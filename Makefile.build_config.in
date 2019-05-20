@@ -112,7 +112,12 @@ OC_COMMON_LDFLAGS = $(INCLUDES)
 
 OC_BYTECODE_LDFLAGS =
 
+# Flags for ocamlopt
 OC_NATIVE_CFLAGS = @oc_native_cflags@
+# Flags for the C compiler (native backend only)
+OC_NATIVE_C_FLAGS = @oc_native_c_flags@
+OC_NATIVE_CPPFLAGS = @oc_native_cppflags@
+OC_ASPPFLAGS = @oc_asppflags@
 
 OC_NATIVE_LDFLAGS = -g
 

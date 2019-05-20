@@ -52,9 +52,22 @@ ocamlc_cflags=""
 ocamlc_cppflags=""
 oc_ldflags=""
 oc_dll_ldflags=""
+oc_native_c_flags="" # Flags for the C compiler (native backend only)
+
+# The following variable defines flags to be passed to the C preprocessor
+# when compiling C files for the native runtime.
+# These flags should be passed *in addition* to those in oc_cppflags, they
+# should not replace them.
+oc_native_cppflags=""
+
+# Flags to pass to the C preprocessor when preprocessing assembly files
+oc_asppflags=""
+
 oc_exe_ldflags=""
 
 tsan=false
+# Passed to the linker by ocamlopt when tsan is enabled
+oc_tsan_ldflags="-fsanitize=thread"
 
 # The C# compiler and its flags
 CSC=""
@@ -135,6 +148,9 @@ AC_SUBST([ccomptype])
 AC_SUBST([toolchain])
 AC_SUBST([oc_cflags])
 AC_SUBST([tsan])
+AC_SUBST([oc_native_c_flags])
+AC_SUBST([oc_native_cppflags])
+AC_SUBST([oc_asppflags])
 AC_SUBST([oc_cppflags])
 AC_SUBST([oc_ldflags])
 AC_SUBST([oc_dll_ldflags])
@@ -333,6 +349,15 @@ AC_ARG_ENABLE([tsan],
     [enable ThreadSanitizer support @<:@default=no@:>@])],
   [],
   [enable_tsan=no])
+
+# Preprocessor and linker flags for libunwind (currently only used when TSan is
+# enabled)
+
+AC_ARG_VAR([LIBUNWIND_CPPFLAGS],
+  [cc flags for libunwind (e.g. -I<location of header files>)])
+
+AC_ARG_VAR([LIBUNWIND_LDFLAGS],
+  [linker flags for libunwind (e.g. -L<location of static object files>])
 
 AC_ARG_ENABLE([graph-lib], [],
   [AS_IF([test "x$enableval" != 'xno'],
@@ -1579,6 +1604,53 @@ $cc_basename on system $system"])]
       [AC_MSG_ERROR([thread sanitizer not supported on arch $arch])]
   )],
   [tsan=false])
+
+# libunwind detection when TSan is enabled
+AC_MSG_CHECKING([whether libunwind is required])
+AS_IF([! $tsan],
+  [libunwind_available=false
+  libunwind_cppflags=
+  libunwind_link_flags=
+  AC_MSG_RESULT([no])],
+  [AC_MSG_RESULT([yes])
+  AS_IF([test "$system" = "macosx"],
+    [AS_IF([test x"$LIBUNWIND_CPPFLAGS" != x -o \
+                 x"$LIBUNWIND_LDFLAGS" != x],
+      [AC_MSG_WARN(m4_normalize([
+        On MacOSX, specifying paths for libunwind headers or libraries is
+        strongly discouraged. It is recommended to rely on the defaults
+        provided by the configure script
+      ]))])])
+
+  AS_IF([test x"$LIBUNWIND_CPPFLAGS" != x],
+    [libunwind_cppflags="$LIBUNWIND_CPPFLAGS"],
+    [libunwind_cppflags=""])
+
+  AS_CASE(["$system"],
+    ["macosx"], [libunwind_ldflags="-framework System"],
+    [libunwind_ldflags="-lunwind -lunwind-x86_64"])
+
+  AS_IF([test x"$LIBUNWIND_LDFLAGS" != x],
+    [libunwind_ldflags="$LIBUNWIND_LDFLAGS $libunwind_ldflags"])
+
+  oc_native_cppflags="$oc_native_cppflags $libunwind_cppflags"
+  oc_tsan_ldflags="$oc_tsan_ldflags $libunwind_ldflags"
+
+  OCAML_CHECK_LIBUNWIND
+
+  AS_IF([! $libunwind_available],
+    [AC_MSG_ERROR([libunwind was requested by tsan but can not be found])])
+
+    # We need unwinding information at runtime, but since we use
+    # -no_compact_unwind, we also need -keep_dwarf_unwind otherwise
+    # the OS X linker will chuck away the DWARF-like (.eh_frame)
+    # information.  (Older versions of OS X don't provide this.)
+
+    AS_IF([$libunwind_available && test x"$system" = "xmacosx"],
+      [extra_flags="-Wl,-keep_dwarf_unwind"
+      mkexe="$mkexe $extra_flags"
+      mksharedlib="$mksharedlib $extra_flags"])
+  ])
 
 ## Sockets
 
