@@ -270,6 +270,8 @@ let set_float_arg round (arg:Float_arg_helper.parsed ref) default value =
   | Some round ->
     arg := Float_arg_helper.add_base_override round value !arg
 
+let add_poll = ref true
+
 let use_inlining_arguments_set ?round (arg:inlining_arguments) =
   let set_int = set_int_arg round in
   let set_float = set_float_arg round in

@@ -14,7 +14,9 @@
 (**************************************************************************)
 
 open Clflags
+
 let write_asm_file = ref false
+let _ = add_poll := false
 
 let compile_file filename =
   if !write_asm_file then begin

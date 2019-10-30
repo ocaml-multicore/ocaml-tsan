@@ -156,6 +156,7 @@ val keep_startup_file : bool ref
 val dump_combine : bool ref
 val native_code : bool ref
 val default_inline_threshold : float
+val add_poll : bool ref
 val inline_threshold : Float_arg_helper.parsed ref
 val inlining_report : bool ref
 val simplify_rounds : int option ref
