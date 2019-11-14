@@ -33,7 +33,6 @@
 #define caml_extra_heap_resources_minor \
   (Caml_state_field(extra_heap_resources_minor))
 
-
 #define CAML_TABLE_STRUCT(t) { \
   t *base;                     \
   t *end;                      \
@@ -64,7 +63,7 @@ struct caml_custom_table CAML_TABLE_STRUCT(struct caml_custom_elt);
    or GC speed parameters. */
 
 extern void caml_set_minor_heap_size (asize_t); /* size in bytes */
-extern void caml_empty_minor_heap (void);
+extern void caml_empty_minor_heap (double aging_ratio);
 CAMLextern void caml_gc_dispatch (void);
 CAMLextern void caml_minor_collection (void);
 CAMLextern void garbage_collection (void); /* runtime/signals_nat.c */
@@ -131,5 +130,15 @@ static inline void add_to_custom_table (struct caml_custom_table *tbl, value v,
   elt->mem = mem;
   elt->max = max;
 }
+
+/* Convenience macros for minor_gc.c, memprof.c, finalise.c */
+#define Kept_in_minor_heap(v) \
+  (CAMLassert (Is_block (v)), \
+   Is_black_val (v) \
+   && (value *) Hp_val (v) >= Caml_state->young_alloc_start \
+   && (value *) Hp_val (v) < Caml_state->young_alloc_end)
+
+#define Is_young_and_dead(v) \
+  (Is_young (v) && Hd_val (v) != 0 && !Kept_in_minor_heap (v))
 
 #endif /* CAML_MINOR_GC_H */

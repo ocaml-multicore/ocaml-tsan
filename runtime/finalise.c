@@ -106,6 +106,13 @@ static void generic_final_update (struct finalisable * final, int darken_value)
     }
   }
 
+#ifdef DEBUG
+  /* Check that we are not missing any values in the recent set */
+  for (i = final->old; i < final->young; i++){
+    CAMLassert (Is_young (final->table[i].val) || !Is_white_val (final->table[i].val));
+  }
+#endif
+
   /** invariant:
       - 0 <= j <= i /\ 0 <= k <= i /\ 0 <= k <= todo_count
       - i : index in final_table, before i all the values are black
@@ -260,10 +267,11 @@ void caml_final_invert_finalisable_values ()
   };
 }
 
-/* Call [caml_oldify_one] on the closures and values of the recent set.
-   This is called by the minor GC through [caml_oldify_local_roots].
+/* Call [caml_oldify_one] on the closures and values of the recent set
+   for [finalisable_first], then move the recent set to the finalisable set.
+   This is called by the minor GC through [caml_oldify_minor_long_lived_roots].
 */
-void caml_final_oldify_young_roots ()
+void caml_final_oldify_young_roots_first (void)
 {
   uintnat i;
 
@@ -274,25 +282,37 @@ void caml_final_oldify_young_roots ()
     caml_oldify_one(finalisable_first.table[i].val,
                     &finalisable_first.table[i].val);
   }
+  finalisable_first.old = finalisable_first.young;
+}
+
+/* Call [caml_oldify_one] on the closures (not the values) of the recent set
+   for [finalisable_last].
+   This is called by the minor GC through [caml_oldify_minor_long_lived_roots].
+   Note that this function does NOT move the recent set into the finalisable
+   set.
+*/
+void caml_final_oldify_young_roots_last (void)
+{
+  uintnat i;
 
   CAMLassert (finalisable_last.old <= finalisable_last.young);
   for (i = finalisable_last.old; i < finalisable_last.young; i++){
     caml_oldify_one(finalisable_last.table[i].fun,
                     &finalisable_last.table[i].fun);
   }
-
 }
 
 static void generic_final_minor_update (struct finalisable * final)
 {
   uintnat i, j, k;
   uintnat todo_count = 0;
+  uintnat first_young;
 
   CAMLassert (final->old <= final->young);
   for (i = final->old; i < final->young; i++){
     CAMLassert (Is_block (final->table[i].val));
     CAMLassert (Is_in_heap_or_young (final->table[i].val));
-    if (Is_young(final->table[i].val) && Hd_val(final->table[i].val) != 0){
+    if (Is_young_and_dead (final->table[i].val)){
       ++ todo_count;
     }
   }
@@ -310,11 +330,11 @@ static void generic_final_minor_update (struct finalisable * final)
     k = 0;
     j = final->old;
     for (i = final->old; i < final->young; i++){
-      CAMLassert (Is_block (final->table[i].val));
-      CAMLassert (Is_in_heap_or_young (final->table[i].val));
-      CAMLassert (Tag_val (final->table[i].val) != Forward_tag);
-      if(Is_young(final->table[i].val) && Hd_val(final->table[i].val) != 0){
-        /** dead */
+      value v = final->table[i].val;
+      CAMLassert (Is_block (v));
+      CAMLassert (Is_in_heap_or_young (v));
+      CAMLassert (Tag_val (v) != Forward_tag);
+      if(Is_young_and_dead (v)){
         to_do_tl->item[k] = final->table[i];
         /* The finalisation function is called with unit not with the value */
         to_do_tl->item[k].val = Val_unit;
@@ -327,45 +347,49 @@ static void generic_final_minor_update (struct finalisable * final)
     }
     CAMLassert (i == final->young);
     CAMLassert (k == todo_count);
-    final->young = j;
-    to_do_tl->size = todo_count;
+    final->young = k;
+    CAMLassert (to_do_tl->size == todo_count);
   }
 
+  first_young = final->young;
   /** update the minor value to the copied major value */
   for (i = final->old; i < final->young; i++){
+    value v = final->table[i].val;
     CAMLassert (Is_block (final->table[i].val));
     CAMLassert (Is_in_heap_or_young (final->table[i].val));
     if (Is_young(final->table[i].val)) {
-      CAMLassert (Hd_val(final->table[i].val) == 0);
-      final->table[i].val = Field(final->table[i].val,0);
+      if(Hd_val(v) == 0){
+        /* moved to the major heap */
+        final->table[i].val = Field(v,0);
+      } else {
+        /* stays in the minor heap */
+        if (first_young > i) first_young = i;
+      }
     }
   }
+  final->old = first_young;
 
   /** check invariant */
+#ifdef DEBUG
   CAMLassert (final->old <= final->young);
-  for (i = 0; i < final->young; i++){
+  for (i = 0; i < final->old; i++){
     CAMLassert( Is_in_heap(final->table[i].val) );
-  };
+  }
+  for (i = final->old; i < final->young; i++){
+    CAMLassert( Is_in_heap_or_young(final->table[i].val) );
+  }
+#endif
 
 }
 
-/* At the end of minor collection update the finalise_last roots in
-   minor heap when moved to major heap or moved them to the finalising
-   set when dead.
+/* At the end of minor collection update the recent [finalise_last] roots:
+   - if moved to the major heap, move to the finalisable set
+   - if staying in the minor heap, keep in the recent set
+   - if dead, move to the finalising set
 */
-void caml_final_update_minor_roots ()
+void caml_final_update_minor_roots_last ()
 {
   generic_final_minor_update(&finalisable_last);
-}
-
-/* Empty the recent set into the finalisable set.
-   This is called at the end of each minor collection.
-   The minor heap must be empty when this is called.
-*/
-void caml_final_empty_young (void)
-{
-  finalisable_first.old = finalisable_first.young;
-  finalisable_last.old = finalisable_last.young;
 }
 
 /* Put (f,v) in the recent set. */

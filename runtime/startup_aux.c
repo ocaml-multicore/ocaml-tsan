@@ -78,6 +78,7 @@ void caml_init_atom_table(void)
 uintnat caml_init_percent_free = Percent_free_def;
 uintnat caml_init_max_percent_free = Max_percent_free_def;
 uintnat caml_init_minor_heap_wsz = Minor_heap_def;
+uintnat caml_init_aging_percent = Aging_percent_def;
 uintnat caml_init_heap_chunk_sz = Heap_chunk_def;
 uintnat caml_init_heap_wsz = Init_heap_def;
 uintnat caml_init_max_stack_wsz = Max_stack_def;
@@ -116,6 +117,7 @@ void caml_parse_ocamlrunparam(void)
       switch (*opt++){
       case 'a': scanmult (opt, &p); caml_set_allocation_policy ((intnat) p);
         break;
+      case 'A': scanmult (opt, &caml_init_aging_percent); break;
       case 'b': scanmult (opt, &p); caml_record_backtrace(Val_bool (p));
         break;
       case 'c': scanmult (opt, &p); caml_cleanup_on_exit = (p != 0); break;

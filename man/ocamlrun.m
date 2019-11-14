@@ -155,6 +155,13 @@ policy, and 2 for the best-fit policy. Best-fit is still experimental,
 but probably the best of the three. The default is 0.
 See the Gc module documentation for details.
 .TP
+.BR A \ (aging_percent)
+How much of the minor heap contents should be retained by the minor collector
+instead of being promoted to the major heap. 0 means everything is promoted
+immediately, 100 means everything is kept for one more cycle. Intermediate
+values set the trade-off between premature promotion and minor-collector
+workload.
+.TP
 .BR s \ (minor_heap_size)
 The size of the minor heap (in words).
 .TP

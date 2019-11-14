@@ -230,7 +230,7 @@ extern void caml_alloc_small_dispatch (intnat wosize, int flags,
     Restore_after_gc;                                                  \
   }                                                                    \
   Hd_hp (Caml_state_field(young_ptr)) =                                \
-    Make_header_with_profinfo ((wosize), (tag), 0, profinfo);          \
+    Make_header_with_profinfo ((wosize), (tag), Caml_white, profinfo); \
   (result) = Val_hp (Caml_state_field(young_ptr));                     \
   DEBUG_clear ((result), (wosize));                                    \
 }while(0)

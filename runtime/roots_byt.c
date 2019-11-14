@@ -30,11 +30,22 @@
 
 CAMLexport void (*caml_scan_roots_hook) (scanning_action f) = NULL;
 
-/* FIXME should rename to [caml_oldify_minor_roots] and synchronise with
-   roots_nat.c */
-/* Call [caml_oldify_one] on (at least) all the roots that point to the minor
-   heap. */
-void caml_oldify_local_roots (void)
+/* Call [caml_oldify_one] on the long-lived roots that can point to
+   the minor heap (the "young" sets):
+   - generational global roots
+   - [finalisable_first] functions and values
+   and move these roots to their respective "old" sets.
+ */
+void caml_oldify_minor_long_lived_roots (void)
+{
+  caml_scan_global_young_roots(&caml_oldify_one);
+  caml_final_oldify_young_roots_first ();
+  caml_final_oldify_young_roots_last ();
+}
+
+/* Call [caml_oldify_one] on a superset of all the roots that can point
+   and are not handled by [caml_oldify_minor_long_lived_roots]. */
+void caml_oldify_minor_short_lived_roots (void)
 {
   register value * sp;
   struct caml__roots_block *lr;
@@ -53,10 +64,6 @@ void caml_oldify_local_roots (void)
       }
     }
   }
-  /* Global C roots */
-  caml_scan_global_young_roots(&caml_oldify_one);
-  /* Finalised values */
-  caml_final_oldify_young_roots ();
   /* Memprof */
   caml_memprof_oldify_young_roots ();
   /* Hook */

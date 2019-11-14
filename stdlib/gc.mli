@@ -226,6 +226,17 @@ type control =
         [caml_alloc_custom_mem] (e.g. bigarrays).
         Default: 8192 bytes.
         @since 4.08.0 *)
+
+    aging_percent : int;
+    (** How much of the values allocated since the last minor collection
+        to keep in the minor heap for one more minor cycle.
+        Meaningful values are between 0 and 100.
+        0 means each minor collection will promote all live object.
+        100 means every value has to survive two minor collections in
+        order to be promoted.
+        Intermediate values set the trade-off between premature promotion
+        and minor collector workload.
+        @since 4.11.0 *)
   }
 (** The GC parameters are given as a [control] record.  Note that
     these parameters can also be initialised by setting the

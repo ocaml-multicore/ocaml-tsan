@@ -237,21 +237,17 @@ void caml_register_dyn_global(void *v) {
   caml_dyn_globals = cons((void*) v,caml_dyn_globals);
 }
 
-/* Call [caml_oldify_one] on (at least) all the roots that point to the minor
-   heap. */
-void caml_oldify_local_roots (void)
+/* Call [caml_oldify_one] on the long-lived roots that can point to
+   the minor heap (the "young" sets):
+   - global variables
+   - generational global roots
+   - [finalisable_first] functions and values
+   and move these roots to their respective "old" sets.
+ */
+void caml_oldify_minor_long_lived_roots (void)
 {
-  char * sp;
-  uintnat retaddr;
-  value * regs;
-  frame_descr * d;
-  uintnat h;
   intnat i, j;
-  int n, ofs;
-  unsigned short * p;
   value * glob;
-  value * root;
-  struct caml__roots_block *lr;
   link *lnk;
 
   /* The global roots */
@@ -274,6 +270,26 @@ void caml_oldify_local_roots (void)
       }
     }
   }
+
+  caml_scan_global_young_roots(&caml_oldify_one);
+  caml_final_oldify_young_roots_first ();
+  caml_final_oldify_young_roots_last ();
+}
+
+/* Call [caml_oldify_one] on a superset of all the roots that can point
+   and are not handled by [caml_oldify_minor_long_lived_roots]. */
+void caml_oldify_minor_short_lived_roots (void)
+{
+  char * sp;
+  uintnat retaddr;
+  value * regs;
+  frame_descr * d;
+  uintnat h;
+  intnat i, j;
+  int n, ofs;
+  unsigned short * p;
+  value * root;
+  struct caml__roots_block *lr;
 
   /* The stack and local roots */
   sp = Caml_state->bottom_of_stack;
@@ -302,12 +318,6 @@ void caml_oldify_local_roots (void)
         /* Move to next frame */
         sp += (d->frame_size & 0xFFFC);
         retaddr = Saved_return_address(sp);
-#ifdef Already_scanned
-        /* Stop here if the frame has been scanned during earlier GCs  */
-        if (Already_scanned(sp, retaddr)) break;
-        /* Mark frame as already scanned */
-        Mark_scanned(sp, retaddr);
-#endif
       } else {
         /* This marks the top of a stack chunk for an ML callback.
            Skip C portion of stack and continue with next ML stack chunk. */
@@ -329,10 +339,6 @@ void caml_oldify_local_roots (void)
       }
     }
   }
-  /* Global C roots */
-  caml_scan_global_young_roots(&caml_oldify_one);
-  /* Finalised values */
-  caml_final_oldify_young_roots ();
   /* Memprof */
   caml_memprof_oldify_young_roots ();
   /* Hook */

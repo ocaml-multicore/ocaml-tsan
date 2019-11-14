@@ -132,6 +132,11 @@ The following environment variables are also consulted:
     but probably the best of the three. The default is "0" (next-fit).
     See the Gc module documentation for details.
   \item[s] ("minor_heap_size")  Size of the minor heap. (in words)
+  \item[A] ("aging_percent") How much of the minor heap contents should
+  be retained by the minor collector instead of being promoted to the
+  major heap. 0 means everything is promoted immediately, 100 means
+  everything is kept for one more cycle. Intermediate values set the
+  trade-off between premature promotion and minor-collector workload.
   \item[i] ("major_heap_increment")  Default size increment for the
   major heap. (in words)
   \item[o] ("space_overhead")  The major GC speed setting.

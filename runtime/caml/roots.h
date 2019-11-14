@@ -23,7 +23,8 @@
 
 typedef void (*scanning_action) (value, value *);
 
-void caml_oldify_local_roots (void);
+void caml_oldify_minor_long_lived_roots (void);
+void caml_oldify_minor_short_lived_roots (void);
 void caml_darken_all_roots_start (void);
 intnat caml_darken_all_roots_slice (intnat);
 void caml_do_roots (scanning_action, int);

@@ -44,7 +44,8 @@
 */
 void caml_init_gc (uintnat minor_size, uintnat major_size, uintnat major_incr,
                    uintnat percent_fr, uintnat percent_m, uintnat window,
-                   uintnat custom_maj, uintnat custom_min, uintnat custom_bsz);
+                   uintnat custom_maj, uintnat custom_min, uintnat custom_bsz,
+                   uintnat aging_percent);
 
 
 CAMLextern value caml_gc_stat(value v);

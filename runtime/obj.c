@@ -141,8 +141,8 @@ CAMLprim value caml_obj_dup(value arg)
    heap and harmless in the minor heap. The object cannot be white
    because there may still be references to it in the ref table. By
    using a black object we ensure that the ref table will be emptied
-   before the block is reallocated (since there must be a minor
-   collection within each major cycle).
+   before the block is reallocated (since each major cycle starts
+   with an empty minor heap).
 
    [newsize] is a value encoding a number of fields (words, except
    for float arrays on 32-bit architectures).

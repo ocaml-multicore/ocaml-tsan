@@ -25,9 +25,9 @@ void caml_final_update_clean_phase (void);
 value caml_final_do_calls_exn (void);
 void caml_final_do_roots (scanning_action f);
 void caml_final_invert_finalisable_values (void);
-void caml_final_oldify_young_roots (void);
-void caml_final_empty_young (void);
-void caml_final_update_minor_roots(void);
+void caml_final_oldify_young_roots_first (void);
+void caml_final_oldify_young_roots_last (void);
+void caml_final_update_minor_roots_last(void);
 value caml_final_register (value f, value v);
 void caml_final_invariant_check(void);
 
