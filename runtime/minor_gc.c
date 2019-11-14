@@ -140,7 +140,7 @@ static void clear_table (struct generic_table *tbl)
 
 void caml_set_minor_heap_size (asize_t bsz)
 {
-  char *new_heap;
+  char *new_heap, *new_stack;
   void *new_heap_base;
 
   CAMLassert (bsz >= Bsize_wsize(Minor_heap_min));
@@ -157,6 +157,14 @@ void caml_set_minor_heap_size (asize_t bsz)
   CAMLassert (Caml_state->young_ptr == Caml_state->young_alloc_end);
   new_heap = caml_stat_alloc_aligned_noexc(bsz, 0, &new_heap_base);
   if (new_heap == NULL) caml_raise_out_of_memory();
+  new_stack =
+    caml_stat_alloc_noexc (Bsize_wsize (Wsize_bsize (bsz) / Whsize_wosize (2)));
+    /* This stack needs to store at most one pointer for each block of
+       size >= 2 in the minor heap. */
+  if (new_stack == NULL){
+    caml_stat_free (new_heap);
+    caml_raise_out_of_memory ();
+  }
   if (caml_page_table_add(In_young, new_heap, new_heap + bsz) != 0)
     caml_raise_out_of_memory();
 
@@ -164,6 +172,8 @@ void caml_set_minor_heap_size (asize_t bsz)
     caml_page_table_remove(In_young, Caml_state->young_start,
                            Caml_state->young_end);
     caml_stat_free (Caml_state->young_base);
+    CAMLassert (Caml_state->young_stack != NULL);
+    caml_stat_free (Caml_state->young_stack);
   }
   Caml_state->young_base = new_heap_base;
   Caml_state->young_start = (value *) new_heap;
@@ -176,6 +186,7 @@ void caml_set_minor_heap_size (asize_t bsz)
   caml_update_young_limit();
   Caml_state->young_ptr = Caml_state->young_alloc_end;
   Caml_state->minor_heap_wsz = Wsize_bsize (bsz);
+  Caml_state->young_stack = (value *) new_stack;
   caml_memprof_renew_minor_sample();
 
   reset_table ((struct generic_table *) Caml_state->ref_table);
@@ -183,7 +194,12 @@ void caml_set_minor_heap_size (asize_t bsz)
   reset_table ((struct generic_table *) Caml_state->custom_table);
 }
 
-static value oldify_todo_list = 0;
+static value *oldify_stack_ptr = NULL;
+
+void caml_oldify_init (void)
+{
+  oldify_stack_ptr = Caml_state->young_stack;
+}
 
 /* Note that the tests on the tag depend on the fact that Infix_tag,
    Forward_tag, and No_scan_tag are contiguous. */
@@ -215,8 +231,7 @@ void caml_oldify_one (value v, value *p)
         Field (v, 0) = result;     /*  and forward pointer. */
         if (sz > 1){
           Field (result, 0) = field0;
-          Field (result, 1) = oldify_todo_list;    /* Add this block */
-          oldify_todo_list = v;                    /*  to the "to do" list. */
+          *oldify_stack_ptr++ = v;  /* Add this block to the "to do" stack. */
         }else{
           CAMLassert (sz == 1);
           p = &Field (result, 0);
@@ -293,56 +308,58 @@ static inline int ephe_check_alive_data(struct caml_ephe_ref_elt *re){
 
 /* Finish the work that was put off by [caml_oldify_one].
    Note that [caml_oldify_one] itself is called by oldify_mopup, so we
-   have to be careful to remove the first entry from the list before
+   have to be careful to remove the top of the stack before
    oldifying its fields. */
 void caml_oldify_mopup (void)
 {
   value v, new_v, f;
   mlsize_t i;
   struct caml_ephe_ref_elt *re;
-  int redo = 0;
+  int redo = 1;
 
-  while (oldify_todo_list != 0){
-    v = oldify_todo_list;                /* Get the head. */
-    CAMLassert (Hd_val (v) == 0);            /* It must be forwarded. */
-    new_v = Field (v, 0);                /* Follow forward pointer. */
-    oldify_todo_list = Field (new_v, 1); /* Remove from list. */
+  while (redo){
+    redo = 0;
+    while (oldify_stack_ptr != Caml_state->young_stack){
+      v = *--oldify_stack_ptr;             /* Get the head. */
+      CAMLassert (Hd_val (v) == 0);        /* It must be forwarded. */
+      new_v = Field (v, 0);                /* Follow forward pointer. */
+      CAMLassert (Tag_val (new_v) < Infix_tag);
 
-    f = Field (new_v, 0);
-    if (Is_block (f) && Is_young (f)){
-      caml_oldify_one (f, &Field (new_v, 0));
-    }
-    for (i = 1; i < Wosize_val (new_v); i++){
-      f = Field (v, i);
+      f = Field (new_v, 0);
       if (Is_block (f) && Is_young (f)){
-        caml_oldify_one (f, &Field (new_v, i));
-      }else{
-        Field (new_v, i) = f;
+        caml_oldify_one (f, &Field (new_v, 0));
+      }
+      for (i = 1; i < Wosize_val (new_v); i++){
+        f = Field (v, i);
+        if (Is_block (f) && Is_young (f)){
+          caml_oldify_one (f, &Field (new_v, i));
+        }else{
+          Field (new_v, i) = f;
+        }
       }
     }
-  }
 
-  /* Oldify the data in the minor heap of alive ephemeron
-     During minor collection keys outside the minor heap are considered alive */
-  for (re = Caml_state->ephe_ref_table->base;
-       re < Caml_state->ephe_ref_table->ptr; re++){
-    /* look only at ephemeron with data in the minor heap */
-    if (re->offset == 1){
-      value *data = &Field(re->ephe,1);
-      if (*data != caml_ephe_none && Is_block (*data) && Is_young (*data)){
-        if (Hd_val (*data) == 0){ /* Value copied to major heap */
-          *data = Field (*data, 0);
-        } else {
-          if (ephe_check_alive_data(re)){
-            caml_oldify_one(*data,data);
-            redo = 1; /* oldify_todo_list can still be 0 */
+    /* Oldify the data in the minor heap of alive ephemeron
+       During minor collection keys outside the minor heap are considered
+       alive */
+    for (re = Caml_state->ephe_ref_table->base;
+         re < Caml_state->ephe_ref_table->ptr; re++){
+      /* look only at ephemeron with data in the minor heap */
+      if (re->offset == 1){
+        value *data = &Field(re->ephe,1);
+        if (*data != caml_ephe_none && Is_block (*data) && Is_young (*data)){
+          if (Hd_val (*data) == 0){ /* Value copied to major heap */
+            *data = Field (*data, 0);
+          } else {
+            if (ephe_check_alive_data(re)){
+              caml_oldify_one(*data,data);
+              redo = 1; /* young_stack can still be empty */
+            }
           }
         }
       }
     }
   }
-
-  if (redo) caml_oldify_mopup ();
 }
 
 /* Make sure the minor heap is empty by performing a minor collection
@@ -362,6 +379,7 @@ void caml_empty_minor_heap (void)
     prev_alloc_words = caml_allocated_words;
     Caml_state->in_minor_collection = 1;
     caml_gc_message (0x02, "<");
+    caml_oldify_init ();
     caml_oldify_local_roots();
     CAML_INSTR_TIME (tmr, "minor/local_roots");
     for (r = Caml_state->ref_table->base;
