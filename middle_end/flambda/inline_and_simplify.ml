@@ -800,7 +800,7 @@ and simplify_partial_application env r ~lhs_of_application
     Location.prerr_warning (Debuginfo.to_location dbg)
       (Warnings.Inlining_impossible "[@unroll] attributes may not be used \
         on partial applications")
-  | Default_inline -> ()
+  | Hint_inline | Default_inline -> ()
   end;
   begin match (specialise_requested : Lambda.specialise_attribute) with
   | Always_specialise | Never_specialise ->
