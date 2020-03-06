@@ -1622,6 +1622,7 @@ bytecomp/bytegen.cmo : \
     typing/ident.cmi \
     typing/env.cmi \
     utils/config.cmi \
+    utils/clflags.cmi \
     parsing/asttypes.cmi \
     bytecomp/bytegen.cmi
 bytecomp/bytegen.cmx : \
@@ -1636,6 +1637,7 @@ bytecomp/bytegen.cmx : \
     typing/ident.cmx \
     typing/env.cmx \
     utils/config.cmx \
+    utils/clflags.cmx \
     parsing/asttypes.cmi \
     bytecomp/bytegen.cmi
 bytecomp/bytegen.cmi : \
@@ -2154,17 +2156,18 @@ asmcomp/branch_relaxation.cmi : \
     asmcomp/linear.cmi \
     asmcomp/branch_relaxation_intf.cmo
 asmcomp/branch_relaxation_intf.cmo : \
-    asmcomp/mach.cmi \
     asmcomp/linear.cmi \
+    lambda/debuginfo.cmi \
     asmcomp/cmm.cmi \
     asmcomp/arch.cmo
 asmcomp/branch_relaxation_intf.cmx : \
-    asmcomp/mach.cmx \
     asmcomp/linear.cmx \
+    lambda/debuginfo.cmx \
     asmcomp/cmm.cmx \
     asmcomp/arch.cmx
 asmcomp/cmm.cmo : \
     utils/targetint.cmi \
+    utils/misc.cmi \
     lambda/lambda.cmi \
     lambda/debuginfo.cmi \
     middle_end/backend_var.cmi \
@@ -2172,6 +2175,7 @@ asmcomp/cmm.cmo : \
     asmcomp/cmm.cmi
 asmcomp/cmm.cmx : \
     utils/targetint.cmx \
+    utils/misc.cmx \
     lambda/lambda.cmx \
     lambda/debuginfo.cmx \
     middle_end/backend_var.cmx \
@@ -2312,12 +2316,14 @@ asmcomp/coloring.cmi :
 asmcomp/comballoc.cmo : \
     asmcomp/reg.cmi \
     asmcomp/mach.cmi \
+    lambda/debuginfo.cmi \
     utils/config.cmi \
     asmcomp/arch.cmo \
     asmcomp/comballoc.cmi
 asmcomp/comballoc.cmx : \
     asmcomp/reg.cmx \
     asmcomp/mach.cmx \
+    lambda/debuginfo.cmx \
     utils/config.cmx \
     asmcomp/arch.cmx \
     asmcomp/comballoc.cmi
@@ -2349,6 +2355,7 @@ asmcomp/emit.cmo : \
     asmcomp/x86_ast.cmi \
     asmcomp/reg.cmi \
     asmcomp/proc.cmi \
+    utils/numbers.cmi \
     utils/misc.cmi \
     asmcomp/mach.cmi \
     asmcomp/linear.cmi \
@@ -2370,6 +2377,7 @@ asmcomp/emit.cmx : \
     asmcomp/x86_ast.cmi \
     asmcomp/reg.cmx \
     asmcomp/proc.cmx \
+    utils/numbers.cmx \
     utils/misc.cmx \
     asmcomp/mach.cmx \
     asmcomp/linear.cmx \
@@ -2387,7 +2395,6 @@ asmcomp/emit.cmi : \
     asmcomp/linear.cmi \
     asmcomp/cmm.cmi
 asmcomp/emitaux.cmo : \
-    asmcomp/mach.cmi \
     lambda/debuginfo.cmi \
     utils/config.cmi \
     asmcomp/cmm.cmi \
@@ -2395,7 +2402,6 @@ asmcomp/emitaux.cmo : \
     asmcomp/arch.cmo \
     asmcomp/emitaux.cmi
 asmcomp/emitaux.cmx : \
-    asmcomp/mach.cmx \
     lambda/debuginfo.cmx \
     utils/config.cmx \
     asmcomp/cmm.cmx \
@@ -2403,7 +2409,6 @@ asmcomp/emitaux.cmx : \
     asmcomp/arch.cmx \
     asmcomp/emitaux.cmi
 asmcomp/emitaux.cmi : \
-    asmcomp/mach.cmi \
     lambda/debuginfo.cmi
 asmcomp/interf.cmo : \
     asmcomp/reg.cmi \
