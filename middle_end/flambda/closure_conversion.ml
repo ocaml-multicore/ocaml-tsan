@@ -207,7 +207,7 @@ let rec close t env (lam : Lambda.lambda) : Flambda.t =
            body;
            contents_kind = block_kind })
   | Lfunction { kind; params; body; attr; loc; } ->
-    let name = Names.anon_fn_with_loc loc in
+    let name = Names.anon_fn_with_loc (Lambda.raw_location loc) in
     let closure_bound_var = Variable.create name in
     (* CR-soon mshinwell: some of this is now very similar to the let rec case
        below *)

@@ -25,6 +25,7 @@ type item = {
   dinfo_start_bol: int;
   dinfo_end_bol: int;
   dinfo_end_line: int;
+  dinfo_scopes: Lambda.lambda_scopes;
 }
 
 type t = item list
@@ -53,7 +54,7 @@ let to_string dbg =
     in
     "{" ^ String.concat ";" items ^ "}"
 
-let item_from_location loc =
+let item_from_location ~scopes loc =
   let valid_endpos =
     String.equal loc.loc_end.pos_fname loc.loc_start.pos_fname in
   { dinfo_file = loc.loc_start.pos_fname;
@@ -70,10 +71,14 @@ let item_from_location loc =
     dinfo_end_line =
       if valid_endpos then loc.loc_end.pos_lnum
       else loc.loc_start.pos_lnum;
+    dinfo_scopes = scopes
   }
 
-let from_location loc =
-  if loc == Location.none then [] else [item_from_location loc]
+let from_location = function
+  | Lambda.Loc_unknown -> []
+  | Lambda.Loc_known {scopes; loc} ->
+    assert (loc != Location.none);
+    [item_from_location ~scopes loc]
 
 let to_location = function
   | [] -> Location.none
@@ -91,10 +96,6 @@ let to_location = function
         pos_cnum = d.dinfo_start_bol + d.dinfo_char_end;
       } in
     { loc_ghost = false; loc_start; loc_end; }
-
-let inline loc t =
-  if loc == Location.none then t
-  else (item_from_location loc) :: t
 
 let concat dbg1 dbg2 =
   dbg1 @ dbg2

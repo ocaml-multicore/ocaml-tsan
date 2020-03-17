@@ -625,13 +625,19 @@ let rec lam ppf = function
        | Lev_module_definition ident ->
          Format.asprintf "module-defn(%a)" Ident.print ident
       in
-      fprintf ppf "@[<2>(%s %s(%i)%s:%i-%i@ %a)@]" kind
-              ev.lev_loc.Location.loc_start.Lexing.pos_fname
-              ev.lev_loc.Location.loc_start.Lexing.pos_lnum
-              (if ev.lev_loc.Location.loc_ghost then "<ghost>" else "")
-              ev.lev_loc.Location.loc_start.Lexing.pos_cnum
-              ev.lev_loc.Location.loc_end.Lexing.pos_cnum
-              lam expr
+      begin match ev.lev_loc with
+      | Loc_unknown ->
+        fprintf ppf "@[<2>(%s <unknown location>@ %a)@]" kind lam expr
+      | Loc_known {scopes; loc} ->
+        fprintf ppf "@[<2>(%s %s %s(%i)%s:%i-%i@ %a)@]" kind
+                (Lambda.string_of_scopes scopes)
+                loc.Location.loc_start.Lexing.pos_fname
+                loc.Location.loc_start.Lexing.pos_lnum
+                (if loc.Location.loc_ghost then "<ghost>" else "")
+                loc.Location.loc_start.Lexing.pos_cnum
+                loc.Location.loc_end.Lexing.pos_cnum
+                lam expr
+      end
   | Lifused(id, expr) ->
       fprintf ppf "@[<2>(ifused@ %a@ %a)@]" Ident.print id lam expr
 

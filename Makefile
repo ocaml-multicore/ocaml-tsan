@@ -105,8 +105,8 @@ TYPING=typing/ident.cmo typing/path.cmo \
   typing/rec_check.cmo typing/typecore.cmo typing/typeclass.cmo \
   typing/typemod.cmo
 
-LAMBDA=lambda/debuginfo.cmo \
-  lambda/lambda.cmo lambda/printlambda.cmo \
+LAMBDA=lambda/lambda.cmo \
+  lambda/debuginfo.cmo lambda/printlambda.cmo \
   lambda/switch.cmo lambda/matching.cmo \
   lambda/translobj.cmo lambda/translattribute.cmo \
   lambda/translprim.cmo lambda/translcore.cmo \

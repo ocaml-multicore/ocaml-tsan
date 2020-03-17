@@ -1470,7 +1470,7 @@ struct
     Cifthenelse (cond, Debuginfo.none, ifso, Debuginfo.none, ifnot,
       Debuginfo.none)
   let make_switch loc arg cases actions =
-    let dbg = Debuginfo.from_location loc in
+    let dbg = Debuginfo.from_location (Lambda.of_raw_location loc) in
     let actions = Array.map (fun expr -> expr, dbg) actions in
     make_switch arg cases actions dbg
   let bind arg body = bind "switcher" arg body

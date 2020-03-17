@@ -613,11 +613,13 @@ let rec emit_tail_infos is_tail lambda =
       if ap.ap_should_be_tailcall
       && not is_tail
       && Warnings.is_active Warnings.Expect_tailcall
-        then Location.prerr_warning ap.ap_loc Warnings.Expect_tailcall;
+        then Location.prerr_warning (raw_location ap.ap_loc)
+               Warnings.Expect_tailcall;
       emit_tail_infos false ap.ap_func;
       list_emit_tail_infos false ap.ap_args;
       if !Clflags.annotations then
-        Stypes.record (Stypes.An_call (ap.ap_loc, call_kind ap.ap_args))
+        Stypes.record (Stypes.An_call (raw_location ap.ap_loc,
+                                       call_kind ap.ap_args))
   | Lfunction {body = lam} ->
       emit_tail_infos true lam
   | Llet (_str, _k, _, lam, body) ->
@@ -676,7 +678,8 @@ let rec emit_tail_infos is_tail lambda =
       emit_tail_infos false obj;
       list_emit_tail_infos false args;
       if !Clflags.annotations then
-        Stypes.record (Stypes.An_call (loc, call_kind (obj :: args)));
+        Stypes.record (Stypes.An_call (raw_location loc,
+                                       call_kind (obj :: args)));
   | Levent (lam, _) ->
       emit_tail_infos is_tail lam
   | Lifused (_, lam) ->
@@ -716,7 +719,7 @@ let split_default_wrapper ~id:fun_id ~kind ~params ~return ~body ~attr ~loc =
           Lapply {
             ap_func = Lvar inner_id;
             ap_args = args;
-            ap_loc = Location.none;
+            ap_loc = Loc_unknown;
             ap_should_be_tailcall = false;
             ap_inlined = Default_inline;
             ap_specialised = Default_specialise;
@@ -774,7 +777,7 @@ let simplify_local_functions lam =
   let current_scope = ref lam in
   let check_static lf =
     if lf.attr.local = Always_local then
-      Location.prerr_warning lf.loc
+      Location.prerr_warning (raw_location lf.loc)
         (Warnings.Inlining_impossible
            "This function cannot be compiled into a static continuation")
   in

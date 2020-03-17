@@ -271,6 +271,58 @@ type function_attribute = {
   stub: bool;
 }
 
+type lambda_scope_item =
+  | Ls_anonymous_function
+  | Ls_value_definition of Ident.t
+  | Ls_module_definition of Ident.t
+  | Ls_class_definition of Ident.t
+  | Ls_method_definition of Asttypes.label loc
+
+type lambda_scopes = lambda_scope_item list
+
+type scoped_location =
+  | Loc_unknown
+  | Loc_known of
+      { loc : Location.t;
+        scopes : lambda_scopes; }
+
+let raw_location = function
+  | Loc_unknown -> Location.none
+  | Loc_known { loc; _ } -> loc
+
+let of_raw_location ?(scopes=[]) loc =
+  if loc = Location.none then
+    Loc_unknown
+  else
+    Loc_known { loc; scopes }
+
+let string_of_scope_item = function
+  | Ls_anonymous_function ->
+     "(fun)"
+  | Ls_value_definition id
+  | Ls_module_definition id
+  | Ls_class_definition id ->
+     let name = Ident.name id in
+     if name = "" then
+       name
+     else
+       (match name.[0] with
+        | 'a'..'z' | 'A'..'Z' | '_' | '0'..'9' -> name
+        | _ -> "(" ^ name ^ ")")
+  | Ls_method_definition name ->
+     name.txt
+
+
+let string_of_scopes scopes =
+  let rec to_strings acc = function
+    (* Collapse nested anonymous function scopes *)
+    | [] -> acc
+    | Ls_anonymous_function :: ((Ls_anonymous_function :: _) as rest) ->
+      to_strings acc rest
+    | s :: rest ->
+      to_strings (string_of_scope_item s :: acc) rest in
+  String.concat "." (to_strings [] scopes)
+
 type lambda =
     Lvar of Ident.t
   | Lconst of structured_constant
@@ -278,10 +330,10 @@ type lambda =
   | Lfunction of lfunction
   | Llet of let_kind * value_kind * Ident.t * lambda * lambda
   | Lletrec of (Ident.t * lambda) list * lambda
-  | Lprim of primitive * lambda list * Location.t
-  | Lswitch of lambda * lambda_switch * Location.t
+  | Lprim of primitive * lambda list * scoped_location
+  | Lswitch of lambda * lambda_switch * scoped_location
   | Lstringswitch of
-      lambda * (string * lambda) list * lambda option * Location.t
+      lambda * (string * lambda) list * lambda option * scoped_location
   | Lstaticraise of int * lambda list
   | Lstaticcatch of lambda * (int * (Ident.t * value_kind) list) * lambda
   | Ltrywith of lambda * Ident.t * lambda
@@ -290,7 +342,7 @@ type lambda =
   | Lwhile of lambda * lambda
   | Lfor of Ident.t * lambda * lambda * direction_flag * lambda
   | Lassign of Ident.t * lambda
-  | Lsend of meth_kind * lambda * lambda * lambda list * Location.t
+  | Lsend of meth_kind * lambda * lambda * lambda list * scoped_location
   | Levent of lambda * lambda_event
   | Lifused of Ident.t * lambda
 
@@ -300,12 +352,12 @@ and lfunction =
     return: value_kind;
     body: lambda;
     attr: function_attribute; (* specified with [@inline] attribute *)
-    loc: Location.t; }
+    loc: scoped_location; }
 
 and lambda_apply =
   { ap_func : lambda;
     ap_args : lambda list;
-    ap_loc : Location.t;
+    ap_loc : scoped_location;
     ap_should_be_tailcall : bool;
     ap_inlined : inline_attribute;
     ap_specialised : specialise_attribute; }
@@ -318,7 +370,7 @@ and lambda_switch =
     sw_failaction : lambda option}
 
 and lambda_event =
-  { lev_loc: Location.t;
+  { lev_loc: scoped_location;
     lev_kind: lambda_event_kind;
     lev_repr: int ref option;
     lev_env: Env.t }
@@ -381,7 +433,7 @@ let make_key e =
     | Lapply ap ->
         Lapply {ap with ap_func = tr_rec env ap.ap_func;
                         ap_args = tr_recs env ap.ap_args;
-                        ap_loc = Location.none}
+                        ap_loc = Loc_unknown}
     | Llet (Alias,_k,x,ex,e) -> (* Ignore aliases -> substitute *)
         let ex = tr_rec env ex in
         tr_rec (Ident.add x ex env) e
@@ -393,7 +445,7 @@ let make_key e =
         let y = make_key x in
         Llet (str,k,y,ex,tr_rec (Ident.add x (Lvar y) env) e)
     | Lprim (p,es,_) ->
-        Lprim (p,tr_recs env es, Location.none)
+        Lprim (p,tr_recs env es, Loc_unknown)
     | Lswitch (e,sw,loc) ->
         Lswitch (tr_rec env e,tr_sw env sw,loc)
     | Lstringswitch (e,sw,d,_) ->
@@ -401,7 +453,7 @@ let make_key e =
           (tr_rec env e,
            List.map (fun (s,e) -> s,tr_rec env e) sw,
            tr_opt env d,
-          Location.none)
+          Loc_unknown)
     | Lstaticraise (i,es) ->
         Lstaticraise (i,tr_recs env es)
     | Lstaticcatch (e1,xs,e2) ->
@@ -415,7 +467,7 @@ let make_key e =
     | Lassign (x,e) ->
         Lassign (x,tr_rec env e)
     | Lsend (m,e1,e2,es,_loc) ->
-        Lsend (m,tr_rec env e1,tr_rec env e2,tr_recs env es,Location.none)
+        Lsend (m,tr_rec env e1,tr_rec env e2,tr_recs env es,Loc_unknown)
     | Lifused (id,e) -> Lifused (id,tr_rec env e)
     | Lletrec _|Lfunction _
     | Lfor _ | Lwhile _
@@ -657,7 +709,7 @@ let transl_prim mod_name name =
   let env = Env.add_persistent_structure pers Env.empty in
   let lid = Longident.Ldot (Longident.Lident mod_name, name) in
   match Env.find_value_by_name lid env with
-  | path, _ -> transl_value_path Location.none env path
+  | path, _ -> transl_value_path Loc_unknown env path
   | exception Not_found ->
       fatal_error ("Primitive " ^ name ^ " not found.")
 

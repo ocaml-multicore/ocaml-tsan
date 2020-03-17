@@ -1624,10 +1624,12 @@ let make_constr_matching p def ctx = function
           match cstr.cstr_tag with
           | Cstr_constant _
           | Cstr_block _ ->
-              make_field_args p.pat_loc Alias arg 0 (cstr.cstr_arity - 1) argl
+              make_field_args (of_raw_location p.pat_loc)
+                Alias arg 0 (cstr.cstr_arity - 1) argl
           | Cstr_unboxed -> (arg, Alias) :: argl
           | Cstr_extension _ ->
-              make_field_args p.pat_loc Alias arg 1 cstr.cstr_arity argl
+              make_field_args (of_raw_location p.pat_loc)
+                Alias arg 1 cstr.cstr_arity argl
       in
       { pm =
           { cases = [];
@@ -1678,7 +1680,8 @@ let make_variant_matching_nonconst p lab def ctx = function
       and ctx = Context.specialize p ctx in
       { pm =
           { cases = [];
-            args = (Lprim (Pfield 1, [ arg ], p.pat_loc), Alias) :: argl;
+            args = (Lprim (Pfield 1, [ arg ], of_raw_location p.pat_loc), Alias)
+                   :: argl;
             default = def
           };
         ctx;
@@ -1769,7 +1772,7 @@ let get_mod_field modname field =
          match Env.find_value_by_name (Longident.Lident field) env with
          | exception Not_found ->
              fatal_error ("Primitive " ^ modname ^ "." ^ field ^ " not found.")
-         | path, _ -> transl_value_path Location.none env path
+         | path, _ -> transl_value_path Loc_unknown env path
        ))
 
 let code_force_lazy_block = get_mod_field "CamlinternalLazy" "force_lazy_block"
@@ -1886,7 +1889,7 @@ let make_lazy_matching def = function
   | [] -> fatal_error "Matching.make_lazy_matching"
   | (arg, _mut) :: argl ->
       { cases = [];
-        args = (inline_lazy_force arg Location.none, Strict) :: argl;
+        args = (inline_lazy_force arg Loc_unknown, Strict) :: argl;
         default = Default_environment.specialize matcher_lazy def
       }
 
@@ -1926,7 +1929,7 @@ let make_tuple_matching loc arity def = function
 
 let divide_tuple arity p ctx pm =
   divide_line (Context.specialize p)
-    (make_tuple_matching p.pat_loc arity)
+    (make_tuple_matching (of_raw_location p.pat_loc) arity)
     (get_args_tuple arity) p ctx pm
 
 (* Matching against a record pattern *)
@@ -1987,7 +1990,7 @@ let make_record_matching loc all_labels def = function
 let divide_record all_labels p ctx pm =
   let get_args = get_args_record (Array.length all_labels) in
   divide_line (Context.specialize p)
-    (make_record_matching p.pat_loc all_labels)
+    (make_record_matching (of_raw_location p.pat_loc) all_labels)
     get_args p ctx pm
 
 (* Matching against an array pattern *)
@@ -2019,7 +2022,7 @@ let make_array_matching kind p def ctx = function
           ( Lprim
               ( Parrayrefu kind,
                 [ arg; Lconst (Const_base (Const_int pos)) ],
-                p.pat_loc ),
+                (of_raw_location p.pat_loc) ),
             StrictOpt )
           :: make_args (pos + 1)
       in
@@ -2248,12 +2251,12 @@ module SArg = struct
 
   type act = Lambda.lambda
 
-  let make_prim p args = Lprim (p, args, Location.none)
+  let make_prim p args = Lprim (p, args, Loc_unknown)
 
   let make_offset arg n =
     match n with
     | 0 -> arg
-    | _ -> Lprim (Poffsetint n, [ arg ], Location.none)
+    | _ -> Lprim (Poffsetint n, [ arg ], Loc_unknown)
 
   let bind arg body =
     let newvar, newarg =
@@ -2267,9 +2270,9 @@ module SArg = struct
 
   let make_const i = Lconst (Const_base (Const_int i))
 
-  let make_isout h arg = Lprim (Pisout, [ h; arg ], Location.none)
+  let make_isout h arg = Lprim (Pisout, [ h; arg ], Loc_unknown)
 
-  let make_isin h arg = Lprim (Pnot, [ make_isout h arg ], Location.none)
+  let make_isin h arg = Lprim (Pnot, [ make_isout h arg ], Loc_unknown)
 
   let make_if cond ifso ifnot = Lifthenelse (cond, ifso, ifnot)
 
@@ -2286,7 +2289,7 @@ module SArg = struct
           sw_blocks = [];
           sw_failaction = None
         },
-        loc )
+        of_raw_location loc )
 
   let make_catch = make_catch_delayed
 
@@ -2491,7 +2494,7 @@ let as_interval fail low high l =
 
 let call_switcher loc fail arg low high int_lambda_list =
   let edges, (cases, actions) = as_interval fail low high int_lambda_list in
-  Switcher.zyva loc edges arg cases actions
+  Switcher.zyva (raw_location loc) edges arg cases actions
 
 let rec list_as_pat = function
   | [] -> fatal_error "Matching.list_as_pat"
@@ -3147,20 +3150,21 @@ and do_compile_matching repr partial ctx pmh =
           compile_test
             (compile_match repr partial)
             partial divide_constant
-            (combine_constant pat.pat_loc arg cst partial)
+            (combine_constant (of_raw_location pat.pat_loc) arg cst partial)
             ctx pm
       | Tpat_construct (_, cstr, _) ->
           compile_test
             (compile_match repr partial)
             partial divide_constructor
-            (combine_constructor pat.pat_loc arg pat cstr partial)
+            (combine_constructor (of_raw_location pat.pat_loc)
+               arg pat cstr partial)
             ctx pm
       | Tpat_array _ ->
           let kind = Typeopt.array_pattern_kind pat in
           compile_test
             (compile_match repr partial)
             partial (divide_array kind)
-            (combine_array pat.pat_loc arg kind partial)
+            (combine_array (of_raw_location pat.pat_loc) arg kind partial)
             ctx pm
       | Tpat_lazy _ ->
           compile_no_test
@@ -3170,7 +3174,7 @@ and do_compile_matching repr partial ctx pmh =
           compile_test
             (compile_match repr partial)
             partial (divide_variant !row)
-            (combine_variant pat.pat_loc !row arg partial)
+            (combine_variant (of_raw_location pat.pat_loc) !row arg partial)
             ctx pm
       | _ -> assert false
     )
@@ -3316,7 +3320,8 @@ let partial_function loc () =
   let slot =
     transl_extension_path loc Env.initial_safe_string Predef.path_match_failure
   in
-  let fname, line, char = Location.get_pos_info loc.Location.loc_start in
+  let fname, line, char =
+    Location.get_pos_info (raw_location loc).Location.loc_start in
   Lprim
     ( Praise Raise_regular,
       [ Lprim
@@ -3340,7 +3345,7 @@ let for_function loc repr param pat_act_list partial =
 (* In the following two cases, exhaustiveness info is not available! *)
 let for_trywith param pat_act_list =
   compile_matching None
-    (fun () -> Lprim (Praise Raise_reraise, [ param ], Location.none))
+    (fun () -> Lprim (Praise Raise_reraise, [ param ], Loc_unknown))
     param pat_act_list Partial
 
 let simple_for_let loc param pat body =

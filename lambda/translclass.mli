@@ -17,7 +17,7 @@ open Typedtree
 open Lambda
 
 val transl_class :
-  Ident.t list -> Ident.t ->
+  scopes:lambda_scopes -> Ident.t list -> Ident.t ->
   string list -> class_expr -> Asttypes.virtual_flag -> lambda;;
 
 type error = Tags of string * string
