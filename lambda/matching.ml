@@ -1824,7 +1824,8 @@ let inline_lazy_force_cond arg loc =
                       ap_func = force_fun;
                       ap_args = [ varg ];
                       ap_inlined = Default_inline;
-                      ap_specialised = Default_specialise
+                      ap_specialised = Default_specialise;
+                       ap_probe=None
                     },
                   (* ... arg *)
                   varg ) ) ) )
@@ -1856,7 +1857,8 @@ let inline_lazy_force_switch arg loc =
                           ap_func = force_fun;
                           ap_args = [ varg ];
                           ap_inlined = Default_inline;
-                          ap_specialised = Default_specialise
+                          ap_specialised = Default_specialise;
+                          ap_probe=None;
                         } )
                   ];
                 sw_failaction = Some varg
@@ -1875,7 +1877,8 @@ let inline_lazy_force arg loc =
         ap_func = Lazy.force code_force_lazy;
         ap_args = [ arg ];
         ap_inlined = Default_inline;
-        ap_specialised = Default_specialise
+        ap_specialised = Default_specialise;
+        ap_probe=None;
       }
   else if !Clflags.native_code then
     (* Lswitch generates compact and efficient native code *)
