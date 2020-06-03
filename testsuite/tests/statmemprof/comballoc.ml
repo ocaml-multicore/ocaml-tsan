@@ -40,7 +40,7 @@ let test sampling_rate =
     let (_, (_, _, x)) = Sys.opaque_identity f i in
     arr.(i) <- x;
   done;
-  Gc.minor ();
+  Gc.minor (); Gc.minor ();
   stop ();
   ignore (Sys.opaque_identity arr);
   for i = 0 to 256 do
