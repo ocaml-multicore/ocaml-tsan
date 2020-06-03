@@ -511,7 +511,8 @@ void caml_empty_minor_heap (double aging_ratio)
   caml_oldify_init ();
 
   /* Switch to a new ref_table. */
-  CAMLassert (Caml_state->ref_table_aux->base == NULL);
+  CAMLassert (Caml_state->ref_table_aux->ptr
+              == Caml_state->ref_table_aux->base);
   old_ref_table = Caml_state->ref_table;
   Caml_state->ref_table = Caml_state->ref_table_aux;
   Caml_state->ref_table_aux = old_ref_table;

@@ -85,7 +85,7 @@ void caml_alloc_minor_tables (void);
 #define CAMLassert_young_header(hd)                \
   CAMLassert(Wosize_hd(hd) > 0 &&                  \
              Wosize_hd(hd) <= Max_young_wosize &&  \
-             Color_hd(hd) == 0)
+             (Color_hd(hd) == Caml_white || Color_hd(hd) == Caml_black))
 
 #define Oldify(p) do{ \
     value __oldify__v__ = *p; \
