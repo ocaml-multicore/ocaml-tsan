@@ -38,6 +38,10 @@ void caml_init_domain ()
   Caml_state->young_base = NULL;
   Caml_state->young_start = NULL;
   Caml_state->young_end = NULL;
+  Caml_state->young_semispace_boundary = NULL;
+  Caml_state->young_semispace_cur = 0;
+  Caml_state->young_aging_ratio = 0.0;
+  Caml_state->latest_aging_ratio = 0.0;
   Caml_state->young_alloc_start = NULL;
   Caml_state->young_alloc_mid = NULL;
   Caml_state->young_alloc_end = NULL;
