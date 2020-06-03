@@ -518,6 +518,10 @@ void caml_memprof_minor_update(void)
         t->deallocated = 1;
       }
     }
+    if (Is_block (t->user_data) && Is_young (t->user_data)
+        && Kept_in_minor_heap (t->user_data)){
+      if (i < first_kept) first_kept = i;
+    }
   }
   if (trackst.callback > trackst.young) {
     trackst.callback = trackst.young;
