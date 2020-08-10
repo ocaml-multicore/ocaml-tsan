@@ -322,7 +322,8 @@ static void oldify_one_aux (value v, value *p, int add_to_ref)
         }
       }else if (tag == Infix_tag){
         mlsize_t offset = Infix_offset_hd (hd);
-        caml_oldify_one (v - offset, p);   /* Cannot recurse deeper than 1. */
+        oldify_one_aux (v - offset, p, add_to_ref);
+            /* Cannot recurse deeper than one level. */
         *p += offset;
       }else{
         value f = Forward_val (v);
