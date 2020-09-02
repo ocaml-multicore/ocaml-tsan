@@ -355,7 +355,7 @@ CAMLprim value caml_gc_get(value v)
   CAMLparam0 ();   /* v is ignored */
   CAMLlocal1 (res);
 
-  res = caml_alloc_tuple (11);
+  res = caml_alloc_tuple (12);
   Store_field (res, 0, Val_long (Caml_state->minor_heap_wsz));          /* s */
   Store_field (res, 1, Val_long (caml_major_heap_increment));           /* i */
   Store_field (res, 2, Val_long (caml_percent_free));                   /* o */
@@ -371,6 +371,9 @@ CAMLprim value caml_gc_get(value v)
   Store_field (res, 8, Val_long (caml_custom_major_ratio));             /* M */
   Store_field (res, 9, Val_long (caml_custom_minor_ratio));             /* m */
   Store_field (res, 10, Val_long (caml_custom_minor_max_bsz));          /* n */
+  Store_field
+    (res, 11, Val_long ((intnat) (Caml_state->young_aging_ratio * 100.)));
+    /* A */
   CAMLreturn (res);
 }
 
@@ -501,7 +504,7 @@ CAMLprim value caml_gc_set(value v)
     }
   }
 
-  /* This field was added in 4.11.0. */
+  /* This field was added in 4.12.0. */
   if (Wosize_val (v) >= 12){
     new_aging_ratio = norm_aging (Field (v, 11)) / 100.;
     if (new_aging_ratio != Caml_state->young_aging_ratio){
