@@ -33,6 +33,9 @@ __declspec(noreturn) void __cdecl abort(void);
 #include "caml/memory.h"
 #include "caml/osdeps.h"
 #include "caml/version.h"
+#ifdef DEBUG
+#include "caml/instrtrace.h"
+#endif
 
 caml_timing_hook caml_major_slice_begin_hook = NULL;
 caml_timing_hook caml_major_slice_end_hook = NULL;
@@ -70,6 +73,9 @@ void caml_gc_message (int level, char *msg, ...)
   if ((caml_verb_gc & level) != 0){
     va_list ap;
     va_start(ap, msg);
+#ifdef DEBUG
+    fprintf (stderr, "%8d ", caml_icount);
+#endif
     vfprintf (stderr, msg, ap);
     va_end(ap);
     fflush (stderr);
