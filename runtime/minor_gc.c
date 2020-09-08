@@ -650,7 +650,7 @@ CAMLexport void caml_gc_dispatch (void)
   caml_instr_alloc_jump = 0;
 #endif
 
-  if (Caml_state->young_trigger == caml_young_alloc_start){
+  if (Caml_state->young_trigger == Caml_state->young_alloc_start){
     /* The minor heap is full, we must do a minor collection. */
     Caml_state->requested_minor_gc = 1;
   }else{
