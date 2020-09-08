@@ -451,7 +451,6 @@ extern uintnat caml_instr_alloc_jump;
 */
 CAMLexport void caml_gc_dispatch (void)
 {
-  value *trigger = Caml_state->young_trigger; /* save old value of trigger */
 #ifdef CAML_INSTR
   CAML_INSTR_SETUP(tmr, "dispatch");
   CAML_INSTR_TIME (tmr, "overhead");
@@ -459,26 +458,36 @@ CAMLexport void caml_gc_dispatch (void)
   caml_instr_alloc_jump = 0;
 #endif
 
-  if (trigger == Caml_state->young_alloc_start
-      || Caml_state->requested_minor_gc) {
+  if (Caml_state->young_trigger == Caml_state->young_alloc_start){
     /* The minor heap is full, we must do a minor collection. */
-    /* reset the pointers first because the end hooks might allocate */
-    Caml_state->requested_minor_gc = 0;
-    Caml_state->young_trigger = Caml_state->young_alloc_mid;
-    caml_update_young_limit();
-    caml_empty_minor_heap ();
-    /* The minor heap is empty, we can start a major collection. */
-    if (caml_gc_phase == Phase_idle) caml_major_collection_slice (-1);
-    CAML_INSTR_TIME (tmr, "dispatch/minor");
-  }
-  if (trigger != Caml_state->young_alloc_start
-      || Caml_state->requested_major_slice) {
+    Caml_state->requested_minor_gc = 1;
+  }else{
     /* The minor heap is half-full, do a major GC slice. */
-    Caml_state->requested_major_slice = 0;
-    Caml_state->young_trigger = Caml_state->young_alloc_start;
-    caml_update_young_limit();
+    Caml_state->requested_major_slice = 1;
+  }
+  if (caml_gc_phase == Phase_idle){
+    /* If a major slice is requested, we need to do a minor collection
+       before we can do the major slice that starts a new major GC cycle.
+       If a minor collection is requested, we take the opportunity to start
+       a new major GC cycle. */
+    caml_empty_minor_heap ();
     caml_major_collection_slice (-1);
-    CAML_INSTR_TIME (tmr, "dispatch/major");
+  }else{
+    if (Caml_state->requested_minor_gc) {
+      /* reset the pointers first because the end hooks might allocate */
+      Caml_state->requested_minor_gc = 0;
+      Caml_state->young_trigger = Caml_state->young_alloc_mid;
+      caml_update_young_limit();
+      caml_empty_minor_heap ();
+      CAML_INSTR_TIME (tmr, "dispatch/minor");
+    }
+    if (Caml_state->requested_major_slice) {
+      Caml_state->requested_major_slice = 0;
+      Caml_state->young_trigger = Caml_state->young_alloc_start;
+      caml_update_young_limit();
+      caml_major_collection_slice (-1);
+      CAML_INSTR_TIME (tmr, "dispatch/major");
+    }
   }
 }
 
