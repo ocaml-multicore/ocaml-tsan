@@ -458,12 +458,14 @@ CAMLexport void caml_gc_dispatch (void)
   caml_instr_alloc_jump = 0;
 #endif
 
-  if (Caml_state->young_trigger == Caml_state->young_alloc_start){
-    /* The minor heap is full, we must do a minor collection. */
-    Caml_state->requested_minor_gc = 1;
-  }else{
-    /* The minor heap is half-full, do a major GC slice. */
-    Caml_state->requested_major_slice = 1;
+  if (Caml_state->young_ptr - Max_young_whsize < Caml_state->young_trigger){
+    if (Caml_state->young_trigger == Caml_state->young_alloc_start){
+      /* The minor heap is full, we must do a minor collection. */
+      Caml_state->requested_minor_gc = 1;
+    }else{
+      /* The minor heap is half-full, do a major GC slice. */
+      Caml_state->requested_major_slice = 1;
+    }
   }
   if (caml_gc_phase == Phase_idle){
     /* If a major slice is requested, we need to do a minor collection
