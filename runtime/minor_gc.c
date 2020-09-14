@@ -472,8 +472,14 @@ CAMLexport void caml_gc_dispatch (void)
        before we can do the major slice that starts a new major GC cycle.
        If a minor collection is requested, we take the opportunity to start
        a new major GC cycle. */
+    Caml_state->requested_minor_gc = 0;
+    Caml_state->requested_major_slice = 0;
+    Caml_state->young_trigger = Caml_state->young_alloc_mid;
+    caml_update_young_limit();
     caml_empty_minor_heap ();
+    CAML_INSTR_TIME (tmr, "dispatch/minor");
     caml_major_collection_slice (-1);
+    CAML_INSTR_TIME (tmr, "dispatch/major");
   }else{
     if (Caml_state->requested_minor_gc) {
       /* reset the pointers first because the end hooks might allocate */
