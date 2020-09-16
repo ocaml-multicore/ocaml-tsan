@@ -583,7 +583,6 @@ static void sweep_slice (intnat work)
         ++ Caml_state->stat_major_collections;
         work = 0;
         caml_gc_phase = Phase_idle;
-        caml_request_minor_gc ();
       }else{
         caml_gc_sweep_hp = chunk;
         limit = chunk + Chunk_size (chunk);
