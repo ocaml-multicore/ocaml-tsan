@@ -238,15 +238,114 @@ void caml_oldify_init (void)
 
 static value * aging_limit;
 
+
+
+/* [oldify_one_aux], specialized for the case where
+   [young_aging_ratio] = 0.
+*/
+static void oldify_one_aux_0 (value v, value *p)
+{
+  value result;
+  header_t hd;
+  mlsize_t sz, i;
+  tag_t tag;
+
+  CAMLassert (aging_limit = Caml_state->young_alloc_start);
+
+ tail_call:
+  if (Is_block (v) && Is_young (v)){
+    CAMLassert (!((value *) Hp_val (v) >= Caml_state->young_alloc_start
+                  && (value *) Hp_val (v) < Caml_state->young_ptr));
+    hd = Hd_val (v);
+    if (hd == 0){         /* If already forwarded */
+      *p = Field (v, 0);  /*  then forward pointer is first field. */
+    }else{
+      CAMLassert_young_header(hd);
+      tag = Tag_hd (hd);
+      if (tag < Infix_tag){
+        value field0;
+        sz = Wosize_hd (hd);
+        result = caml_alloc_shr_for_minor_gc (sz, tag, hd);
+        *p = result;
+        field0 = Field (v, 0);
+        Hd_val (v) = 0;            /* Set forward flag */
+        Field (v, 0) = result;     /*  and forward pointer. */
+        if (sz > 1){
+          Field (result, 0) = field0;
+          *oldify_stack_ptr++ = v;
+        }else{
+          CAMLassert (sz == 1);
+          p = &Field (result, 0);
+          v = field0;
+          goto tail_call;
+        }
+      }else if (tag >= No_scan_tag){
+        sz = Wosize_hd (hd);
+        result = caml_alloc_shr_for_minor_gc (sz, tag, hd);
+        for (i = 0; i < sz; i++) Field (result, i) = Field (v, i);
+        Hd_val (v) = 0;            /* Set forward flag */
+        Field (v, 0) = result;     /*  and forward pointer. */
+        *p = result;
+      }else if (tag == Infix_tag){
+        mlsize_t offset = Infix_offset_hd (hd);
+        oldify_one_aux_0 (v - offset, p);
+            /* Cannot recurse deeper than one level. */
+        *p += offset;
+      }else{
+        value f = Forward_val (v);
+        tag_t ft = 0;
+        int vv = 1;
+
+        CAMLassert (tag == Forward_tag);
+        if (Is_block (f)){
+          if (Is_young (f)){
+            vv = 1;
+            ft = Tag_val (Hd_val (f) == 0 ? Field (f, 0) : f);
+          }else{
+            vv = Is_in_value_area(f);
+            if (vv){
+              ft = Tag_val (f);
+            }
+          }
+        }
+        if (!vv || ft == Forward_tag || ft == Lazy_tag
+#ifdef FLAT_FLOAT_ARRAY
+            || ft == Double_tag
+#endif
+            ){
+          /* Do not short-circuit the pointer.  Copy as a normal block. */
+          CAMLassert (Wosize_hd (hd) == 1);
+          result = caml_alloc_shr_for_minor_gc (1, Forward_tag, hd);
+          *p = result;
+          Hd_val (v) = 0;             /* Set (GC) forward flag */
+          Field (v, 0) = result;      /*  and forward pointer. */
+          p = &Field (result, 0);
+          v = f;
+          goto tail_call;
+        }else{
+          v = f;                        /* Follow the forwarding */
+          goto tail_call;               /*  then oldify. */
+        }
+      }
+    }
+  }else{
+    *p = v;
+  }
+}
+
 /* Note that the tests on the tag depend on the fact that Infix_tag,
    Forward_tag, and No_scan_tag are contiguous. */
-
 static void oldify_one_aux (value v, value *p, int add_to_ref)
 {
   value result;
   header_t hd;
   mlsize_t sz, i;
   tag_t tag;
+
+  if (aging_limit == Caml_state->young_alloc_start){
+    oldify_one_aux_0 (v, p);
+    return;
+  }
 
  tail_call:
   if (Is_block (v) && Is_young (v)){
@@ -482,12 +581,87 @@ void caml_oldify_mopup (void)
   }
 }
 
+/* [caml_oldify_mopup], specialized for the case where
+   [caml_aging_ratio] = 0. */
+#if 0
+void caml_oldify_mopup_0 (void)
+{
+  value v, new_v, f;
+  mlsize_t i;
+  struct caml_ephe_ref_elt *re;
+  int redo = 1;
+  header_t hd;
+
+  while (redo){
+    redo = 0;
+    while (oldify_stack_ptr != Caml_state->young_stack){
+      v = *--oldify_stack_ptr;             /* Get the head. */
+      hd = Hd_val (v);
+      if (hd == 0){
+        /* Promoted to the major heap. */
+        new_v = Field (v, 0);                /* Follow forward pointer. */
+        hd = Hd_val (new_v);
+        CAMLassert_young_header (hd);
+        CAMLassert (Tag_hd (hd) < Infix_tag);
+
+        f = Field (new_v, 0);
+        if (Is_block (f) && Is_young (f)){
+          oldify_one_aux_0 (f, &Field (new_v, 0));
+        }
+        for (i = 1; i < Wosize_hd (hd); i++){
+          f = Field (v, i);
+          if (Is_block (f) && Is_young (f)){
+            oldify_one_aux_0 (f, &Field (new_v, i));
+          }else{
+            Field (new_v, i) = f;
+          }
+        }
+      }else{
+        /* Kept in the minor heap. */
+        CAMLassert_young_header (hd);
+        CAMLassert (Is_black_hd (hd));
+        for (i = 0; i < Wosize_hd (hd); i++){
+          f = Field (v, i);
+          if (Is_block (f) && Is_young (f)){
+            oldify_one_aux_0 (f, &Field (v, i));
+          }
+        }
+      }
+    }
+
+    /* Oldify the data in the minor heap of alive ephemeron
+       During minor collection keys outside the minor heap are considered
+       alive */
+    for (re = Caml_state->ephe_ref_table->base;
+         re < Caml_state->ephe_ref_table->ptr; re++){
+      /* look only at ephemeron with data in the minor heap */
+      if (re->offset == 1){
+        value *data = &Field(re->ephe,1);
+        if (*data != caml_ephe_none && Is_block (*data) && Is_young (*data)){
+          if (Hd_val (*data) == 0){ /* Value copied to major heap */
+            *data = Field (*data, 0);
+          }else if (Kept_in_minor_heap (*data)){
+            CAMLassert ((value *) Hp_val (*data) >= Caml_state->young_ptr);
+            /* Stays in minor heap. */
+          } else {
+            if (ephe_check_alive_data(re)){
+              oldify_one_aux_0 (*data, data);
+              redo = 1; /* young_stack can still be empty */
+            }
+          }
+        }
+      }
+    }
+  }
+}
+#endif
+
 /* Do a partial collection of the minor heap.
-   [aging_ratio] specified how much of the most recently allocated data
+   [aging_ratio] specifies how much of the most recently allocated data
    should be kept in the minor heap. It must be between 0 and 1.
 
    If you need to empty the minor heap, call this function with
-   aging_ratio = 0.
+   [aging_ratio] = 0.
 */
 void caml_empty_minor_heap (double aging_ratio)
 {
