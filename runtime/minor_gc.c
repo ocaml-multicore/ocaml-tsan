@@ -583,8 +583,7 @@ void caml_oldify_mopup (void)
 
 /* [caml_oldify_mopup], specialized for the case where
    [caml_aging_ratio] = 0. */
-#if 0
-void caml_oldify_mopup_0 (void)
+static void caml_oldify_mopup_0 (void)
 {
   value v, new_v, f;
   mlsize_t i;
@@ -654,7 +653,6 @@ void caml_oldify_mopup_0 (void)
     }
   }
 }
-#endif
 
 /* Do a partial collection of the minor heap.
    [aging_ratio] specifies how much of the most recently allocated data
@@ -711,7 +709,11 @@ void caml_empty_minor_heap (double aging_ratio)
   CAML_INSTR_TIME (tmr, "minor/ref_table");
   caml_oldify_minor_short_lived_roots ();
   CAML_INSTR_TIME (tmr, "minor/short_lived_roots");
-  caml_oldify_mopup ();
+  if (aging_ratio == 0.0){
+    caml_oldify_mopup_0 ();
+  }else{
+    caml_oldify_mopup ();
+  }
   CAML_INSTR_TIME (tmr, "minor/copy");
   /* Update the ephemerons */
   for (re = keep_re = Caml_state->ephe_ref_table->base;
