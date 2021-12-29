@@ -750,6 +750,9 @@ let mk__ f =
   "-", Arg.String f,
   "<file>  Treat <file> as a file name (even if it starts with `-')"
 
+let mk_tsan f =
+  "-tsan", Arg.Unit f, "Enable thread sanitizer instrumentation"
+
 module type Common_options = sig
   val _absname : unit -> unit
   val _no_absname : unit -> unit
@@ -971,6 +974,7 @@ module type Optcomp_options = sig
   val _afl_inst_ratio : int -> unit
   val _function_sections : unit -> unit
   val _save_ir_after : string -> unit
+  val _tsan : unit -> unit
 end;;
 
 module type Opttop_options = sig
@@ -1215,6 +1219,7 @@ struct
     mk_function_sections F._function_sections;
     mk_stop_after ~native:true F._stop_after;
     mk_save_ir_after ~native:true F._save_ir_after;
+    mk_tsan F._tsan;
     mk_i F._i;
     mk_I F._I;
     mk_impl F._impl;
@@ -1817,6 +1822,7 @@ module Default = struct
     include Compiler
     let _afl_inst_ratio n = afl_inst_ratio := n
     let _afl_instrument = set afl_instrument
+    let _tsan = set thread_sanitizer
     let _function_sections () =
       assert Config.function_sections;
       Compenv.first_ccopts := ("-ffunction-sections" ::(!Compenv.first_ccopts));
