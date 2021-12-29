@@ -1422,6 +1422,11 @@ let transl_function f =
       Afl_instrument.instrument_function (transl env body) f.dbg
     else
       transl env body in
+  let cmm_body = 
+    if !Clflags.thread_sanitizer then
+      Thread_sanitizer.instrument f.label cmm_body
+    else
+      cmm_body in
   let fun_codegen_options =
     if !Clflags.optimize_for_speed then
       []

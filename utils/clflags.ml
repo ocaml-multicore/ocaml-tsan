@@ -182,6 +182,8 @@ let inlining_report = ref false    (* -inlining-report *)
 let afl_instrument = ref Config.afl_instrument (* -afl-instrument *)
 let afl_inst_ratio = ref 100           (* -afl-inst-ratio *)
 
+let thread_sanitizer = ref false (* -tsan *)
+
 let function_sections = ref false      (* -function-sections *)
 
 let simplify_rounds = ref None        (* -rounds *)
