@@ -204,6 +204,7 @@ ASMCOMP = \
   asmcomp/mach.cmo \
   asmcomp/proc.cmo \
   asmcomp/afl_instrument.cmo \
+	asmcomp/thread_sanitizer.cmo \
   asmcomp/strmatch.cmo \
   asmcomp/cmmgen_state.cmo \
   asmcomp/cmm_helpers.cmo \
