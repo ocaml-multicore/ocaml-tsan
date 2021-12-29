@@ -52,6 +52,10 @@ ocamlc_cflags=""
 ocamlc_cppflags=""
 oc_ldflags=""
 oc_dll_ldflags=""
+oc_tsan_cflags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+oc_tsan_ldflags=""
+oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
+oc_tsan_asppflags="-DWITH_THREAD_SANITIZER"
 oc_exe_ldflags=""
 
 # The C# compiler and its flags
@@ -65,6 +69,8 @@ profinfo=false
 profinfo_width=0
 instrumented_runtime=false
 instrumented_runtime_libs=""
+tsan=false
+tsan_runtime_libs="-fsanitize=thread"
 bootstrapping_flexdll=false
 flexdll_dir=
 lib_dynlink=false
@@ -133,6 +139,10 @@ AC_SUBST([mkexe_via_cc_ldflags])
 AC_SUBST([ccomptype])
 AC_SUBST([toolchain])
 AC_SUBST([oc_cflags])
+AC_SUBST([oc_tsan_cflags])
+AC_SUBST([oc_tsan_ldflags])
+AC_SUBST([oc_tsan_asppflags])
+AC_SUBST([oc_tsan_cppflags])
 AC_SUBST([oc_cppflags])
 AC_SUBST([oc_ldflags])
 AC_SUBST([oc_dll_ldflags])
@@ -157,6 +167,8 @@ AC_SUBST([cmxs])
 AC_SUBST([debug_runtime])
 AC_SUBST([instrumented_runtime])
 AC_SUBST([instrumented_runtime_libs])
+AC_SUBST([tsan])
+AC_SUBST([tsan_runtime_libs])
 AC_SUBST([has_monotonic_clock])
 AC_SUBST([otherlibraries])
 AC_SUBST([lib_dynlink])
@@ -316,6 +328,13 @@ AC_ARG_ENABLE([instrumented-runtime],
     [build the instrumented runtime @<:@default=auto@:>@])],
   [],
   [enable_instrumented_runtime=auto])
+
+# FIXME this doesn't show 'no'
+AC_ARG_ENABLE([tsan],
+  [AS_HELP_STRING([--enable-tsan],
+    [enable ThreadSanitizer support @<:@default=auto@:>@])],
+  [],
+  [enable_tsan=auto])
 
 AC_ARG_ENABLE([vmthreads], [],
   [AS_IF([test "x$enableval" != 'xno'],
@@ -1547,6 +1566,34 @@ but no proper monotonic clock source was found.])
           ]
       )]
     )]
+)
+
+AS_IF([test "x$enable_tsan" = "xyes" ],
+  [AS_CASE(["$host","$host","$cc_basename"],
+    [[aarch64-*|x86_64-*|powerpc64-*|powerpc64le-*,*-linux*|*-freebsd*\
+     |*-netbsd*,gcc*|clang*]],
+      [tsan=true],
+    [arm64-*|x86_64-*,*-darwin*,gcc*|clang*],
+      [tsan=true],
+      [AC_MSG_ERROR([thread sanitizer not supported on this platform])]
+  )],
+  [tsan=false])
+
+AS_IF([$tsan],
+  [AC_MSG_NOTICE([using thread sanitizer with vendor=$ocaml_cv_cc_vendor])
+  AS_CASE([$ocaml_cv_cc_vendor],
+    [gcc-[[0123456789]]-*|gcc-10-*|clang-*],
+    [],
+    [oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan"])],
+  [AC_MSG_NOTICE([not using thread sanitizer])]
+)
+
+AS_IF([$tsan],
+  [AS_CASE([$target],
+    [*-apple-darwin*],
+    [],
+    [oc_tsan_ldflags="-lunwind"])],
+  []
 )
 
 ## Sockets

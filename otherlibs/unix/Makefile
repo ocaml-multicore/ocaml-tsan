@@ -71,7 +71,10 @@ endif
 
 ALL_C_SOURCES = $(COMMON_C_SOURCES) $(OS_C_SOURCES)
 
-COBJS = $(ALL_C_SOURCES:.c=.$(O))
+COBJS_BYTECODE = $(ALL_C_SOURCES:.c=.b.$(O))
+COBJS_NATIVE = $(ALL_C_SOURCES:.c=.n.$(O))
+
+COBJS = $(COBJS_BYTECODE) $(COBJS_NATIVE)
 
 CAMLOBJS=unix.cmo unixLabels.cmo
 

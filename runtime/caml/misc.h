@@ -557,21 +557,6 @@ CAMLextern int caml_snwprintf(wchar_t * buf,
 #define snprintf_os snprintf
 #endif
 
-/* Macro used to deactivate thread and address sanitizers on some
-   functions. */
-#define CAMLno_tsan
-#define CAMLno_asan
-#if defined(__has_feature)
-#  if __has_feature(thread_sanitizer)
-#    undef CAMLno_tsan
-#    define CAMLno_tsan __attribute__((no_sanitize("thread")))
-#  endif
-#  if __has_feature(address_sanitizer)
-#    undef CAMLno_asan
-#    define CAMLno_asan __attribute__((no_sanitize("address")))
-#  endif
-#endif
-
 #endif /* CAML_INTERNALS */
 
 /* The [backtrace_slot] type represents values stored in

@@ -167,6 +167,7 @@ static void spin_on_header(value v) {
   }
 }
 
+CAMLno_tsan /* Disable TSan instrumentation for performance. */
 Caml_inline header_t get_header_val(value v) {
   header_t hd = atomic_load_explicit(Hp_atomic_val(v), memory_order_acquire);
   if (!Is_update_in_progress(hd))
@@ -181,6 +182,11 @@ header_t caml_get_header_val(value v) {
 }
 
 
+CAMLno_tsan /* FIXME Race reports from this function clog the tests of user
+               programs, so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports.
+               */
 static int try_update_object_header(value v, volatile value *p, value result,
                                     mlsize_t infix_offset) {
   int success = 0;
@@ -230,7 +236,13 @@ static scanning_action_flags oldify_scanning_flags =
 
 /* Note that the tests on the tag depend on the fact that Infix_tag,
    Forward_tag, and No_scan_tag are contiguous. */
-static void oldify_one (void* st_v, value v, volatile value *p)
+static
+CAMLno_tsan /* FIXME Race reports from this function clog the tests of user
+               programs, so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports.
+               */
+void oldify_one (void* st_v, value v, volatile value *p)
 {
   struct oldify_state* st = st_v;
   value result;
@@ -375,6 +387,7 @@ static void oldify_one (void* st_v, value v, volatile value *p)
    Note that [oldify_one] itself is called by oldify_mopup, so we
    have to be careful to remove the first entry from the list before
    oldifying its fields. */
+CAMLno_tsan /* Disable TSan instrumentation for performance. */
 static void oldify_mopup (struct oldify_state* st, int do_ephemerons)
 {
   value v, new_v, f;

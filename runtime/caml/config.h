@@ -266,4 +266,8 @@ typedef uint64_t uintnat;
 /* Default size of runtime_events ringbuffers, in words, in powers of two */
 #define Default_runtime_events_log_wsize 16
 
+#ifdef DEBUG
+#define TSAN_DEBUG
+#endif
+
 #endif /* CAML_CONFIG_H */

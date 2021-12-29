@@ -187,6 +187,18 @@ let frame_pointers = make
      "frame-pointers available"
      "frame-pointers not available")
 
+let tsan = make
+  "tsan"
+  (Actions_helpers.pass_or_skip (Ocamltest_config.tsan)
+     "tsan available"
+     "tsan not available")
+
+let no_tsan = make
+  "no-tsan"
+  (Actions_helpers.pass_or_skip (not Ocamltest_config.tsan)
+     "tsan not available"
+     "tsan available")
+
 let has_symlink = make
   "has_symlink"
   (Actions_helpers.pass_or_skip (Unix.has_symlink () )
@@ -311,4 +323,6 @@ let _ =
     frame_pointers;
     file_exists;
     copy;
+    tsan;
+    no_tsan;
   ]

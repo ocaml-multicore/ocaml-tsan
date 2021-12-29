@@ -117,7 +117,8 @@ let add_ccobjs origin l =
   end
 
 let runtime_lib () =
-  let libname = "libasmrun" ^ !Clflags.runtime_variant ^ ext_lib in
+  let ext = if !Clflags.runtime_variant = "_shared" then ext_dll else ext_lib in
+  let libname = "libasmrun" ^ !Clflags.runtime_variant ^ ext in
   try
     if !Clflags.nopervasives || not !Clflags.with_runtime then []
     else [ Load_path.find libname ]
@@ -236,7 +237,18 @@ let make_startup_file ~ppf_dump units_list ~crc_interfaces =
   Emit.begin_assembly ();
   let name_list =
     List.flatten (List.map (fun (info,_,_) -> info.ui_defines) units_list) in
-  compile_phrase (Cmm_helpers.entry_point name_list);
+  let entry = Cmm_helpers.entry_point name_list in
+  let entry =
+    if Config.tsan then
+      match entry with
+      | Cfunction ({ fun_body; _ } as cf) ->
+          Cmm.Cfunction { cf with fun_body =
+            Thread_sanitizer.wrap_entry_exit fun_body }
+      | _ -> assert false
+  else
+    entry
+  in
+  compile_phrase entry;
   let units = List.map (fun (info,_,_) -> info) units_list in
   List.iter compile_phrase (Cmm_helpers.generic_functions false units);
   Array.iteri

@@ -117,6 +117,8 @@ let configuration_variables =
   p_bool "flat_float_array" flat_float_array;
   p_bool "function_sections" function_sections;
   p_bool "afl_instrument" afl_instrument;
+  p_bool "tsan" tsan;
+  p "tsan_ld_flags" tsan_ld_flags;
   p_bool "windows_unicode" windows_unicode;
   p_bool "supports_shared_libraries" supports_shared_libraries;
   p_bool "naked_pointers" naked_pointers;

@@ -18,7 +18,9 @@
 LIBNAME=runtime_events
 CLIBNAME=camlruntime_events
 CAMLOBJS=runtime_events.cmo
-COBJS=runtime_events_consumer.$(O)
+COBJS_BYTECODE=runtime_events_consumer.b.$(O)
+COBJS_NATIVE=runtime_events_consumer.n.$(O)
+COBJS=$(COBJS_BYTECODE) $(COBJS_NATIVE)
 HEADERS=runtime_events_consumer.h
 
 include ../Makefile.otherlibs.common
