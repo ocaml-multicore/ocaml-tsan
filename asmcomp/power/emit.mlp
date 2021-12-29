@@ -513,6 +513,7 @@ module BR = Branch_relaxation.Make (struct
     | Lop (Idls_get) ->
         (* Here to maintain build *)
         assert false
+    | Lop (Ireturn_addr) -> failwith "Not implemented"
     | Lreloadretaddr -> 2
     | Lreturn -> 2
     | Llabel _ -> 0

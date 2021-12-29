@@ -39,6 +39,9 @@ MKLIB=$(OCAMLRUN) $(ROOTDIR)/tools/ocamlmklib
 # The C stubs for the native backend may be built with specific flags by
 # redefining this variable.
 OC_NATIVE_C_FLAGS =
+ifeq "$(WITH_TSAN)" "true"
+OC_NATIVE_C_FLAGS += $(OC_TSAN_CFLAGS)
+endif
 
 # Variables that must be defined by individual libraries:
 # LIBNAME
@@ -170,6 +173,14 @@ distclean:: clean
 
 %.n.$(O): %.c $(REQUIRED_HEADERS)
 	$(V_CC)$(CC) -c $(OC_CFLAGS) $(OC_NATIVE_C_FLAGS) $(CFLAGS) \
+	  $(OC_CPPFLAGS) $(CPPFLAGS) $(OUTPUTOBJ)$@ $<
+
+%.b.$(O): %.c $(REQUIRED_HEADERS)
+	$(CC) -c $(OC_CFLAGS) $(CFLAGS) $(OC_CPPFLAGS) $(CPPFLAGS) \
+	  $(OUTPUTOBJ)$@ $<
+
+%.n.$(O): %.c $(REQUIRED_HEADERS)
+	$(CC) -c $(OC_CFLAGS) $(OC_NATIVE_C_FLAGS) $(CFLAGS) \
 	  $(OC_CPPFLAGS) $(CPPFLAGS) $(OUTPUTOBJ)$@ $<
 
 ifeq "$(COMPUTE_DEPS)" "true"

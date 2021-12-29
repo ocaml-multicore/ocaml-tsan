@@ -502,6 +502,8 @@ let emit_instr env i =
   | Lop (Idls_get) ->
       let ofs = Domainstate.(idx_of_field Domain_dls_root) * 8 in
       `	ld	{emit_reg i.res.(0)}, {emit_int ofs}({emit_reg reg_domain_state_ptr})\n`
+  | Lop (Ireturn_addr) ->
+      failwith "Not implemented"
   | Lreloadretaddr ->
       let n = frame_size env in
       reload_ra n

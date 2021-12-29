@@ -152,9 +152,37 @@ where 0 <= R <= 31 is HEADER_RESERVED_BITS, set with the
 #define Color_hd(hd) ((hd) & HEADER_COLOR_MASK)
 #define Hd_with_color(hd, color) (((hd) &~ HEADER_COLOR_MASK) | (color))
 
+/* Macro used to deactivate thread and address sanitizers on some
+   functions. */
+#define CAMLno_tsan
+#define CAMLno_asan
+/* __has_feature is Clang-specific, but GCC defines __SANITIZE_ADDRESS__ and
+ * __SANITIZE_THREAD__. */
+#if defined(__has_feature)
+#  if __has_feature(thread_sanitizer)
+#    undef CAMLno_tsan
+#    define CAMLno_tsan __attribute__((disable_sanitizer_instrumentation))
+#  endif
+#  if __has_feature(address_sanitizer)
+#    undef CAMLno_asan
+#    define CAMLno_asan __attribute__((disable_sanitizer_instrumentation))
+#  endif
+#else
+#  if __SANITIZE_THREAD__
+#    undef CAMLno_tsan
+#    define CAMLno_tsan __attribute__((no_sanitize_thread))
+#  endif
+#  if __SANITIZE_ADDRESS__
+#    undef CAMLno_asan
+#    define CAMLno_asan __attribute__((no_sanitize_address))
+#  endif
+#endif
+
 #define Hp_atomic_val(val) ((atomic_uintnat *)(val) - 1)
-#define Hd_val(val) ((header_t) \
-  (atomic_load_explicit(Hp_atomic_val(val), memory_order_relaxed)))
+CAMLno_tsan Caml_inline header_t Hd_val(value val)
+{
+  return atomic_load_explicit(Hp_atomic_val(val), memory_order_relaxed);
+}
 
 #define Color_val(val) (Color_hd (Hd_val (val)))
 

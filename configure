@@ -834,6 +834,8 @@ lib_runtime_events
 lib_dynlink
 otherlibraries
 has_monotonic_clock
+tsan_runtime_libs
+tsan
 instrumented_runtime_libs
 instrumented_runtime
 debug_runtime
@@ -858,6 +860,10 @@ oc_exe_ldflags
 oc_dll_ldflags
 oc_ldflags
 oc_cppflags
+oc_tsan_cppflags
+oc_tsan_asppflags
+oc_tsan_ldflags
+oc_tsan_cflags
 oc_cflags
 toolchain
 ccomptype
@@ -871,7 +877,6 @@ syslib
 outputobj
 outputexe
 ocamlyacc_wstr_module
-ln
 unix_or_win32
 ocamlsrcdir
 systhread_support
@@ -947,6 +952,7 @@ enable_debug_runtime
 enable_debugger
 enable_dependency_generation
 enable_instrumented_runtime
+enable_tsan
 enable_vmthreads
 enable_systhreads
 enable_graph_lib
@@ -1633,6 +1639,7 @@ Optional Features:
                           do not compute dependency information for C sources
   --enable-instrumented-runtime
                           build the instrumented runtime [default=auto]
+  --enable-tsan           enable ThreadSanitizer support [default=auto]
 
   --disable-systhreads    disable the Win32/POSIX threads library
   --disable-str-lib       do not build the str library
@@ -3223,6 +3230,10 @@ ocamlc_cflags=""
 ocamlc_cppflags=""
 oc_ldflags=""
 oc_dll_ldflags=""
+oc_tsan_cflags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+oc_tsan_ldflags=""
+oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
+oc_tsan_asppflags="-DWITH_THREAD_SANITIZER"
 oc_exe_ldflags=""
 
 # The C# compiler and its flags
@@ -3235,6 +3246,8 @@ toolchain="cc"
 reserved_header_bits=0
 instrumented_runtime=false
 instrumented_runtime_libs=""
+tsan=false
+tsan_runtime_libs="-fsanitize=thread"
 bootstrapping_flexdll=false
 flexdll_dir=
 lib_dynlink=false
@@ -3283,6 +3296,11 @@ OCAML_VERSION_SHORT=5.1
 # Note: This is present for the flexdll bootstrap where it exposed as the old
 # TOOLPREF variable. It would be better if flexdll where updated to require
 # WINDRES instead.
+
+
+
+
+
 
 
 
@@ -3567,6 +3585,8 @@ test -n "$target_alias" &&
 case $host in #(
   *-pc-windows) :
     as_fn_error 69 "the MSVC compiler is not supported currently" "$LINENO" 5 ;; #(
+  *-*-cygwin*) :
+    as_fn_error 69 "Cygwin is not supported currently" "$LINENO" 5 ;; #(
   i386-*-solaris*) :
     as_fn_error $? "Building for 32 bits target is not supported. \
 If your host is 64 bits, you can try with './configure CC=\"gcc -m64\"' \
@@ -3648,6 +3668,16 @@ then :
   enableval=$enable_instrumented_runtime;
 else $as_nop
   enable_instrumented_runtime=auto
+fi
+
+
+# FIXME this doesn't show 'no'
+# Check whether --enable-tsan was given.
+if test ${enable_tsan+y}
+then :
+  enableval=$enable_tsan;
+else $as_nop
+  enable_tsan=auto
 fi
 
 
@@ -13515,13 +13545,11 @@ ocamlsrcdir=${ocamlsrcdir%X}
 case $host in #(
   *-*-mingw32*|*-pc-windows) :
     unix_or_win32="win32"
-    ln='cp -pf'
     ocamltest_libunix="Some false"
     ocamlsrcdir="$(LC_ALL=C.UTF-8 cygpath -w -- "$ocamlsrcdir")"
     ocamlyacc_wstr_module="yacc/wstr" ;; #(
   *) :
     unix_or_win32="unix"
-  ln='ln -sf'
   ocamltest_libunix="Some true"
   ocamlyacc_wstr_module="" ;;
 esac
@@ -15417,7 +15445,7 @@ fi; system=elf ;; #(
   aarch64-*-netbsd*) :
     has_native_backend=yes; arch=arm64; system=netbsd ;; #(
   x86_64-*-cygwin*) :
-    has_native_backend=yes; arch=amd64; system=cygwin ;; #(
+    arch=amd64; system=cygwin ;; #(
   riscv64-*-linux*) :
     has_native_backend=yes; arch=riscv; model=riscv64; system=linux
  ;; #(
@@ -16349,6 +16377,48 @@ esac
      ;;
 esac
 
+fi
+
+if test "x$enable_tsan" = "xyes"
+then :
+  case "$host","$host","$cc_basename" in #(
+  aarch64-*|x86_64-*|powerpc64-*|powerpc64le-*,*-linux*|*-freebsd*\
+     |*-netbsd*,gcc*|clang*) :
+    tsan=true ;; #(
+  arm64-*|x86_64-*,*-darwin*,gcc*|clang*) :
+    tsan=true ;; #(
+  *) :
+    as_fn_error $? "thread sanitizer not supported on this platform" "$LINENO" 5
+   ;;
+esac
+else $as_nop
+  tsan=false
+fi
+
+if $tsan
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&5
+printf "%s\n" "$as_me: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&6;}
+  case $ocaml_cv_cc_vendor in #(
+  gcc-[0123456789]-*|gcc-10-*|clang-*) :
+     ;; #(
+  *) :
+    oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan" ;;
+esac
+else $as_nop
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: not using thread sanitizer" >&5
+printf "%s\n" "$as_me: not using thread sanitizer" >&6;}
+
+fi
+
+if $tsan
+then :
+  case $target in #(
+  *-apple-darwin*) :
+     ;; #(
+  *) :
+    oc_tsan_ldflags="-lunwind" ;;
+esac
 fi
 
 ## Sockets

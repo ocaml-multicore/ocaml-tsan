@@ -276,6 +276,10 @@ void caml_final_domain_terminate (caml_domain_state *domain_state)
   }
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 static int no_orphaned_work (void)
 {
   return
@@ -323,6 +327,10 @@ static void orph_ephe_list_verify_status (int status)
 
 static intnat ephe_mark (intnat budget, uintnat for_cycle, int force_alive);
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 void caml_add_to_orphaned_ephe_list(struct caml_ephe_info* ephe_info)
 {
   caml_plat_lock(&orphaned_lock);
@@ -352,6 +360,10 @@ void caml_add_to_orphaned_ephe_list(struct caml_ephe_info* ephe_info)
   }
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 void caml_adopt_orphaned_work (void)
 {
   caml_domain_state* domain_state = Caml_state;
@@ -689,6 +701,10 @@ static void realloc_mark_stack (struct mark_stack* stk)
   mark_stack_prune(stk);
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 Caml_inline void mark_stack_push_range(struct mark_stack* stk,
                                        value* start, value* end)
 {
@@ -702,6 +718,10 @@ Caml_inline void mark_stack_push_range(struct mark_stack* stk,
   me->end = end;
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 /* returns the work done by skipping unmarkable objects */
 static intnat mark_stack_push_block(struct mark_stack* stk, value block)
 {
@@ -772,6 +792,10 @@ void caml_shrink_mark_stack (void)
 
 void caml_darken_cont(value cont);
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 static void mark_slice_darken(struct mark_stack* stk, value child,
                               intnat* work)
 {
@@ -816,6 +840,10 @@ static void mark_slice_darken(struct mark_stack* stk, value child,
   }
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 Caml_noinline static intnat do_some_marking(struct mark_stack* stk,
                                             intnat budget) {
   prefetch_buffer_t pb = { .enqueued = 0, .dequeued = 0,
