@@ -4939,13 +4939,13 @@ if test $ac_test_CFLAGS; then
   CFLAGS=$ac_save_CFLAGS
 elif test $ac_cv_prog_cc_g = yes; then
   if test "$GCC" = yes; then
-    CFLAGS="-g -O2"
+    CFLAGS="-g -O1"
   else
     CFLAGS="-g"
   fi
 else
   if test "$GCC" = yes; then
-    CFLAGS="-O2"
+    CFLAGS="-O1"
   else
     CFLAGS=
   fi
@@ -13586,7 +13586,7 @@ case $host in #(
     internal_cflags="-Wno-unused $cc_warnings \
 -fexcess-precision=standard"
         # TODO: see whether the code can be fixed to avoid -Wno-unused
-        common_cflags="-O2 -fno-strict-aliasing -fwrapv -mms-bitfields"
+        common_cflags="-O1 -fno-strict-aliasing -fwrapv -mms-bitfields"
         internal_cppflags='-D__USE_MINGW_ANSI_STDIO=0 -DUNICODE -D_UNICODE'
         internal_cppflags="$internal_cppflags -DWINDOWS_UNICODE="
         internal_cppflags="${internal_cppflags}\$(WINDOWS_UNICODE)" ;; #(
@@ -13596,16 +13596,16 @@ esac ;; #(
   *) :
     case $ocaml_cv_cc_vendor in #(
   clang-*) :
-    common_cflags="-O2 -fno-strict-aliasing -fwrapv";
+    common_cflags="-O1 -fno-strict-aliasing -fwrapv";
       internal_cflags="$cc_warnings -fno-common" ;; #(
   gcc-[0123]-*|gcc-4-[0-8]) :
     # No C11 support
       as_fn_error 69 "This version of GCC is too old. Please use GCC version 4.9 or above." "$LINENO" 5 ;; #(
   gcc-*) :
-    common_cflags="-O2 -fno-strict-aliasing -fwrapv";
+    common_cflags="-O1 -fno-strict-aliasing -fwrapv";
       internal_cflags="$cc_warnings -fno-common -fexcess-precision=standard" ;; #(
   msvc-*) :
-    common_cflags="-nologo -O2 -Gy- -MD $cc_warnings"
+    common_cflags="-nologo -O1 -Gy- -MD $cc_warnings"
       common_cppflags="-D_CRT_SECURE_NO_DEPRECATE"
       internal_cppflags='-DUNICODE -D_UNICODE'
 
