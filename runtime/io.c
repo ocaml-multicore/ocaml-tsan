@@ -134,7 +134,7 @@ Caml_inline int descriptor_is_in_binary_mode(int fd)
 #endif
 }
 
-CAMLexport void caml_link_channel (struct channel* channel)
+static void link_channel (struct channel* channel)
 {
   channel->next = caml_all_opened_channels;
   CAMLassert(channel->prev == NULL);
@@ -143,7 +143,7 @@ CAMLexport void caml_link_channel (struct channel* channel)
   caml_all_opened_channels = channel;
 }
 
-CAMLexport void caml_unlink_channel(struct channel *channel)
+static void unlink_channel(struct channel *channel)
 {
   if (channel->prev == NULL) {
     CAMLassert (channel == caml_all_opened_channels);
@@ -176,7 +176,7 @@ CAMLexport struct channel * caml_open_descriptor_in(int fd)
   channel->flags = descriptor_is_in_binary_mode(fd) ? 0 : CHANNEL_TEXT_MODE;
 
   caml_plat_lock (&caml_all_opened_channels_mutex);
-  caml_link_channel (channel);
+  link_channel (channel);
   caml_plat_unlock (&caml_all_opened_channels_mutex);
 
   return channel;
@@ -202,7 +202,7 @@ CAMLexport void caml_close_channel(struct channel *channel)
     caml_plat_unlock (&caml_all_opened_channels_mutex);
     return;
   }
-  caml_unlink_channel(channel);
+  unlink_channel(channel);
   caml_plat_unlock (&caml_all_opened_channels_mutex);
   if (caml_channel_mutex_free != NULL) (*caml_channel_mutex_free)(channel);
   caml_stat_free(channel->name);
@@ -518,7 +518,7 @@ void caml_finalize_channel(value vchan)
     caml_plat_unlock (&caml_all_opened_channels_mutex);
     return;
   }
-  caml_unlink_channel(chan);
+  unlink_channel(chan);
   caml_plat_unlock (&caml_all_opened_channels_mutex);
   if (caml_channel_mutex_free != NULL) (*caml_channel_mutex_free)(chan);
 
