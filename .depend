@@ -3154,10 +3154,12 @@ asmcomp/strmatch.cmi : \
 asmcomp/thread_sanitizer.cmo : \
     lambda/debuginfo.cmi \
     asmcomp/cmm.cmi \
+    middle_end/backend_var.cmi \
     asmcomp/thread_sanitizer.cmi
 asmcomp/thread_sanitizer.cmx : \
     lambda/debuginfo.cmx \
     asmcomp/cmm.cmx \
+    middle_end/backend_var.cmx \
     asmcomp/thread_sanitizer.cmi
 asmcomp/thread_sanitizer.cmi : \
     asmcomp/cmm.cmi
