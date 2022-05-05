@@ -1527,6 +1527,12 @@ let compunit (ulam, preallocated_blocks, constants) =
         (fun () -> dbg)
     else
       transl empty_env ulam in
+  let init_code =
+    if !Clflags.thread_sanitizer then
+      Csequence (Thread_sanitizer.init_code (), init_code)
+    else
+      init_code
+  in
   let c1 = [Cfunction {fun_name = Compilenv.make_symbol (Some "entry");
                        fun_args = [];
                        fun_body = init_code;
