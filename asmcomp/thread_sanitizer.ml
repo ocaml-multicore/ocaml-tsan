@@ -1,3 +1,18 @@
+(**************************************************************************)
+(*                                                                        *)
+(*                                 OCaml                                  *)
+(*                                                                        *)
+(*                      Anmol Sahoo, Purdue University                    *)
+(*                                                                        *)
+(*   Copyright 2022 Institut National de Recherche en Informatique et     *)
+(*     en Automatique.                                                    *)
+(*                                                                        *)
+(*   All rights reserved.  This file is distributed under the terms of    *)
+(*   the GNU Lesser General Public License version 2.1, with the          *)
+(*   special exception on linking described in the file LICENSE.          *)
+(*                                                                        *)
+(**************************************************************************)
+
 open Cmm
 module V = Backend_var
 module VP = Backend_var.With_provenance
@@ -60,7 +75,9 @@ let instrument label body =
     | Ctuple es -> Ctuple (List.map aux es)
     | Csequence(c1,c2) -> Csequence(aux c1, aux c2)
     | Ccatch (isrec, cases, body) ->
-        let cases = List.map (fun (nfail, ids, e, dbg) -> (nfail, ids, aux e, dbg)) cases in
+        let cases =
+          List.map (fun (nfail, ids, e, dbg) -> (nfail, ids, aux e, dbg)) cases
+        in
         Ccatch (isrec, cases, aux body)
     | Cexit (ex, args) -> Cexit (ex, List.map aux args)
     | Cifthenelse (cond, t_dbg, t, f_dbg, f, dbg) ->
@@ -68,7 +85,10 @@ let instrument label body =
     | Ctrywith (e, ex, handler, dbg) ->
         Ctrywith (aux e, ex, aux handler, dbg)
     | Cswitch (e, cases, handlers, dbg) ->
-        let handlers = Array.map (fun (handler, handler_dbg) -> (aux handler, handler_dbg)) handlers in
+        let handlers =
+          handlers |> Array.map (fun (handler, handler_dbg) ->
+                                  (aux handler, handler_dbg))
+        in
         Cswitch(aux e, cases, handlers, dbg)
     (* no instrumentation *)
     | Cconst_int _ | Cconst_natint _ | Cconst_float _
