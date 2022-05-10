@@ -20,6 +20,7 @@ module VP = Backend_var.With_provenance
 type read_or_write = Read | Write
 
 let init_code () =
+  Cmm_helpers.return_unit Debuginfo.none @@
   Cop (Cextcall ("__tsan_init", typ_void, [], false), [], Debuginfo.none)
 
 let select_function read_or_write size =
@@ -46,10 +47,10 @@ let instrument label body =
         let args = loc_exp :: List.tl args in
         Clet (loc_id, loc,
           Csequence
-            (Cop
+            (Cmm_helpers.return_unit dbg (Cop
               (Cextcall
                 (select_function Read memory_chunk, typ_void, [], false),
-                [loc_exp], dbg),
+                [loc_exp], dbg)),
             Cop (load_op, args, dbginfo)))
     | Cop (Cstore(memory_chunk, init_or_assn), args, dbginfo) as c ->
         begin match init_or_assn with
@@ -60,10 +61,10 @@ let instrument label body =
             let args = loc_exp :: List.tl args in
             Clet (loc_id, loc,
               Csequence
-                (Cop (Cextcall
+                (Cmm_helpers.return_unit dbg (Cop (Cextcall
                        (select_function Write memory_chunk, typ_void, [],
                          false),
-                       [loc_exp], dbg),
+                       [loc_exp], dbg)),
                 Cop (Cstore (memory_chunk, init_or_assn), args, dbginfo)))
         | _ -> c
         end
@@ -94,14 +95,18 @@ let instrument label body =
     | Cconst_int _ | Cconst_natint _ | Cconst_float _
     | Cconst_symbol _ | Cvar _ as c -> c
   in
-  let entry_instr = Cop(
-    Cextcall("__tsan_func_entry", typ_void, [], false),
-    [Cconst_symbol(label, dbg)],
-    dbg) in
-  let exit_instr = Cop(
-    Cextcall("__tsan_func_exit", typ_void, [], false),
-    [],
-    dbg) in
+  let entry_instr = Cmm_helpers.return_unit dbg @@
+    Cop(
+      Cextcall("__tsan_func_entry", typ_void, [], false),
+      [Cconst_symbol(label, dbg)],
+      dbg)
+  in
+  let exit_instr = Cmm_helpers.return_unit dbg @@
+    Cop(
+      Cextcall("__tsan_func_exit", typ_void, [], false),
+      [],
+      dbg)
+  in
   Csequence(
     entry_instr,
     Csequence(aux body, exit_instr))
