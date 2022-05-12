@@ -13,6 +13,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open Asttypes
 open Cmm
 module V = Backend_var
 module VP = Backend_var.With_provenance
@@ -23,24 +24,38 @@ let init_code () =
   Cmm_helpers.return_unit Debuginfo.none @@
   Cop (Cextcall ("__tsan_init", typ_void, [], false), [], Debuginfo.none)
 
-let select_function read_or_write size =
-  let acc_string = match read_or_write with Read -> "read" | Write -> "write" in
-  match size with
+let bit_size memory_chunk =
+  match memory_chunk with
   | Byte_unsigned
-  | Byte_signed -> Printf.sprintf "__tsan_%s1" acc_string
+  | Byte_signed -> 8
   | Sixteen_unsigned
-  | Sixteen_signed -> Printf.sprintf "__tsan_%s2" acc_string
+  | Sixteen_signed -> 16
   | Thirtytwo_unsigned
-  | Thirtytwo_signed -> Printf.sprintf "__tsan_%s4" acc_string
+  | Thirtytwo_signed -> 32
   | Word_int
-  | Word_val -> Printf.sprintf "__tsan_%s%d" acc_string (Sys.word_size / 8)
-  | Single -> Printf.sprintf "__tsan_%s4" acc_string
-  | Double -> Printf.sprintf "__tsan_%s8" acc_string
+  | Word_val -> Sys.word_size
+  | Single -> 32
+  | Double -> 64
+
+let select_function read_or_write memory_chunk =
+  let bit_size = bit_size memory_chunk in
+  let acc_string =
+    match read_or_write with Read -> "read" | Write -> "write"
+  in
+  Printf.sprintf "__tsan_%s%d" acc_string (bit_size / 8)
+
+module TSan_memory_order = struct
+  (* Constants defined in the LLVM ABI *)
+  (* TODO: Not sure whether it's an int, a nativeint or an int32 *)
+  let acquire = Cconst_int (2, Debuginfo.none)
+  (*let release = Cconst_int (3, Debuginfo.none)*)
+end
 
 let instrument label body =
   let dbg = Debuginfo.none in
   let rec aux = function
-    | Cop (Cload {memory_chunk; _} as load_op, args, dbginfo) ->
+    | Cop (Cload {memory_chunk; mutability=Mutable; is_atomic=false} as load_op,
+            args, dbginfo) ->
         let loc = List.hd args in
         let loc_id = VP.create (V.create_local "loc") in
         let loc_exp = Cvar (VP.var loc_id) in
@@ -48,9 +63,24 @@ let instrument label body =
         Clet (loc_id, loc,
           Csequence
             (Cmm_helpers.return_unit dbg (Cop
-              (Cextcall
-                (select_function Read memory_chunk, typ_void, [], false),
+              (Cextcall (select_function Read memory_chunk, typ_void,
+                          [], false),
                 [loc_exp], dbg)),
+            Cop (load_op, args, dbginfo)))
+    | Cop (Cload {memory_chunk; mutability=Mutable; is_atomic=true} as load_op,
+            args, dbginfo) ->
+        let loc = List.hd args in
+        let loc_id = VP.create (V.create_local "loc") in
+        let loc_exp = Cvar (VP.var loc_id) in
+        let args = loc_exp :: List.tl args in
+        Clet (loc_id, loc,
+          Csequence
+            (Cmm_helpers.return_unit dbg
+              (Cop (Cextcall
+                     (Printf.sprintf "__tsan_atomic%d_load"
+                                (bit_size memory_chunk),
+                     typ_void, [], false),
+                [loc_exp; TSan_memory_order.acquire], dbg)),
             Cop (load_op, args, dbginfo)))
     | Cop (Cstore(memory_chunk, init_or_assn), args, dbginfo) as c ->
         begin match init_or_assn with
