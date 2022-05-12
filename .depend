@@ -3148,12 +3148,14 @@ asmcomp/thread_sanitizer.cmo : \
     asmcomp/cmm_helpers.cmi \
     asmcomp/cmm.cmi \
     middle_end/backend_var.cmi \
+    parsing/asttypes.cmi \
     asmcomp/thread_sanitizer.cmi
 asmcomp/thread_sanitizer.cmx : \
     lambda/debuginfo.cmx \
     asmcomp/cmm_helpers.cmx \
     asmcomp/cmm.cmx \
     middle_end/backend_var.cmx \
+    parsing/asttypes.cmi \
     asmcomp/thread_sanitizer.cmi
 asmcomp/thread_sanitizer.cmi : \
     asmcomp/cmm.cmi
