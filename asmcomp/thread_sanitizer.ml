@@ -51,11 +51,24 @@ module TSan_memory_order = struct
   (*let release = Cconst_int (3, Debuginfo.none)*)
 end
 
+let machtype_of_memory_chunk = function
+  | Byte_unsigned
+  | Byte_signed
+  | Sixteen_unsigned
+  | Sixteen_signed
+  | Thirtytwo_unsigned
+  | Thirtytwo_signed
+  | Word_int -> typ_int
+  | Word_val -> typ_val
+  | Single
+  | Double -> typ_float
+
 let instrument label body =
   let dbg = Debuginfo.none in
   let rec aux = function
     | Cop (Cload {memory_chunk; mutability=Mutable; is_atomic=false} as load_op,
             args, dbginfo) ->
+        (* Emit a call to [__tsan_readN] before the load *)
         let loc = List.hd args in
         let loc_id = VP.create (V.create_local "loc") in
         let loc_exp = Cvar (VP.var loc_id) in
@@ -67,22 +80,19 @@ let instrument label body =
                           [], false),
                 [loc_exp], dbg)),
             Cop (load_op, args, dbginfo)))
-    | Cop (Cload {memory_chunk; mutability=Mutable; is_atomic=true} as load_op,
-            args, dbginfo) ->
-        let loc = List.hd args in
-        let loc_id = VP.create (V.create_local "loc") in
-        let loc_exp = Cvar (VP.var loc_id) in
-        let args = loc_exp :: List.tl args in
-        Clet (loc_id, loc,
-          Csequence
-            (Cmm_helpers.return_unit dbg
-              (Cop (Cextcall
-                     (Printf.sprintf "__tsan_atomic%d_load"
-                                (bit_size memory_chunk),
-                     typ_void, [], false),
-                [loc_exp; TSan_memory_order.acquire], dbg)),
-            Cop (load_op, args, dbginfo)))
+    | Cop (Cload {memory_chunk; mutability=Mutable; is_atomic=true},
+            [loc], dbginfo) ->
+        (* Replace the atomic load with a call to [__tsan_atomicN_load] *)
+        (* TODO: convince myself that this is safe *)
+        let ret_typ = machtype_of_memory_chunk memory_chunk in
+        Cop (Cextcall
+               (Printf.sprintf "__tsan_atomic%d_load" (bit_size memory_chunk),
+               ret_typ, [], false),
+          [loc; TSan_memory_order.acquire], dbginfo)
+    | Cop (Cload {memory_chunk=_; mutability=Mutable; is_atomic=_}, _ :: _, _) ->
+        invalid_arg "instrument: wrong number of arguments for operation Cload"
     | Cop (Cstore(memory_chunk, init_or_assn), args, dbginfo) as c ->
+        (* Emit a call to [__tsan_writeN] before the store *)
         begin match init_or_assn with
         | Assignment ->
             let loc = List.hd args in
