@@ -89,7 +89,8 @@ let instrument label body =
                (Printf.sprintf "__tsan_atomic%d_load" (bit_size memory_chunk),
                ret_typ, [], false),
           [loc; TSan_memory_order.acquire], dbginfo)
-    | Cop (Cload {memory_chunk=_; mutability=Mutable; is_atomic=_}, _ :: _, _) ->
+    | Cop (Cload {memory_chunk=_; mutability=Mutable; is_atomic=_},
+            _ :: _, _) ->
         invalid_arg "instrument: wrong number of arguments for operation Cload"
     | Cop (Cstore(memory_chunk, init_or_assn), args, dbginfo) as c ->
         (* Emit a call to [__tsan_writeN] before the store *)
