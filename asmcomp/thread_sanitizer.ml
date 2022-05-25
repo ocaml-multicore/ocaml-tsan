@@ -147,6 +147,7 @@ let instrument label body =
       [],
       dbg)
   in
+  let res_id = VP.create (V.create_local "res") in
   Csequence(
     entry_instr,
-    Csequence(aux body, exit_instr))
+    Clet (res_id, aux body, Csequence(exit_instr, Cvar (VP.var res_id))))
