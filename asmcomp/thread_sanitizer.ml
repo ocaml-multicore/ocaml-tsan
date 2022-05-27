@@ -67,19 +67,17 @@ let instrument label body =
   let dbg = Debuginfo.none in
   let rec aux = function
     | Cop (Cload {memory_chunk; mutability=Mutable; is_atomic=false} as load_op,
-            args, dbginfo) ->
+            [loc], dbginfo) ->
         (* Emit a call to [__tsan_readN] before the load *)
-        let loc = List.hd args in
         let loc_id = VP.create (V.create_local "loc") in
         let loc_exp = Cvar (VP.var loc_id) in
-        let args = loc_exp :: List.tl args in
         Clet (loc_id, loc,
           Csequence
             (Cmm_helpers.return_unit dbg (Cop
               (Cextcall (select_function Read memory_chunk, typ_void,
                           [], false),
                 [loc_exp], dbg)),
-            Cop (load_op, args, dbginfo)))
+            Cop (load_op, [loc_exp], dbginfo)))
     | Cop (Cload {memory_chunk; mutability=Mutable; is_atomic=true},
             [loc], dbginfo) ->
         (* Replace the atomic load with a call to [__tsan_atomicN_load] *)
