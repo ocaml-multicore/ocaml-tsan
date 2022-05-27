@@ -63,7 +63,7 @@ let machtype_of_memory_chunk = function
   | Single
   | Double -> typ_float
 
-let instrument label body =
+let instrument _label body =
   let dbg = Debuginfo.none in
   let rec aux = function
     | Cop (Cload {memory_chunk; mutability=Mutable; is_atomic=false} as load_op,
@@ -134,6 +134,8 @@ let instrument label body =
     | Cconst_int _ | Cconst_natint _ | Cconst_float _
     | Cconst_symbol _ | Cvar _ as c -> c
   in
+  (* Don't call [__tsan_func_entry] or [__tsan_func_exit] for now. *)
+  (*
   let entry_instr = Cmm_helpers.return_unit dbg @@
     Cop(
       Cextcall("__tsan_func_entry", typ_void, [], false),
@@ -150,3 +152,5 @@ let instrument label body =
   Csequence(
     entry_instr,
     Clet (res_id, aux body, Csequence(exit_instr, Cvar (VP.var res_id))))
+  *)
+  aux body
