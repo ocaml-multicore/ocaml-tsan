@@ -124,6 +124,9 @@ OCaml 5.0
   `caml_process_pending*` for multicore.
   (Guillaume Munch-Maccagnoni, review by Sadiq Jaffer and Gabriel Scherer)
 
+- #11304: Fix data race on Windows file descriptors
+  (Olivier Nicole, review by Xavier Leroy)
+
 ### Code generation and optimizations:
 
 - #10972: ARM64 multicore support: OCaml & C stack separation;
