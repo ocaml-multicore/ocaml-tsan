@@ -67,6 +67,18 @@ static void channel_mutex_free_default(struct channel *chan)
   caml_plat_mutex_free(&chan->mutex);
 }
 
+CAMLextern void channel_mutex_lock_and_forget(struct channel *chan)
+{
+  if( caml_plat_try_lock(&chan->mutex) ) {
+    return;
+  }
+
+  /* If unsuccessful, block on mutex */
+  caml_enter_blocking_section();
+  caml_plat_lock(&chan->mutex);
+  caml_leave_blocking_section();
+}
+
 static void channel_mutex_lock_default(struct channel *chan)
 {
   if( caml_plat_try_lock(&chan->mutex) ) {

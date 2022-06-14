@@ -115,6 +115,8 @@ CAMLextern struct channel * caml_all_opened_channels;
 #define Flush_if_unbuffered(channel) \
   if (channel->flags & CHANNEL_FLAG_UNBUFFERED) caml_flush(channel)
 
+CAMLextern void channel_mutex_lock_and_forget(struct channel* chan);
+
 /* Conversion between file_offset and int64_t */
 
 #define Val_file_offset(fofs) caml_copy_int64(fofs)
