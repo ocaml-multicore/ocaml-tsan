@@ -1,161 +1,193 @@
-=== ⚠️ CAUTION
+ThreadSanitizer support for OCaml 5
+===================================
 
-The developer team is currently preparing the release of OCaml 5.0. This release
-sports a full rewrite of its runtime system for shared-memory parallel
-programming using domains and native support for concurrent programming using
-effect handlers.
+ThreadSanitizer is an effective approach to locate data races in concurrent code bases. This is an experimental extension of the OCaml compiler to add ThreadSanitizer support to OCaml 5.0.
 
-Owing to the large number of changes, the initial 5.0 release will be more
-experimental than usual.  It is recommended that all users wanting a stable
-release use the 4.14 release which will continue to be supported and updated
-while 5.0 reaches feature and stability parity. Similarly, if you need one of
-the ports not yet supported in the 5.0 release you must use the 4.14 release.
+Trying it out
+-------------
 
-The initial release of OCaml 5.0 will only support the native compiler under
-ARM64 and x86-64 architectures under Linux and macOS. On Windows, only the
-Mingw-w64 port is supported.  Support for other 64-bit architectures and systems
-will be added back in later releases. On 32-bit systems, only the bytecode
-compiler is supported.  Native-code support for these systems is under
-discussion.
+**The current prototype still has shortcomings; in addition, its interface is still subject to changes.**
 
-|=====
-| Branch `trunk` | Branch `4.14` | Branch `4.13` | Branch `4.12`
+Install the compiler with ThreadSanitizer instrumentation in a new opam switch. **Please note:** I only tested this with the clang C compiler (i.e. `clang` in your PATH, and no `gcc`), although GCC should theoretically work too.
+```
+opam update
+opam switch create tsan --empty
+eval $(opam env --switch=tsan)
+opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
+opam pin add ocaml-variants.5.1.0+tsan git+https://github.com/OlivierNicole/ocaml#tsan
+```
 
-| image:https://github.com/ocaml/ocaml/workflows/Build/badge.svg?branch=trunk["Github CI Build Status (trunk branch)",
-     link="https://github.com/ocaml/ocaml/actions?query=workflow%3ABuild"]
-  image:https://github.com/ocaml/ocaml/workflows/Hygiene/badge.svg?branch=trunk["Github CI Hygiene Status (trunk branch)",
-     link="https://github.com/ocaml/ocaml/actions?query=workflow%3AHygiene"]
-  image:https://ci.appveyor.com/api/projects/status/github/ocaml/ocaml?branch=trunk&svg=true["AppVeyor Build Status (trunk branch)",
-     link="https://ci.appveyor.com/project/avsm/ocaml"]
-| image:https://github.com/ocaml/ocaml/workflows/main/badge.svg?branch=4.14["Github CI Build Status (4.14 branch)",
-     link="https://github.com/ocaml/ocaml/actions?query=workflow%3Amain"]
-  image:https://ci.appveyor.com/api/projects/status/github/ocaml/ocaml?branch=4.14&svg=true["AppVeyor Build Status (4.14 branch)",
-     link="https://ci.appveyor.com/project/avsm/ocaml"]
-| image:https://travis-ci.org/ocaml/ocaml.svg?branch=4.13["TravisCI Build Status (4.13 branch)",
-     link="https://travis-ci.org/ocaml/ocaml"]
-  image:https://ci.appveyor.com/api/projects/status/github/ocaml/ocaml?branch=4.13&svg=true["AppVeyor Build Status (4.13 branch)",
-     link="https://ci.appveyor.com/project/avsm/ocaml"]
-| image:https://travis-ci.org/ocaml/ocaml.svg?branch=4.12["TravisCI Build Status (4.12 branch)",
-     link="https://travis-ci.org/ocaml/ocaml"]
-  image:https://ci.appveyor.com/api/projects/status/github/ocaml/ocaml?branch=4.12&svg=true["AppVeyor Build Status (4.12 branch)",
-     link="https://ci.appveyor.com/project/avsm/ocaml"]
-|=====
+Then, to run your programs with ThreadSanitizer instrumentation, you need to pass three options to `ocamlopt`:
+- `-tsan` to enable the instrumentation pass
+- `-runtime-variant d` to link the executables with the debug runtime (the default runtime is not instrumented)
+- When linking, use `-cclib -fsanitize=thread` to instruct the linker to link with the ThreadSanitizer runtime.
+C stubs can be instrumented by passing `-fsanitize=thread` to GCC or clang.
 
-= README =
+If you use Dune, these settings can be grouped in a Dune profile by adding the following to your `dune-workspace`:
+```
+(env
+ (tsan
+  (ocamlopt_flags (:standard -tsan))
+  (flags (:standard -runtime-variant d))
+  (link_flags (-cclib -fsanitize=thread))
+  (c_flags -fsanitize=thread)))
+```
+Then you only need to select this profile, e.g. `dune exec --profile tsan myexecutable.exe` or `dune runtest --profile tsan`.
 
-== Overview
+Examples
+--------
 
-OCaml is a functional, statically-typed programming language from the
-ML family, offering a powerful module system extending that of
-Standard ML and a feature-rich, class-based object system.
+### A simple race
 
-OCaml comprises two compilers. One generates bytecode which is then
-interpreted by a C program. This compiler runs quickly, generates
-compact code with moderate memory requirements, and is portable to
-many 32 or 64 bit platforms. Performance of generated programs is
-quite good for a bytecoded implementation.  This compiler can be used
-either as a standalone, batch-oriented compiler that produces
-standalone programs, or as an interactive REPL system.
+The simplest of data races can be created by having two accesses to the same mutable location, one of them being a write:
+```ocaml
+type t = { mutable x : int }
 
-The other compiler generates high-performance native code for a number of
-processors. Compilation takes longer and generates bigger code, but the
-generated programs deliver excellent performance, while retaining the
-moderate memory requirements of the bytecode compiler. The native-code
-compiler currently runs on the following platforms:
+let v = { x = 0 }
 
-|====
-|                |  Tier 1 (actively maintained)   | Tier 2 (maintained when possible)
+let () =
+  let t1 = Domain.spawn (fun () -> v.x <- 10; Unix.sleep 1) in
+  let t2 = Domain.spawn (fun () -> ignore (Sys.opaque_identity v.x); Unix.sleep 1) in
+  Domain.join t1;
+  Domain.join t2
+```
+The `Sys.opaque_identity` is here to prevent the compiler from optimizing away the read of `v.x`.
 
-| x86 64 bits    | Linux, macOS, Windows, FreeBSD  |  NetBSD, OpenBSD
-| x86 32 bits    | Linux, Windows                  |  FreeBSD, NetBSD, OpenBSD
-| ARM 64 bits    | Linux, macOS                    |  FreeBSD
-| ARM 32 bits    | Linux                           |  FreeBSD, NetBSD, OpenBSD
-| Power 64 bits  | Linux                           |
-| Power 32 bits  | Linux                           |
-| RISC-V 64 bits | Linux                           |
-| IBM Z (s390x)  | Linux                           |
-|====
+Running this program with ThreadSanitizer instrumentation will output the following report:
+```
+WARNING: ThreadSanitizer: data race (pid=502344)
+  Read of size 8 at 0x7fc0b15fe458 by thread T4 (mutexes: write M0):
+    #0 camlDune__exe__Simple_race__fun_600 /workspace_root/simple_race.ml:7 (simple_race.exe+0x51e9b1)
+    #1 caml_callback ??:? (simple_race.exe+0x5777f0)
+    #2 domain_thread_func domain.c:? (simple_race.exe+0x57b8fc)
 
-Other operating systems for the processors above have not been tested, but
-the compiler may work under other operating systems with little work.
+  Previous write of size 8 at 0x7fc0b15fe458 by thread T1 (mutexes: write M1):
+    #0 camlDune__exe__Simple_race__fun_596 /workspace_root/simple_race.ml:6 (simple_race.exe+0x51e971)
+    #1 caml_callback ??:? (simple_race.exe+0x5777f0)
+    #2 domain_thread_func domain.c:? (simple_race.exe+0x57b8fc)
+
+  Mutex M0 (0x0000019c9598) created at:
+    #0 pthread_mutex_init ??:? (simple_race.exe+0x488344)
+    #1 caml_plat_mutex_init ??:? (simple_race.exe+0x5a83e2)
+    #2 caml_init_domains ??:? (simple_race.exe+0x57a6e9)
+    #3 caml_init_gc ??:? (simple_race.exe+0x58da25)
+    #4 caml_startup_common ??:? (simple_race.exe+0x5b9b15)
+    #5 caml_main ??:? (simple_race.exe+0x5b9d0b)
+    #6 main ??:? (simple_race.exe+0x59bfb9)
+
+  Mutex M1 (0x0000019c9480) created at:
+    #0 pthread_mutex_init ??:? (simple_race.exe+0x488344)
+    #1 caml_plat_mutex_init ??:? (simple_race.exe+0x5a83e2)
+    #2 caml_init_domains ??:? (simple_race.exe+0x57a6e9)
+    #3 caml_init_gc ??:? (simple_race.exe+0x58da25)
+    #4 caml_startup_common ??:? (simple_race.exe+0x5b9b15)
+    #5 caml_main ??:? (simple_race.exe+0x5b9d0b)
+    #6 main ??:? (simple_race.exe+0x59bfb9)
+
+  Thread T4 (tid=502383, running) created by main thread at:
+    #0 pthread_create ??:? (simple_race.exe+0x463f7f)
+    #1 caml_domain_spawn ??:? (simple_race.exe+0x57b396)
+    #2 caml_c_call ??:? (simple_race.exe+0x5ba27e)
+    #3 caml_main ??:? (simple_race.exe+0x5b9d0b)
+    #4 main ??:? (simple_race.exe+0x59bfb9)
+
+  Thread T1 (tid=502380, running) created by main thread at:
+    #0 pthread_create ??:? (simple_race.exe+0x463f7f)
+    #1 caml_domain_spawn ??:? (simple_race.exe+0x57b396)
+    #2 caml_c_call ??:? (simple_race.exe+0x5ba27e)
+    #3 caml_main ??:? (simple_race.exe+0x5b9d0b)
+    #4 main ??:? (simple_race.exe+0x59bfb9)
+
+SUMMARY: ThreadSanitizer: data race /workspace_root/simple_race.ml:7 in camlDune__exe__Simple_race__fun_600
+==================
+ThreadSanitizer: reported 1 warnings
+```
+If the mutable field is replaced with an `Atomic` reference, the warning disappears:
+```ocaml
+let v = Atomic.make 0
+
+let () =
+  let t1 = Domain.spawn (fun () -> Atomic.set v 10; Unix.sleep 1) in
+  let t2 = Domain.spawn (fun () ->
+      ignore (Sys.opaque_identity (Atomic.get v)); Unix.sleep 1) in
+  Domain.join t1;
+  Domain.join t2
+```
+
+### Synchronization using an atomic variable
+
+Synchronizing the two accesses above by busy-waiting on an atomic boolean will be detected by ThreadSanitizer and no data race will be reported:
+```ocaml
+type t = { mutable x : int }
+
+let v = { x = 0 }
+
+let v_modified = Atomic.make false
+
+let () =
+  let t1 =
+    Domain.spawn (fun () ->
+        v.x <- 10;
+        Atomic.set v_modified true;
+        Unix.sleep 1)
+  in
+  let t2 =
+    Domain.spawn (fun () ->
+        while not (Atomic.get v_modified) do () done;
+        ignore (Sys.opaque_identity v.x);
+        Unix.sleep 1)
+  in
+  Domain.join t1;
+  Domain.join t2
+```
+More efficiently, such synchronization can be implemented using a `Mutex.t` with the same result.
 
 
-== Copyright
+Background
+----------
 
-All files marked "Copyright INRIA" in this distribution are
-Copyright (C) 1996-2021 Institut National de Recherche en Informatique et
-en Automatique (INRIA) and distributed under the conditions stated in
-file LICENSE.
+There are two components to ThreadSanitizer (TSan):
+1. **A run-time library** to track accesses to shared data and report races
+2. **Compiler instrumentation** that emits calls to the run-time library
 
-== Installation
+Internally the run-time library in 1. combines two existing approaches (described in more detail in the WBIA'09 paper):
+- **locksets** - associated with each shared memory location (an empty lockset intersection indicates a potential race)
+- **a happens-before (HB) relation** - to communicate event orderings that we are certain of
 
-See the file link:INSTALL.adoc[] for installation instructions on
-machines running Unix, Linux, macOS, WSL and Cygwin.  For native Microsoft
-Windows, see link:README.win32.adoc[].
+This information is maintained as a “shadow state” in a separate memory region, and updated at every (instrumented) memory access.
+A data race is reported every time two memory accesses are made to overlapping memory regions, and:
+- one of them is a write, and
+- there is no established happens-before relation between them.
 
-== Documentation
+The run-time library is reusable across different programming languages (C,C++,Go, ...).
 
-The OCaml manual is distributed in HTML, PDF, and Emacs
-Info files.  It is available at
 
-https://ocaml.org/releases/latest/manual.html
+Status
+------
 
-== Availability
+The ThreadSanitizer support in OCaml 5.0 is still an ongoing effort. For more information on the status of this work, see https://github.com/OlivierNicole/ocaml-tsan/wiki/Status-of-ThreadSanitizer-for-OCaml[the dedicated wiki page].
 
-The complete OCaml distribution can be accessed at
 
-https://ocaml.org/docs/install.html
+Caveats
+-------
 
-== Keeping in Touch with the Caml Community
+- A pure happens-before-based race detector depends on scheduling and may thus miss races. For this reason TSan combines this approach with *locksets* associated with each memory location.
+- TSan may still yield false alarms though, as some coordination using variables is not representable using only locksets and the HB-relation (sec.6.4 of WBIA'09 paper).
+- TSan investigates *a particular execution* and may also miss races - even using the combined mode.
 
-There is an active and friendly discussion forum at
 
-https://discuss.ocaml.org/
+Resources
+---------
 
-The OCaml mailing list is the longest-running forum for OCaml users.
-You can email it at
-
-mailto:caml-list@inria.fr[]
-
-You can subscribe and access list archives via the Web interface at
-
-https://sympa.inria.fr/sympa/subscribe/caml-list
-
-An alternative archive of the mailing list is also available at
-
-https://inbox.ocaml.org/
-
-There also exist other mailing lists, chat channels, and various other forums
-around the internet for getting in touch with the OCaml and ML family language
-community. These can be accessed at
-
-https://ocaml.org/community/
-
-In particular, the IRC channel `#ocaml` on https://libera.chat/[Libera] has a
-long history and welcomes questions.
-
-== Bug Reports and User Feedback
-
-Please report bugs using the issue tracker at
-https://github.com/ocaml/ocaml/issues
-
-To be effective, bug reports should include a complete program (preferably
-small) that exhibits the unexpected behavior, and the configuration you are
-using (machine type, etc).
-
-For information on contributing to OCaml, see link:HACKING.adoc[] and
-link:CONTRIBUTING.md[].
-
-== Separately maintained components
-
-Some libraries and tools which used to be part of the OCaml distribution are
-now maintained separately. Please use the issue trackers at their respective
-new homes:
-
-- https://github.com/ocaml/graphics/issues[The Graphics library] (removed in OCaml 4.09)
-- https://github.com/ocaml/num/issues[The Num library] (removed in OCaml 4.06)
-- https://github.com/ocaml/ocamlbuild/issues[The OCamlbuild tool] (removed in OCaml 4.03)
-- https://github.com/camlp4/camlp4/issues[The camlp4 tool] (removed in OCaml 4.02)
-- https://github.com/garrigue/labltk/issues[The LablTk library] (removed in OCaml 4.02)
-- https://github.com/ocaml/dbm/issues[The CamlDBM library] (removed in OCaml 4.00)
-- https://github.com/xavierleroy/ocamltopwin/issues[The OCamlWinTop Windows toplevel] (removed in OCaml 4.00)
+- Anmol's blog post: https://anmolsahoo25.github.io/blog/thread-sanitizer-ocaml/
+- Clang/LLVM TSan documentation: https://clang.llvm.org/docs/ThreadSanitizer.html
+- Google Sanitizer wiki:
+  - TSan C/C++ Manual: https://github.com/google/sanitizers/wiki/ThreadSanitizerCppManual
+  - TSan Algorithm: https://github.com/google/sanitizers/wiki/ThreadSanitizerAlgorithm
+- Slides from GCC Cauldron 2012: https://gcc.gnu.org/wiki/cauldron2012?action=AttachFile&do=get&target=kcc.pdf
+- Papers
+  - Serebryany and Iskhodzhanov: *ThreadSanitizer – data race detection in practice*, WBIA'09 https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/35604.pdf
+  - Chabby and Ramanathan: *A Study of Real-World Data Races in Golang*, PLDI'22 https://arxiv.org/pdf/2204.00764.pdf
+  - Ahmad et al.: *Kard: Lightweight Data Race Detection with Per-Thread
+Memory Protection*, ASPLOS'21 https://web.ics.purdue.edu/~ahmad37/papers/ahmad-kard.pdf
+- ThreadSanitizer Google group: https://groups.google.com/g/thread-sanitizer
