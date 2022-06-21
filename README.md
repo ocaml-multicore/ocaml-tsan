@@ -14,7 +14,7 @@ opam update
 opam switch create tsan --empty
 eval $(opam env --switch=tsan)
 opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
-opam pin add ocaml-variants.5.1.0+tsan git+https://github.com/OlivierNicole/ocaml#tsan
+opam pin add ocaml-variants.5.1.0+tsan git+https://github.com/OlivierNicole/ocaml-tsan
 ```
 
 Then, to run your programs with ThreadSanitizer instrumentation, you need to pass three options to `ocamlopt`:
