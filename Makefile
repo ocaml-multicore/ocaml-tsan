@@ -722,8 +722,11 @@ ocamlrund_CPPFLAGS = -DDEBUG
 ocamlruni_CPPFLAGS = -DCAML_INSTR
 
 # Debug runtime: compile with ThreadSanitizer. Don't optimize too much to get
-# better backtraces of errors.
-OC_NATIVE_DEBUG_CFLAGS = -O1 -fno-omit-frame-pointer -fsanitize=thread
+# better backtraces of errors. Compile as PIE as this might be necessary to get
+# line numbers in backtraces (unclear).
+# Avoid DWARF 5 which is not understood by some tools (like binutils 2.38).
+OC_NATIVE_DEBUG_CFLAGS = -O1 -fno-omit-frame-pointer -fsanitize=thread -g \
+  -gdwarf-4 -fPIE -Wno-tsan
 
 ## Runtime targets
 
