@@ -90,23 +90,36 @@ let instrument _label body =
     | Cop (Cload {memory_chunk=_; mutability=Mutable; is_atomic=_},
             _ :: _, _) ->
         invalid_arg "instrument: wrong number of arguments for operation Cload"
-    | Cop (Cstore(memory_chunk, init_or_assn), args, dbginfo) as c ->
+    | Cop (Cstore(memory_chunk, init_or_assn), [loc;v], dbginfo) as c ->
         (* Emit a call to [__tsan_writeN] before the store *)
         begin match init_or_assn with
         | Assignment ->
-            let loc = List.hd args in
+            (* We make sure that 1. the location and value expressions are
+               evaluated before the call to TSan, and 2. the location
+               expression is evaluated right before that call, as it might not
+               be a valid OCaml value (e.g. a pointer into an array), in which
+               case it must not be live across a function call or allocation
+               point. *)
             let loc_id = VP.create (V.create_local "loc") in
-        let loc_exp = Cvar (VP.var loc_id) in
-            let args = loc_exp :: List.tl args in
-            Clet (loc_id, loc,
-              Csequence
-                (Cmm_helpers.return_unit dbg (Cop (Cextcall
-                       (select_function Write memory_chunk, typ_void, [],
-                         false),
-                       [loc_exp], dbg)),
-                Cop (Cstore (memory_chunk, init_or_assn), args, dbginfo)))
-        | _ -> c
+            let loc_exp = Cvar (VP.var loc_id) in
+            let v_id = VP.create (V.create_local "newval") in
+            let v_exp = Cvar (VP.var v_id) in
+            let args = [loc_exp; v_exp] in
+            Clet (v_id, v,
+              Clet (loc_id, loc,
+                Csequence
+                  (Cmm_helpers.return_unit dbg (Cop (Cextcall
+                         (select_function Write memory_chunk, typ_void, [],
+                           false),
+                         [loc_exp], dbg)),
+                  Cop (Cstore (memory_chunk, init_or_assn), args, dbginfo))))
+        | Heap_initialization | Root_initialization ->
+            (* Initializing writes need not be instrumented as they are always
+               domain-safe *)
+            c
         end
+    | Cop (Cstore _, _, _) ->
+        invalid_arg "instrument: wrong number of arguments for operation Cstore"
     | Cop (op, es, dbg) -> Cop (op, List.map aux es, dbg)
     | Clet (v, e, body) -> Clet (v, aux e, aux body)
     | Clet_mut (v, k, e, body) -> Clet_mut (v, k, aux e, aux body)
@@ -132,25 +145,58 @@ let instrument _label body =
         Cswitch(aux e, cases, handlers, dbg)
     (* no instrumentation *)
     | Cconst_int _ | Cconst_natint _ | Cconst_float _
-    | Cconst_symbol _ | Cvar _ as c -> c
+    | Cconst_symbol _ | Cvar _ | Creturn_addr as c -> c
   in
-  (* Don't call [__tsan_func_entry] or [__tsan_func_exit] for now. *)
-  (*
-  let entry_instr = Cmm_helpers.return_unit dbg @@
-    Cop(
-      Cextcall("__tsan_func_entry", typ_void, [], false),
-      [Cconst_symbol(label, dbg)],
-      dbg)
+  let body = aux body in
+  let call_entry = Cmm_helpers.return_unit dbg @@ Cop (
+      Cextcall ("__tsan_func_entry", typ_void, [], false), [Creturn_addr], dbg)
   in
-  let exit_instr = Cmm_helpers.return_unit dbg @@
-    Cop(
-      Cextcall("__tsan_func_exit", typ_void, [], false),
-      [],
-      dbg)
+  let call_exit = Cmm_helpers.return_unit dbg @@ Cop (
+      Cextcall ("__tsan_func_exit", typ_void, [], false), [], dbg)
   in
-  let res_id = VP.create (V.create_local "res") in
-  Csequence(
-    entry_instr,
-    Clet (res_id, aux body, Csequence(exit_instr, Cvar (VP.var res_id))))
-  *)
-  aux body
+  let rec insert_call_exit = function
+    | Clet (v, e, body) -> Clet (v, e, insert_call_exit body)
+    | Clet_mut (v, typ, e, body) -> Clet_mut (v, typ, e, insert_call_exit body)
+    | Cphantom_let (v, e, body) -> Cphantom_let (v, e, insert_call_exit body)
+    | Cassign (v, body) -> Cassign (v, insert_call_exit body)
+    | Cop (Capply fn, args, dbg) ->
+        let fun_ = List.hd args in
+        let var_args =
+          List.map (fun x -> VP.create (V.create_local "arg"), x)
+            (List.tl args)
+        in
+        let tail =
+          Csequence (call_exit,
+            (Cop (Capply fn,
+                fun_ :: List.map (fun (id,_) -> Cvar (VP.var id)) var_args,
+                dbg)))
+        in
+        List.fold_right (fun (id,arg) acc -> Clet (id, arg, acc)) var_args tail
+    | Csequence (op1, op2) -> Csequence (op1, insert_call_exit op2)
+    | Cifthenelse (cond, t_dbg, t, f_dbg, f, dbg) ->
+        Cifthenelse (cond, t_dbg, insert_call_exit t, f_dbg,
+          insert_call_exit f, dbg)
+    | Cswitch (e, cases, handlers, dbg) ->
+        let handlers = Array.map
+          (fun (handler, handler_dbg) ->
+            (insert_call_exit handler, handler_dbg))
+          handlers
+        in
+        Cswitch (e, cases, handlers, dbg)
+    | Ccatch (isrec, handlers, next) -> (* FIXME ask Fred about Ccatch usage! *)
+        let handlers = List.map
+            (fun (id, args, e, dbg) -> (id, args, insert_call_exit e, dbg))
+            handlers
+        in
+        Ccatch (isrec, handlers, insert_call_exit next)
+    | Cexit (ex, args) -> (* FIXME ask Fred about Cexit usage! *)
+        Cexit (ex, args)
+    | Ctrywith (e, v, handler, dbg) ->
+        Ctrywith (e, v, insert_call_exit handler, dbg)
+    | Cconst_int (_, _) | Cconst_natint (_, _) | Cconst_float (_, _)
+    | Cconst_symbol (_, _) | Cvar _ | Ctuple _ | Cop (_, _, _)
+    | Creturn_addr as expr ->
+        let id = VP.create (V.create_local "res") in
+        Clet (id, expr, Csequence (call_exit, Cvar (VP.var id)))
+  in
+  Csequence (call_entry, insert_call_exit body)
