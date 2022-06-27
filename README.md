@@ -165,7 +165,7 @@ The run-time library is reusable across different programming languages (C,C++,G
 Status
 ------
 
-The ThreadSanitizer support in OCaml 5.0 is still an ongoing effort. For more information on the status of this work, see https://github.com/OlivierNicole/ocaml-tsan/wiki/Status-of-ThreadSanitizer-for-OCaml[the dedicated wiki page].
+The ThreadSanitizer support in OCaml 5.0 is still an ongoing effort. For more information on the status of this work, see [the dedicated wiki page](https://github.com/OlivierNicole/ocaml-tsan/wiki/Status-of-ThreadSanitizer-for-OCaml).
 
 
 Caveats
