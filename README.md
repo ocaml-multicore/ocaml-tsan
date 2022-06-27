@@ -8,7 +8,7 @@ Trying it out
 
 **The current prototype still has shortcomings; in addition, its interface is still subject to changes.**
 
-Install the compiler with ThreadSanitizer instrumentation in a new opam switch. **Please note:** I only tested this with the clang C compiler (i.e. `clang` in your PATH, and no `gcc`), although GCC should theoretically work too.
+Install the compiler with ThreadSanitizer instrumentation in a new opam switch.
 ```
 opam update
 opam switch create tsan --empty
