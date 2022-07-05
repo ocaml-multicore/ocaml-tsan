@@ -60,6 +60,9 @@ profinfo=false
 profinfo_width=0
 instrumented_runtime=false
 instrumented_runtime_libs=""
+tsan_runtime=false
+force_tsan_runtime=false
+tsan_runtime_libs="-fsanitize=thread"
 bootstrapping_flexdll=false
 
 # Information about the package
@@ -136,6 +139,8 @@ AC_SUBST([cmxs])
 AC_SUBST([debug_runtime])
 AC_SUBST([instrumented_runtime])
 AC_SUBST([instrumented_runtime_libs])
+AC_SUBST([tsan_runtime])
+AC_SUBST([tsan_runtime_libs])
 AC_SUBST([has_monotonic_clock])
 AC_SUBST([otherlibraries])
 AC_SUBST([cc_has_debug_prefix_map])
@@ -174,6 +179,7 @@ AC_SUBST([flexdll_chain])
 AC_SUBST([PACKLD])
 AC_SUBST([stdlib_manpages])
 AC_SUBST([compute_deps])
+AC_SUBST([force_tsan_runtime])
 AC_SUBST([QS])
 
 ## Generated files
@@ -271,6 +277,13 @@ AC_ARG_ENABLE([instrumented-runtime],
   [],
   [enable_instrumented_runtime=auto])
 
+# FIXME this doesn't show 'no'
+AC_ARG_ENABLE([tsan-runtime],
+  [AS_HELP_STRING([--enable-tsan-runtime],
+    [build the tsan runtime @<:@default=auto@:>@])],
+  [],
+  [enable_tsan_runtime=auto])
+
 AC_ARG_ENABLE([vmthreads], [],
   [AS_IF([test "x$enableval" != 'xno'],
     [AC_MSG_ERROR(m4_normalize([The vmthreads library is no longer available.
@@ -367,6 +380,10 @@ AC_ARG_ENABLE([flambda],
 AC_ARG_ENABLE([flambda-invariants],
   [AS_HELP_STRING([--enable-flambda-invariants],
     [enable invariants checks in flambda])])
+
+AC_ARG_ENABLE([force-tsan-runtime],
+  [AS_HELP_STRING([--force-tsan-runtime],
+    [force the usage of the tsan runtime])])
 
 AC_ARG_ENABLE([cmm-invariants],
   [AS_HELP_STRING([--enable-cmm-invariants],
@@ -1481,6 +1498,18 @@ but no proper monotonic clock source was found.])
       )]
     )]
 )
+
+# TODO
+# FIXME tsan support more OS
+AS_IF([test "x$enable_tsan_runtime" = "xyes" ],
+  [AS_CASE(["$host,$cc_basename"],
+    [x86_64-*-linux*,gcc*|x86_64-*-linux*,clang*],
+      [tsan_runtime=true]
+      AC_MSG_NOTICE([using thread sanitizer]),
+    [AC_MSG_ERROR([thread sanitizer not supported on this platform])]
+  )],
+  [AC_MSG_NOTICE([not using thread sanitizer])
+  tsan_runtime=false])
 
 ## Sockets
 
