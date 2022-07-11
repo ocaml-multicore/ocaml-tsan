@@ -723,13 +723,6 @@ runtime_CPPFLAGS = -DCAMLDLLIMPORT=
 ocamlrund_CPPFLAGS = -DDEBUG
 ocamlruni_CPPFLAGS = -DCAML_INSTR
 
-# Debug runtime: compile with ThreadSanitizer. Don't optimize too much to get
-# better backtraces of errors. Compile as PIE as this might be necessary to get
-# line numbers in backtraces (unclear).
-# Avoid DWARF 5 which is not understood by some tools (like binutils 2.38).
-OC_NATIVE_DEBUG_CFLAGS = -O1 -fno-omit-frame-pointer -fsanitize=thread -g \
-  -gdwarf-4 -fPIE -Wno-tsan
-
 ## Runtime targets
 
 .PHONY: runtime-all
@@ -889,11 +882,8 @@ runtime/%.n.$(O): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS)
 $(DEPDIR)/runtime/%.n.$(D): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS)
 
 runtime/%.nd.$(O): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlrund_CPPFLAGS)
-runtime/%.nd.$(O): OC_CFLAGS += $(OC_NATIVE_DEBUG_CFLAGS)
 $(DEPDIR)/runtime/%.nd.$(D): \
   OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlrund_CPPFLAGS)
-$(DEPDIR)/runtime/%.nd.$(D): \
-  OC_CFLAGS += $(OC_NATIVE_DEBUG_CFLAGS)
 
 runtime/%.ni.$(O): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlruni_CPPFLAGS)
 $(DEPDIR)/runtime/%.ni.$(D): \
