@@ -758,31 +758,46 @@ ENDFUNCTION(G(caml_start_program))
 
 /* Raise an exception from OCaml */
 
+
 FUNCTION(G(caml_raise_exn))
 CFI_STARTPROC
         ENTER_FUNCTION
 LBL(caml_raise_exn):
+#if !defined(WITH_THREAD_SANITIZER)
         testq   $1, Caml_state(backtrace_active)
         jne   LBL(116)
         RESTORE_EXN_HANDLER_OCAML
         ret
+#endif
 LBL(116):
         movq    $0, Caml_state(backtrace_pos)
 LBL(117):
-        movq    %rsp, %r10        /* Save OCaml stack pointer */
+        movq    %rsp, %r13        /* Save OCaml stack pointer */
         movq    %rax, %r12        /* Save exception bucket */
         movq    Caml_state(c_stack), %rsp
+#if defined(WITH_THREAD_SANITIZER)
+        testq   $1, Caml_state(backtrace_active)
+        jne   LBL(118)
+#endif
         movq    %rax, C_ARG_1     /* arg 1: exception bucket */
 #ifdef WITH_FRAME_POINTERS
-        movq    8(%r10), C_ARG_2   /* arg 2: pc of raise */
-        leaq    16(%r10), C_ARG_3  /* arg 3: sp at raise */
+        movq    8(%r13), C_ARG_2   /* arg 2: pc of raise */
+        leaq    16(%r13), C_ARG_3  /* arg 3: sp at raise */
 #else
-        movq    (%r10), C_ARG_2   /* arg 2: pc of raise */
-        leaq    8(%r10), C_ARG_3  /* arg 3: sp at raise */
+        movq    (%r13), C_ARG_2   /* arg 2: pc of raise */
+        leaq    8(%r13), C_ARG_3  /* arg 3: sp at raise */
 #endif
         movq    Caml_state(exn_handler), C_ARG_4
                                   /* arg 4: sp of handler */
         C_call  (GCALL(caml_stash_backtrace))
+#if defined(WITH_THREAD_SANITIZER)
+LBL(118):
+        /* FIXME also need the exception value? */
+        movq    (%r13), C_ARG_1   /* arg 1: pc of raise */
+        leaq    8(%r13), C_ARG_2  /* arg 2: sp at raise */
+        movq    Caml_state(exn_handler), C_ARG_3 /* arg 3: sp of handler */
+        C_call  (GCALL(caml_tsan_exn_func_exit))
+#endif
         movq    %r12, %rax        /* Recover exception bucket */
         RESTORE_EXN_HANDLER_OCAML
         ret
