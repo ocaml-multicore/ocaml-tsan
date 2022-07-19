@@ -381,10 +381,6 @@ AC_ARG_ENABLE([flambda-invariants],
   [AS_HELP_STRING([--enable-flambda-invariants],
     [enable invariants checks in flambda])])
 
-AC_ARG_ENABLE([force-tsan-runtime],
-  [AS_HELP_STRING([--force-tsan-runtime],
-    [force the usage of the tsan runtime])])
-
 AC_ARG_ENABLE([cmm-invariants],
   [AS_HELP_STRING([--enable-cmm-invariants],
     [enable invariants checks in Cmm])])
