@@ -387,10 +387,6 @@ AC_ARG_ENABLE([force-instrumented-runtime],
   [AS_HELP_STRING([--force-instrumented-runtime],
     [force the usage of the instrumented runtime])])
 
-AC_ARG_ENABLE([force-tsan-runtime],
-  [AS_HELP_STRING([--force-tsan-runtime],
-    [force the usage of the tsan runtime])])
-
 AC_ARG_ENABLE([cmm-invariants],
   [AS_HELP_STRING([--enable-cmm-invariants],
     [enable invariants checks in Cmm])])
