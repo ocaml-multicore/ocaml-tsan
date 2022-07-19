@@ -166,7 +166,6 @@ let pic_code = ref (match Config.architecture with (* -fPIC *)
                      | "amd64" -> true
                      | _       -> false)
 
-(* TODO check for tsan runtime *)
 let runtime_variant =
   ref (match Config.force_instrumented_runtime with (* -runtime-variant *)
         | true -> "i"
