@@ -1803,7 +1803,9 @@ module Default = struct
           "Cannot use `-tsan' with a runtime forced to be instrumented"
       else if not (List.mem !Clflags.runtime_variant ["";"t"]) then
         Compenv.fatal "Cannot use another runtime with `-tsan`";
-      set thread_sanitizer ()
+      set thread_sanitizer ();
+      runtime_variant := "t";
+      Compenv.defer (ProcessObjects ["-fsanitize=thread"])
     let _function_sections () =
       assert Config.function_sections;
       Compenv.first_ccopts := ("-ffunction-sections" ::(!Compenv.first_ccopts));
