@@ -686,10 +686,6 @@ runtime_BYTECODE_STATIC_LIBRARIES += runtime/libcamlrunt.$(A)
 runtime_NATIVE_STATIC_LIBRARIES += runtime/libasmrunt.$(A)
 endif
 
-# FIXME Is it okay to have this variable?
-# FIXME Remove (or downgrande) -Wno-tsan flag
-OC_TSAN_CFLAGS = -O1 -fno-omit-frame-pointer -fsanitize=thread -Wno-tsan
-
 ifeq "$(UNIX_OR_WIN32)" "unix"
 ifeq "$(SUPPORTS_SHARED_LIBRARIES)" "true"
 runtime_BYTECODE_STATIC_LIBRARIES += runtime/libcamlrun_pic.$(A)

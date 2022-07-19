@@ -176,6 +176,7 @@ UNIX_OR_WIN32=@unix_or_win32@
 INSTALL_SOURCE_ARTIFACTS=@install_source_artifacts@
 
 OC_CFLAGS=@oc_cflags@
+OC_TSAN_CFLAGS=@oc_tsan_cflags@
 CFLAGS?=@CFLAGS@
 OC_CPPFLAGS=-I$(ROOTDIR)/runtime @oc_cppflags@
 CPPFLAGS?=@CPPFLAGS@

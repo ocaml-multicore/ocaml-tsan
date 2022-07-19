@@ -53,6 +53,7 @@ ocamlc_cppflags=""
 oc_ldflags=""
 oc_dll_ldflags=""
 oc_exe_ldflags=""
+oc_tsan_cflags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
 ostype="Unix"
 SO="so"
 toolchain="cc"
@@ -116,6 +117,7 @@ AC_SUBST([mkexe_via_cc_ldflags])
 AC_SUBST([ccomptype])
 AC_SUBST([toolchain])
 AC_SUBST([oc_cflags])
+AC_SUBST([oc_tsan_cflags])
 AC_SUBST([oc_cppflags])
 AC_SUBST([oc_ldflags])
 AC_SUBST([oc_dll_ldflags])
@@ -1495,17 +1497,25 @@ but no proper monotonic clock source was found.])
     )]
 )
 
-# TODO
-# FIXME tsan support more OS
 AS_IF([test "x$enable_tsan_runtime" = "xyes" ],
-  [AS_CASE(["$host,$cc_basename"],
-    [x86_64-*-linux*,gcc*|x86_64-*-linux*,clang*],
-      [tsan_runtime=true]
-      AC_MSG_NOTICE([using thread sanitizer]),
-    [AC_MSG_ERROR([thread sanitizer not supported on this platform])]
+  [AS_CASE(["$host","$host","$cc_basename"],
+    [aarch64-*|x86_64-*|powerpc64-*|powerpc64le-*,\
+     *-linux*|*-freebsd*|*-netbsd*,gcc*|clang*],
+      [tsan_runtime=true],
+    [arm64-*|x86_64-*,*-darwin*,gcc*|clang*],
+      [tsan_runtime=true],
+      [AC_MSG_ERROR([thread sanitizer not supported on this platform])]
   )],
-  [AC_MSG_NOTICE([not using thread sanitizer])
-  tsan_runtime=false])
+  [tsan_runtime=false])
+
+AS_IF([$tsan_runtime],
+  [AC_MSG_NOTICE([using thread sanitizer with vendor=$ocaml_cv_cc_vendor])
+  AS_CASE([$ocaml_cv_cc_vendor],
+    [gcc-[[0123456789]]-*|gcc-10-*],
+    [],
+    [oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan"])],
+  [AC_MSG_NOTICE([not using thread sanitizer])]
+)
 
 ## Sockets
 
