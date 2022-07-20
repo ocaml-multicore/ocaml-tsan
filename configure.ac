@@ -52,6 +52,7 @@ ocamlc_cflags=""
 ocamlc_cppflags=""
 oc_ldflags=""
 oc_dll_ldflags=""
+oc_tsan_cflags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
 ostype="Unix"
 SO="so"
 toolchain="cc"
@@ -60,6 +61,9 @@ profinfo_width=0
 instrumented_runtime=true
 force_instrumented_runtime=false
 instrumented_runtime_libs=""
+tsan_runtime=false
+force_tsan_runtime=false
+tsan_runtime_libs="-fsanitize=thread"
 bootstrapping_flexdll=false
 
 # Information about the package
@@ -113,6 +117,7 @@ AC_SUBST([mkexe_via_cc_ldflags])
 AC_SUBST([ccomptype])
 AC_SUBST([toolchain])
 AC_SUBST([oc_cflags])
+AC_SUBST([oc_tsan_cflags])
 AC_SUBST([oc_cppflags])
 AC_SUBST([oc_ldflags])
 AC_SUBST([oc_dll_ldflags])
@@ -133,6 +138,8 @@ AC_SUBST([cmxs])
 AC_SUBST([debug_runtime])
 AC_SUBST([instrumented_runtime])
 AC_SUBST([instrumented_runtime_libs])
+AC_SUBST([tsan_runtime])
+AC_SUBST([tsan_runtime_libs])
 AC_SUBST([has_monotonic_clock])
 AC_SUBST([otherlibraries])
 AC_SUBST([cc_has_debug_prefix_map])
@@ -172,6 +179,7 @@ AC_SUBST([PACKLD])
 AC_SUBST([stdlib_manpages])
 AC_SUBST([compute_deps])
 AC_SUBST([force_instrumented_runtime])
+AC_SUBST([force_tsan_runtime])
 AC_SUBST([QS])
 
 ## Generated files
@@ -264,6 +272,13 @@ AC_ARG_ENABLE([instrumented-runtime],
     [build the instrumented runtime @<:@default=auto@:>@])],
   [],
   [enable_instrumented_runtime=auto])
+
+# FIXME this doesn't show 'no'
+AC_ARG_ENABLE([tsan-runtime],
+  [AS_HELP_STRING([--enable-tsan-runtime],
+    [build the tsan runtime @<:@default=auto@:>@])],
+  [],
+  [enable_tsan_runtime=auto])
 
 AC_ARG_ENABLE([vmthreads], [],
   [AS_IF([test "x$enableval" != 'xno'],
@@ -1409,6 +1424,10 @@ AS_IF([test "x$enable_force_instrumented_runtime" = "xyes"],
   [force_instrumented_runtime=true]
 )
 
+AS_IF([test "x$enable_force_instrumented_runtime" = "xyes"],
+  [force_tsan_runtime=true]
+)
+
 # The instrumented runtime is built by default
 # if the proper clock source is found.
 # If asked via --enable-instrumented-runtime, configuration fails if the proper
@@ -1458,6 +1477,26 @@ but no proper monotonic clock source was found.])
           ]
       )]
     )]
+)
+
+AS_IF([test "x$enable_tsan_runtime" = "xyes" ],
+  [AS_CASE(["$host","$host","$cc_basename"],
+    [aarch64-*|x86_64-*|powerpc64-*|powerpc64le-*,\
+     *-linux*|*-freebsd*|*-netbsd*,gcc*|clang*],
+      [tsan_runtime=true],
+    [arm64-*|x86_64-*,*-darwin*,gcc*|clang*],
+      [tsan_runtime=true],
+      [AC_MSG_ERROR([thread sanitizer not supported on this platform])]
+  )],
+  [tsan_runtime=false])
+
+AS_IF([$tsan_runtime],
+  [AC_MSG_NOTICE([using thread sanitizer with vendor=$ocaml_cv_cc_vendor])
+  AS_CASE([$ocaml_cv_cc_vendor],
+    [gcc-[[0123456789]]-*|gcc-10-*],
+    [],
+    [oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan"])],
+  [AC_MSG_NOTICE([not using thread sanitizer])]
 )
 
 ## Sockets
