@@ -1,3 +1,5 @@
+[![Build](https://github.com/OlivierNicole/ocaml-tsan/actions/workflows/build.yml/badge.svg)](https://github.com/OlivierNicole/ocaml-tsan/actions/workflows/build.yml)
+
 ThreadSanitizer support for OCaml 5
 ===================================
 
