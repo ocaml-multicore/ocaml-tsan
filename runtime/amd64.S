@@ -777,7 +777,7 @@ LBL(117):
         movq    Caml_state(c_stack), %rsp
 #if defined(WITH_THREAD_SANITIZER)
         testq   $1, Caml_state(backtrace_active)
-        jne   LBL(118)
+        je    LBL(118)
 #endif
         movq    %rax, C_ARG_1     /* arg 1: exception bucket */
 #ifdef WITH_FRAME_POINTERS
