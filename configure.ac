@@ -1481,8 +1481,8 @@ but no proper monotonic clock source was found.])
 
 AS_IF([test "x$enable_tsan_runtime" = "xyes" ],
   [AS_CASE(["$host","$host","$cc_basename"],
-    [aarch64-*|x86_64-*|powerpc64-*|powerpc64le-*,\
-     *-linux*|*-freebsd*|*-netbsd*,gcc*|clang*],
+    [[aarch64-*|x86_64-*|powerpc64-*|powerpc64le-*,*-linux*|*-freebsd*\
+     |*-netbsd*,gcc*|clang*]],
       [tsan_runtime=true],
     [arm64-*|x86_64-*,*-darwin*,gcc*|clang*],
       [tsan_runtime=true],
