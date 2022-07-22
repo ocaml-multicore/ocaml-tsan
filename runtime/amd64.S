@@ -741,10 +741,14 @@ ENDFUNCTION(G(caml_raise_exn))
 
 FUNCTION(G(caml_reraise_exn))
 CFI_STARTPROC
+#if defined(WITH_THREAD_SANITIZER)
+        jmp   LBL(117)
+#else
         testq   $1, Caml_state(backtrace_active)
         jne   LBL(117)
         RESTORE_EXN_HANDLER_OCAML
         ret
+#endif
 CFI_ENDPROC
 ENDFUNCTION(G(caml_reraise_exn))
 
