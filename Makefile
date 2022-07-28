@@ -917,7 +917,7 @@ $(DEPDIR)/runtime/%.npic.$(D): \
   OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(SHAREDLIB_CFLAGS)
 
 runtime/%.nt.$(O): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlrunt_CPPFLAGS)
-runtime/%.nt.$(O): OC_CFLAGS += $(OC_NATIVE_CFLAGS)
+runtime/%.nt.$(O): OC_CFLAGS += $(OC_NATIVE_CFLAGS) $(OC_TSAN_CFLAGS)
 $(DEPDIR)/runtime/%.nt.$(D): \
   OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlrunt_CPPFLAGS)
 
