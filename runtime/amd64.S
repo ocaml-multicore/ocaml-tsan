@@ -887,6 +887,13 @@ LBL(do_perform):
         movq    Handler_parent(%r11), %r10 /* %r10 := parent stack */
         cmpq    $0, %r10                   /* parent is NULL? */
         je      LBL(112)
+#if defined(WITH_THREAD_SANITIZER)
+        movq    (%rsp), C_ARG_1 /* arg 1: pc of raise */
+        movq    %rsp, C_ARG_2   /* arg 2: sp at raise */
+        SWITCH_OCAML_TO_C
+        C_call  (GCALL(caml_tsan_func_exit_on_perform))
+        SWITCH_C_TO_OCAML
+#endif
         SWITCH_OCAML_STACKS /* preserves r11 and rsi */
      /* We have to null the Handler_parent after the switch because the
         Handler_parent is needed to unwind the stack for backtraces */
