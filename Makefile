@@ -726,8 +726,10 @@ libasmruni_OBJECTS = \
 libasmrunpic_OBJECTS = $(runtime_NATIVE_C_SOURCES:.c=.npic.$(O)) \
   $(runtime_ASM_OBJECTS:.$(O)=_libasmrunpic.$(O))
 
+# FIXME Add tsan.c properly
 libasmrunt_OBJECTS = \
-  $(runtime_NATIVE_C_SOURCES:.c=.nt.$(O)) $(runtime_ASM_OBJECTS:.$(O)=.t.$(O))
+  $(runtime_NATIVE_C_SOURCES:.c=.nt.$(O)) runtime/tsan.nt.$(O) \
+	$(runtime_ASM_OBJECTS:.$(O)=.t.$(O))
 
 ## General (non target-specific) assembler and compiler flags
 
