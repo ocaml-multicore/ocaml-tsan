@@ -17,6 +17,7 @@
 #include "mlvalues.h"
 
 CAMLextern void caml_tsan_func_exit_on_perform(uintnat pc, char* sp);
+CAMLextern void caml_tsan_func_entry_on_resume(uintnat pc, char* sp)
 
 #endif /* CAML_INTERNALS */
 

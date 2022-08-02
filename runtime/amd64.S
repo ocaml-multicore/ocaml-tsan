@@ -888,11 +888,13 @@ LBL(do_perform):
         cmpq    $0, %r10                   /* parent is NULL? */
         je      LBL(112)
 #if defined(WITH_THREAD_SANITIZER)
-        movq    (%rsp), C_ARG_1 /* arg 1: pc of raise */
-        movq    %rsp, C_ARG_2   /* arg 2: sp at raise */
+        SAVE_ALL_REGS // FIXME
+        movq    (%rsp), C_ARG_1   /* arg 1: pc of raise */
+        leaq    8(%rsp), C_ARG_2  /* arg 2: sp at raise */
         SWITCH_OCAML_TO_C
         C_call  (GCALL(caml_tsan_func_exit_on_perform))
         SWITCH_C_TO_OCAML
+        RESTORE_ALL_REGS // FIXME
 #endif
         SWITCH_OCAML_STACKS /* preserves r11 and rsi */
      /* We have to null the Handler_parent after the switch because the
@@ -937,6 +939,15 @@ CFI_STARTPROC
     /*  check if stack null, then already used */
         testq   %r10, %r10
         jz      2f
+#if defined(WITH_THREAD_SANITIZER)
+        // FIXME Do we want this func_entry? If so pair with a func_exit!
+        SAVE_ALL_REGS // FIXME
+        movq    (%rsp), C_ARG_1   /* arg 1: pc of raise */
+        SWITCH_OCAML_TO_C
+        C_call  (GCALL(__tsan_func_entry))
+        SWITCH_C_TO_OCAML
+        RESTORE_ALL_REGS // FIXME
+#endif
     /* Find end of list of stacks and add current */
         movq    %r10, %rsi
 1:      movq    Stack_handler(%rsi), %rcx
@@ -950,6 +961,15 @@ CFI_STARTPROC
         that was not originally run here. */
         UPDATE_BASE_POINTER(%rcx)
         SWITCH_OCAML_STACKS
+#if defined(WITH_THREAD_SANITIZER)
+        SAVE_ALL_REGS // FIXME
+        movq    (%rsp), C_ARG_1   /* arg 1: pc of raise */
+        leaq    8(%rsp), C_ARG_2  /* arg 2: sp at raise */
+        SWITCH_OCAML_TO_C
+        C_call  (GCALL(caml_tsan_func_entry_on_resume))
+        SWITCH_C_TO_OCAML
+        RESTORE_ALL_REGS // FIXME
+#endif
         jmp     *(%rbx)
 2:      LEA_VAR(caml_exn_Continuation_already_taken, %rax)
         jmp LBL(caml_raise_exn)
@@ -962,6 +982,15 @@ FUNCTION(G(caml_runstack))
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
         ENTER_FUNCTION
+#if defined(WITH_THREAD_SANITIZER)
+        // FIXME Do we want this func_entry? If so pair with a func_exit!
+        SAVE_ALL_REGS // FIXME
+        movq    (%rsp), C_ARG_1   /* arg 1: pc of raise */
+        SWITCH_OCAML_TO_C
+        C_call  (GCALL(__tsan_func_entry))
+        SWITCH_C_TO_OCAML
+        RESTORE_ALL_REGS // FIXME
+#endif
     /* %rax -> fiber, %rbx -> fun, %rdi -> arg */
         andq    $-2, %rax       /* %rax = Ptr_val(%rax) */
     /* save old stack pointer and exception handler */
