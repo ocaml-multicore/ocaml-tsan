@@ -253,6 +253,29 @@
         CFI_DEF_CFA_OFFSET(16);                \
         POP_EXN_HANDLER
 
+
+// FIXME SAVE_ALL_REGS is overkill
+#if defined(WITH_THREAD_SANITIZER)
+#define TSAN_ENTER_FUNCTION                                     \
+        SAVE_ALL_REGS;                                          \
+        movq    (%rsp), C_ARG_1;   /* arg 1: pc of raise */     \
+        SWITCH_OCAML_TO_C;                                      \
+        C_call  (GCALL(__tsan_func_entry));                     \
+        SWITCH_C_TO_OCAML;                                      \
+        RESTORE_ALL_REGS;
+#define TSAN_EXIT_FUNCTION                                      \
+        SAVE_ALL_REGS;                                          \
+        SWITCH_OCAML_TO_C;                                      \
+        movq    $0, C_ARG_1;                                    \
+        C_call  (GCALL(__tsan_func_exit));                      \
+        SWITCH_C_TO_OCAML;                                      \
+        RESTORE_ALL_REGS;
+#else
+#define TSAN_ENTER_FUNCTION
+#define TSAN_EXIT_FUNCTION
+#endif
+
+
 /* Switch between OCaml stacks. Clobbers %r12.
    Expects old stack in %rsi and target stack in %r10.
    Leaves old stack in %rsi and target stack in %r10. */
@@ -939,28 +962,6 @@ CFI_STARTPROC
     /*  check if stack null, then already used */
         testq   %r10, %r10
         jz      2f
-
-//#if defined(WITH_THREAD_SANITIZER)
-//        SAVE_ALL_REGS // FIXME
-//        movq    (%rsp), C_ARG_1   /* arg 1: pc of raise */
-//        SWITCH_OCAML_TO_C
-//        C_call  (GCALL(__tsan_func_entry))
-//        SWITCH_C_TO_OCAML
-//        RESTORE_ALL_REGS // FIXME
-//#endif
-
-#if defined(WITH_THREAD_SANITIZER)
-        SAVE_ALL_REGS // FIXME
-        movq    Stack_sp(%r10), %r11
-        movq    (%r11), C_ARG_1   /* arg 1: pc of perform */
-        leaq    8(%r11), C_ARG_2  /* arg 2: sp at perform */
-        movq    %r10, C_ARG_3     /* arg 3: fiber */
-        SWITCH_OCAML_TO_C
-        C_call  (GCALL(caml_tsan_func_entry_on_resume))
-        SWITCH_C_TO_OCAML
-        RESTORE_ALL_REGS // FIXME
-#endif
-
     /* Find end of list of stacks and add current */
         movq    %r10, %rsi
 1:      movq    Stack_handler(%rsi), %rcx
@@ -974,14 +975,6 @@ CFI_STARTPROC
         that was not originally run here. */
         UPDATE_BASE_POINTER(%rcx)
         SWITCH_OCAML_STACKS
-//#if defined(WITH_THREAD_SANITIZER)
-//        SAVE_ALL_REGS // FIXME
-//        SWITCH_OCAML_TO_C
-//        movq    $0, C_ARG_1
-//        C_call  (GCALL(__tsan_func_exit))
-//        SWITCH_C_TO_OCAML
-//        RESTORE_ALL_REGS // FIXME
-//#endif
         jmp     *(%rbx)
 2:      LEA_VAR(caml_exn_Continuation_already_taken, %rax)
         jmp LBL(caml_raise_exn)
@@ -994,19 +987,7 @@ FUNCTION(G(caml_runstack))
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
         ENTER_FUNCTION
-#if defined(WITH_THREAD_SANITIZER)
-        // FIXME pair with a func_exit in resume?
-        // Force to push the address of the calling function (func doing the match_with)
-        // Matching __tsan_func_exit when:
-        //  - computation returns a value (in this function)
-        //  - perform-ing (by caml_tsan_func_exit_on_perform)
-        SAVE_ALL_REGS // FIXME
-        movq    (%rsp), C_ARG_1   /* arg 1: pc of raise */
-        SWITCH_OCAML_TO_C
-        C_call  (GCALL(__tsan_func_entry))
-        SWITCH_C_TO_OCAML
-        RESTORE_ALL_REGS // FIXME
-#endif
+        TSAN_ENTER_FUNCTION
     /* %rax -> fiber, %rbx -> fun, %rdi -> arg */
         andq    $-2, %rax       /* %rax = Ptr_val(%rax) */
     /* save old stack pointer and exception handler */
@@ -1064,14 +1045,7 @@ LBL(frame_runstack):
         movq    %r13, %rsp
         CFI_RESTORE_STATE
         movq    %r12, %rax
-#if defined(WITH_THREAD_SANITIZER)
-        SAVE_ALL_REGS // FIXME
-        SWITCH_OCAML_TO_C
-        movq    $0, C_ARG_1
-        C_call  (GCALL(__tsan_func_exit))
-        SWITCH_C_TO_OCAML
-        RESTORE_ALL_REGS // FIXME
-#endif
+    TSAN_EXIT_FUNCTION
     /* Invoke handle_value (or handle_exn) */
         LEAVE_FUNCTION
         jmp     *(%rbx)
