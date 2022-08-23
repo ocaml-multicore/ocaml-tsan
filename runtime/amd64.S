@@ -962,6 +962,18 @@ CFI_STARTPROC
     /*  check if stack null, then already used */
         testq   %r10, %r10
         jz      2f
+        TSAN_ENTER_FUNCTION
+#if defined(WITH_THREAD_SANITIZER)
+        SAVE_ALL_REGS // FIXME
+        movq    Stack_sp(%r10), %r11
+        movq    (%r11), C_ARG_1   /* arg 1: pc of perform */
+        leaq    8(%r11), C_ARG_2  /* arg 2: sp at perform */
+        movq    %r10, C_ARG_3     /* arg 3: fiber */
+        SWITCH_OCAML_TO_C
+        C_call  (GCALL(caml_tsan_func_entry_on_resume))
+        SWITCH_C_TO_OCAML
+        RESTORE_ALL_REGS // FIXME
+#endif
     /* Find end of list of stacks and add current */
         movq    %r10, %rsi
 1:      movq    Stack_handler(%rsi), %rcx
