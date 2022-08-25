@@ -8,7 +8,7 @@ ThreadSanitizer is an effective approach to locate data races in concurrent code
 Trying it out
 -------------
 
-**The current prototype still has shortcomings; in addition, its interface is still subject to changes.**
+**The current prototype is experimental; in addition, its interface is subject to changes.**
 
 Install the compiler with ThreadSanitizer instrumentation in a new opam switch.
 ```
@@ -19,22 +19,17 @@ opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
 opam pin add ocaml-variants.5.1.0+tsan git+https://github.com/OlivierNicole/ocaml-tsan
 ```
 
-Then, to run your programs with ThreadSanitizer instrumentation, you need to pass three options to `ocamlopt`:
-- `-tsan` to enable the instrumentation pass
-- `-runtime-variant d` to link the executables with the debug runtime (the default runtime is not instrumented)
-- When linking, use `-cclib -fsanitize=thread` to instruct the linker to link with the ThreadSanitizer runtime.
-C stubs can be instrumented by passing `-fsanitize=thread` to GCC or clang.
+Then, to run your programs with ThreadSanitizer instrumentation, you need to pass the `-tsan` options to `ocamlopt` to instrument the generated executables and libraries.
+If you link against C files, those can be (optionally) instrumented to detect data races in them as well, by passing `-fsanitize=thread` to GCC or clang.
 
 If you use Dune, these settings can be grouped in a Dune profile by adding the following to your `dune-workspace`:
 ```
 (env
  (tsan
   (ocamlopt_flags (:standard -tsan))
-  (flags (:standard -runtime-variant d))
-  (link_flags (-cclib -fsanitize=thread))
   (c_flags -fsanitize=thread)))
 ```
-Then you only need to select this profile, e.g. `dune exec --profile tsan myexecutable.exe` or `dune runtest --profile tsan`.
+Then you only need to select this profile, e.g. `dune exec --profile tsan myexecutable.exe` or `dune runtest --profile tsan` (or set the profile in your `dune-workspace` file).
 
 Examples
 --------
@@ -152,14 +147,13 @@ There are two components to ThreadSanitizer (TSan):
 1. **A run-time library** to track accesses to shared data and report races
 2. **Compiler instrumentation** that emits calls to the run-time library
 
-Internally the run-time library in 1. combines two existing approaches (described in more detail in the WBIA'09 paper):
-- **locksets** - associated with each shared memory location (an empty lockset intersection indicates a potential race)
-- **a happens-before (HB) relation** - to communicate event orderings that we are certain of
+Internally the run-time library associates with each word of application memory at least 2 “shadow words”. Each shadow word contains information about a recent memory access to that word, including a “scalar clock”. Those clocks serve to establish a happens-before (HB) relation, i.e. an event orderings that we are certain of.
 
 This information is maintained as a “shadow state” in a separate memory region, and updated at every (instrumented) memory access.
 A data race is reported every time two memory accesses are made to overlapping memory regions, and:
 - one of them is a write, and
 - there is no established happens-before relation between them.
+More information about TSan's algorithm on [their wiki](https://github.com/google/sanitizers/wiki/ThreadSanitizerAlgorithm).
 
 The run-time library is reusable across different programming languages (C,C++,Go, ...).
 
@@ -173,9 +167,8 @@ The ThreadSanitizer support in OCaml 5.0 is still an ongoing effort. For more in
 Caveats
 -------
 
-- A pure happens-before-based race detector depends on scheduling and may thus miss races. For this reason TSan combines this approach with *locksets* associated with each memory location.
-- TSan may still yield false alarms though, as some coordination using variables is not representable using only locksets and the HB-relation (sec.6.4 of WBIA'09 paper).
-- TSan investigates *a particular execution* and may also miss races - even using the combined mode.
+- TSan investigates *a particular execution* and therefore will not detect races in code paths that are not visited.
+- TSan may still report false positives in some rare cases (see section 6.4 of the WBIA '09 paper below).
 
 
 Resources
