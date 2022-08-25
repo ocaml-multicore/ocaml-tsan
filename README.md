@@ -181,7 +181,7 @@ Resources
   - TSan Algorithm: https://github.com/google/sanitizers/wiki/ThreadSanitizerAlgorithm
 - Slides from GCC Cauldron 2012: https://gcc.gnu.org/wiki/cauldron2012?action=AttachFile&do=get&target=kcc.pdf
 - Papers
-  - Serebryany and Iskhodzhanov: *ThreadSanitizer – data race detection in practice*, WBIA'09 https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/35604.pdf
+  - Serebryany and Iskhodzhanov: *ThreadSanitizer – data race detection in practice*, WBIA'09 <https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/35604.pdf>. Note that the algorithm presented in this paper is not the one used in the new version of TSan.
   - Chabby and Ramanathan: *A Study of Real-World Data Races in Golang*, PLDI'22 https://arxiv.org/pdf/2204.00764.pdf
   - Ahmad et al.: *Kard: Lightweight Data Race Detection with Per-Thread
 Memory Protection*, ASPLOS'21 https://web.ics.purdue.edu/~ahmad37/papers/ahmad-kard.pdf
