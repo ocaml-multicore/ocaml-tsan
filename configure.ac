@@ -66,8 +66,7 @@ profinfo=false
 profinfo_width=0
 instrumented_runtime=false
 instrumented_runtime_libs=""
-tsan_runtime=false
-force_tsan_runtime=false
+tsan=false
 tsan_runtime_libs="-fsanitize=thread"
 bootstrapping_flexdll=false
 flexdll_dir=
@@ -161,7 +160,7 @@ AC_SUBST([cmxs])
 AC_SUBST([debug_runtime])
 AC_SUBST([instrumented_runtime])
 AC_SUBST([instrumented_runtime_libs])
-AC_SUBST([tsan_runtime])
+AC_SUBST([tsan])
 AC_SUBST([tsan_runtime_libs])
 AC_SUBST([has_monotonic_clock])
 AC_SUBST([otherlibraries])
@@ -220,7 +219,6 @@ AC_SUBST([stdlib_manpages])
 AC_SUBST([compute_deps])
 AC_SUBST([ocaml_bindir])
 AC_SUBST([ocaml_libdir])
-AC_SUBST([force_tsan_runtime])
 AC_SUBST([QS])
 
 ## Generated files
@@ -327,11 +325,11 @@ AC_ARG_ENABLE([instrumented-runtime],
   [enable_instrumented_runtime=auto])
 
 # FIXME this doesn't show 'no'
-AC_ARG_ENABLE([tsan-runtime],
-  [AS_HELP_STRING([--enable-tsan-runtime],
-    [build the tsan runtime @<:@default=auto@:>@])],
+AC_ARG_ENABLE([tsan],
+  [AS_HELP_STRING([--enable-tsan],
+    [enable ThreadSanitizer support @<:@default=auto@:>@])],
   [],
-  [enable_tsan_runtime=auto])
+  [enable_tsan=auto])
 
 AC_ARG_ENABLE([vmthreads], [],
   [AS_IF([test "x$enableval" != 'xno'],
@@ -1563,18 +1561,18 @@ but no proper monotonic clock source was found.])
     )]
 )
 
-AS_IF([test "x$enable_tsan_runtime" = "xyes" ],
+AS_IF([test "x$enable_tsan" = "xyes" ],
   [AS_CASE(["$host","$host","$cc_basename"],
     [[aarch64-*|x86_64-*|powerpc64-*|powerpc64le-*,*-linux*|*-freebsd*\
      |*-netbsd*,gcc*|clang*]],
-      [tsan_runtime=true],
+      [tsan=true],
     [arm64-*|x86_64-*,*-darwin*,gcc*|clang*],
-      [tsan_runtime=true],
+      [tsan=true],
       [AC_MSG_ERROR([thread sanitizer not supported on this platform])]
   )],
-  [tsan_runtime=false])
+  [tsan=false])
 
-AS_IF([$tsan_runtime],
+AS_IF([$tsan],
   [AC_MSG_NOTICE([using thread sanitizer with vendor=$ocaml_cv_cc_vendor])
   AS_CASE([$ocaml_cv_cc_vendor],
     [gcc-[[0123456789]]-*|gcc-10-*],
