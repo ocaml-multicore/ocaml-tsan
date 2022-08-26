@@ -181,6 +181,12 @@ let function_sections = make
      "Target supports function sections"
      "Target does not support function sections")
 
+let tsan = make
+  "tsan"
+  (Actions_helpers.pass_or_skip (Ocamltest_config.tsan)
+     "tsan available"
+     "tsan not available")
+
 let has_symlink = make
   "has_symlink"
   (Actions_helpers.pass_or_skip (Unix.has_symlink () )
@@ -304,4 +310,5 @@ let _ =
     function_sections;
     file_exists;
     copy;
+    tsan;
   ]
