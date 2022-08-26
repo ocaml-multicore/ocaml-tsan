@@ -680,7 +680,7 @@ runtime_BYTECODE_STATIC_LIBRARIES += runtime/libcamlruni.$(A)
 runtime_NATIVE_STATIC_LIBRARIES += runtime/libasmruni.$(A)
 endif
 
-ifeq "$(TSAN_RUNTIME)" "true"
+ifeq "$(WITH_TSAN)" "true"
 runtime_PROGRAMS += runtime/ocamlrunt$(EXE)
 runtime_BYTECODE_STATIC_LIBRARIES += runtime/libcamlrunt.$(A)
 runtime_NATIVE_STATIC_LIBRARIES += runtime/libasmrunt.$(A)
