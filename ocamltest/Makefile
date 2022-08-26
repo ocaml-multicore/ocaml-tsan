@@ -268,6 +268,7 @@ ocamltest_config.ml: ocamltest_config.ml.in Makefile ../Makefile.config
 	    $(call SUBST,WINDOWS_UNICODE) \
 	    $(call SUBST,FUNCTION_SECTIONS) \
 	    $(call SUBST,WITH_FRAME_POINTERS) \
+	    $(call SUBST,WITH_TSAN) \
 	    $< > $@
 
 # Manual
