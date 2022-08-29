@@ -21,10 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(WITH_THREAD_SANITIZER) // FIXME include proper .h?
-extern void __tsan_func_exit(void);
-#endif
-
 #include "caml/alloc.h"
 #include "caml/backtrace.h"
 #include "caml/backtrace_prim.h"
@@ -338,41 +334,3 @@ int caml_debug_info_status(void)
 {
   return 1;
 }
-
-#if defined(WITH_THREAD_SANITIZER) // FIXME include proper .h?
-#include <execinfo.h>
-void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
-{
-  fprintf(stderr, "caml_tsan_exn_func_exit(pc = %ld, sp = %p, trapsp = %p)\n",
-      pc, sp, trapsp); // XXX
-
-  caml_domain_state* domain_state = Caml_state;
-  caml_frame_descrs fds = caml_get_frame_descrs();
-
-  /* iterate on each frame  */
-  while (1) {
-    void *p = (void*)pc;
-    fprintf(stderr, "I'm at : ");
-    backtrace_symbols_fd(&p, 1, 2);
-    fprintf(stderr, "\n");
-
-    frame_descr* descr = caml_next_frame_descriptor(fds, &pc, &sp,
-        domain_state->current_stack);
-    if (descr == NULL) {
-      fprintf(stderr, "Oh noes, no descriptor!!\n");
-      return;
-    }
-
-    fprintf(stderr, "next_fd(pc = %ld, sp = %p)\n", pc, sp); // XXX
-
-    /* Stop when we reach the current exception handler */
-    if (sp > trapsp)
-      break;
-
-    fprintf(stderr, "Calling __tsan_func_exit\n");
-    __tsan_func_exit();
-  }
-
-  fprintf(stderr, "I'm leaving caml_tsan_exn_func_exit\n");
-}
-#endif
