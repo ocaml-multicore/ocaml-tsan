@@ -835,6 +835,8 @@ lib_runtime_events
 lib_dynlink
 otherlibraries
 has_monotonic_clock
+tsan_runtime_libs
+tsan
 instrumented_runtime_libs
 instrumented_runtime
 debug_runtime
@@ -859,6 +861,7 @@ oc_exe_ldflags
 oc_dll_ldflags
 oc_ldflags
 oc_cppflags
+oc_tsan_cflags
 oc_cflags
 toolchain
 ccomptype
@@ -947,6 +950,7 @@ enable_debug_runtime
 enable_debugger
 enable_dependency_generation
 enable_instrumented_runtime
+enable_tsan
 enable_vmthreads
 enable_systhreads
 enable_graph_lib
@@ -1633,6 +1637,7 @@ Optional Features:
                           do not compute dependency information for C sources
   --enable-instrumented-runtime
                           build the instrumented runtime [default=auto]
+  --enable-tsan           enable ThreadSanitizer support [default=auto]
 
   --disable-systhreads    disable the Win32/POSIX threads library
   --disable-str-lib       do not build the str library
@@ -3223,6 +3228,7 @@ ocamlc_cflags=""
 ocamlc_cppflags=""
 oc_ldflags=""
 oc_dll_ldflags=""
+oc_tsan_cflags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
 oc_exe_ldflags=""
 
 # The C# compiler and its flags
@@ -3236,6 +3242,8 @@ profinfo=false
 profinfo_width=0
 instrumented_runtime=false
 instrumented_runtime_libs=""
+tsan=false
+tsan_runtime_libs="-fsanitize=thread"
 bootstrapping_flexdll=false
 flexdll_dir=
 lib_dynlink=false
@@ -3284,6 +3292,9 @@ OCAML_VERSION_SHORT=5.1
 # Note: This is present for the flexdll bootstrap where it exposed as the old
 # TOOLPREF variable. It would be better if flexdll where updated to require
 # WINDRES instead.
+
+
+
 
 
 
@@ -3651,6 +3662,16 @@ then :
   enableval=$enable_instrumented_runtime;
 else $as_nop
   enable_instrumented_runtime=auto
+fi
+
+
+# FIXME this doesn't show 'no'
+# Check whether --enable-tsan was given.
+if test ${enable_tsan+y}
+then :
+  enableval=$enable_tsan;
+else $as_nop
+  enable_tsan=auto
 fi
 
 
@@ -5007,13 +5028,13 @@ if test $ac_test_CFLAGS; then
   CFLAGS=$ac_save_CFLAGS
 elif test $ac_cv_prog_cc_g = yes; then
   if test "$GCC" = yes; then
-    CFLAGS="-g -O1"
+    CFLAGS="-g -O2"
   else
     CFLAGS="-g"
   fi
 else
   if test "$GCC" = yes; then
-    CFLAGS="-O1"
+    CFLAGS="-O2"
   else
     CFLAGS=
   fi
@@ -13686,7 +13707,7 @@ case $host in #(
     internal_cflags="-Wno-unused $cc_warnings \
 -fexcess-precision=standard"
         # TODO: see whether the code can be fixed to avoid -Wno-unused
-        common_cflags="-O1 -fno-strict-aliasing -fwrapv -mms-bitfields"
+        common_cflags="-O2 -fno-strict-aliasing -fwrapv -mms-bitfields"
         internal_cppflags='-D__USE_MINGW_ANSI_STDIO=0 -DUNICODE -D_UNICODE'
         internal_cppflags="$internal_cppflags -DWINDOWS_UNICODE="
         internal_cppflags="${internal_cppflags}\$(WINDOWS_UNICODE)" ;; #(
@@ -13696,16 +13717,16 @@ esac ;; #(
   *) :
     case $ocaml_cv_cc_vendor in #(
   clang-*) :
-    common_cflags="-O1 -fno-strict-aliasing -fwrapv";
+    common_cflags="-O2 -fno-strict-aliasing -fwrapv";
       internal_cflags="$cc_warnings -fno-common" ;; #(
   gcc-[0123]-*|gcc-4-[0-8]) :
     # No C11 support
       as_fn_error 69 "This version of GCC is too old. Please use GCC version 4.9 or above." "$LINENO" 5 ;; #(
   gcc-*) :
-    common_cflags="-O1 -fno-strict-aliasing -fwrapv";
+    common_cflags="-O2 -fno-strict-aliasing -fwrapv";
       internal_cflags="$cc_warnings -fno-common -fexcess-precision=standard" ;; #(
   msvc-*) :
-    common_cflags="-nologo -O1 -Gy- -MD $cc_warnings"
+    common_cflags="-nologo -O2 -Gy- -MD $cc_warnings"
       common_cppflags="-D_CRT_SECURE_NO_DEPRECATE"
       internal_cppflags='-DUNICODE -D_UNICODE'
 
@@ -16352,6 +16373,38 @@ but no proper monotonic clock source was found." "$LINENO" 5
 esac
      ;;
 esac
+
+fi
+
+if test "x$enable_tsan" = "xyes"
+then :
+  case "$host","$host","$cc_basename" in #(
+  aarch64-*|x86_64-*|powerpc64-*|powerpc64le-*,*-linux*|*-freebsd*\
+     |*-netbsd*,gcc*|clang*) :
+    tsan=true ;; #(
+  arm64-*|x86_64-*,*-darwin*,gcc*|clang*) :
+    tsan=true ;; #(
+  *) :
+    as_fn_error $? "thread sanitizer not supported on this platform" "$LINENO" 5
+   ;;
+esac
+else $as_nop
+  tsan=false
+fi
+
+if $tsan
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&5
+printf "%s\n" "$as_me: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&6;}
+  case $ocaml_cv_cc_vendor in #(
+  gcc-[0123456789]-*|gcc-10-*) :
+     ;; #(
+  *) :
+    oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan" ;;
+esac
+else $as_nop
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: not using thread sanitizer" >&5
+printf "%s\n" "$as_me: not using thread sanitizer" >&6;}
 
 fi
 
