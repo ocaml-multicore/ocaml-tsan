@@ -1,4 +1,3 @@
-
 /**************************************************************************/
 /*                                                                        */
 /*                                 OCaml                                  */
@@ -11,49 +10,19 @@
 /*                                                                        */
 /**************************************************************************/
 
-#include <execinfo.h>
-#include <stdio.h> // XXX
+#define CAML_INTERNALS
+
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+#include <execinfo.h> // XXX
+#include <stdio.h>    // XXX
 
 #include "caml/misc.h"
+#include "caml/mlvalues.h"
 #include "caml/frame_descriptors.h"
+#include "caml/domain_state.h"
 
-//extern void __tsan_func_exit(void);
-
-frame_descr* caml_next_frame_descriptor(caml_frame_descrs fds, uintnat* pc,
-    char** sp, struct stack_info* stack)
-{
-  frame_descr* descr;
-
-  while (1) {
-    descr = caml_find_frame_descr(fds, *pc);
-
-    if (descr == NULL) {
-      return NULL;
-    }
-
-    /* Skip to next frame */
-    if (descr->frame_size != 0xFFFF) {
-      /* Regular frame, update sp/pc and return the frame descriptor */
-      *sp += (d->frame_size & 0xFFFC);
-      *pc = Saved_return_address(*sp);
-      return descr;
-    } else {
-      /* This marks the top of an ML stack chunk. Move sp to the previous stack
-       chunk. This includes skipping over the DWARF link & trap frame
-       (4 words). */
-      *sp += 4 * sizeof(value);
-      if (*sp == (char*)Stack_high(stack)) {
-        /* We've reached the top of stack. No more frames. */
-        *pc = 0;
-        return NULL;
-      }
-      Pop_frame_pointer(*sp);
-      *pc = **(uintnat**)sp;
-      *sp += sizeof(value); /* return address */
-      return NULL;
-    }
-  }
-}
+extern void __tsan_func_exit(void*);
 
 void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
 {
@@ -90,7 +59,7 @@ void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
   //fprintf(stderr, "I'm leaving caml_tsan_exn_func_exit\n");
 }
 
-void caml_tsan_exn_func_exit_c(uintnat pc, char* sp, char* limit)
+void caml_tsan_exn_func_exit_c(char* limit)
 {
   unw_context_t uc;
   unw_cursor_t cursor;
@@ -119,7 +88,5 @@ void caml_tsan_exn_func_exit_c(uintnat pc, char* sp, char* limit)
     if ((char*)sp >= limit) {
       break;
     }
-    
-    __tsan_func_exit();
   }
 }
