@@ -23,15 +23,15 @@
 (** Instrumentation of a {!Cmm.expression}: instrument memory accesses, and
     surround the expression by external calls to [__tsan_func_entry] and
     [__tsan_func_exit]. If the expression tail is a function call, then
-      [__tsan_func_exit] is inserted before that call. *)
+    [__tsan_func_exit] is inserted before that call. *)
 val instrument : string -> Cmm.expression -> Cmm.expression
 
 (** Surround an expression by external calls to [__tsan_func_entry] and
-    [__tsan_func_exit]. *)
+    [__tsan_func_exit]. If the expression tail is a function call, then
+    [__tsan_func_exit] is inserted before that call. *)
 val wrap_entry_exit : Cmm.expression -> Cmm.expression
 
 (** Call to [__tsan_init], which should be called at least once in the compiled
     program, before other [__tsan_*] API functions. Idempotent, i.e. can be
-    called more than once without consequences. If the expression tail is a
-    function call, then [__tsan_func_exit] is inserted before that call. *)
+    called more than once without consequences. *)
 val init_code : unit -> Cmm.expression
