@@ -31,6 +31,7 @@
 #include "caml/roots.h"
 #include "caml/callback.h"
 #include "caml/signals.h"
+#include "caml/tsan.h"
 
 /* The globals holding predefined exceptions */
 
@@ -79,6 +80,10 @@ void caml_raise(value v)
          (char *) Caml_state->local_roots < exception_pointer) {
     Caml_state->local_roots = Caml_state->local_roots->next;
   }
+
+#if defined(WITH_THREAD_SANITIZER)
+  caml_tsan_exn_func_exit_c(exception_pointer);
+#endif
 
   caml_raise_exception(Caml_state, v);
 }
