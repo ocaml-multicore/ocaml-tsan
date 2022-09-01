@@ -236,6 +236,27 @@
         CFI_DEF_CFA_OFFSET(16);                \
         POP_EXN_HANDLER
 
+#if defined(WITH_THREAD_SANITIZER)
+#define TSAN_ENTER_FUNCTION                                     \
+        SAVE_ALL_REGS;                                          \
+        /* arg 1: pc of raise */                                \
+        movq    (%rsp), C_ARG_1;                                \
+        SWITCH_OCAML_TO_C;                                      \
+        C_call  (GCALL(__tsan_func_entry));                     \
+        SWITCH_C_TO_OCAML;                                      \
+        RESTORE_ALL_REGS;
+#define TSAN_EXIT_FUNCTION                                      \
+        SAVE_ALL_REGS;                                          \
+        SWITCH_OCAML_TO_C;                                      \
+        movq    $0, C_ARG_1;                                    \
+        C_call  (GCALL(__tsan_func_exit));                      \
+        SWITCH_C_TO_OCAML;                                      \
+        RESTORE_ALL_REGS;
+#else
+#define TSAN_ENTER_FUNCTION
+#define TSAN_EXIT_FUNCTION
+#endif
+
 /* Switch between OCaml stacks. Clobbers %r12.
    Expects old stack in %rsi and target stack in %r10.
    Leaves old stack in %rsi and target stack in %r10. */
@@ -538,6 +559,7 @@ ENDFUNCTION(G(caml_allocN))
 FUNCTION(G(caml_c_call))
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
+        TSAN_ENTER_FUNCTION
 LBL(caml_c_call):
     /* Arguments:
         C arguments         : %rdi, %rsi, %rdx, %rcx, %r8, and %r9
@@ -552,6 +574,7 @@ LBL(caml_c_call):
         movq    Caml_state(young_ptr), %r15
     /* Load ocaml stack and restore global variables */
         SWITCH_C_TO_OCAML
+        TSAN_EXIT_FUNCTION
     /* Return to OCaml caller */
         ret
 CFI_ENDPROC
@@ -606,6 +629,13 @@ CFI_STARTPROC
         CFI_SIGNAL_FRAME
     /* Save callee-save registers */
         PUSH_CALLEE_SAVE_REGS
+#if defined(WITH_THREAD_SANITIZER)
+    /* TSan enter function from C */
+        pushq   C_ARG_1
+        movq    56(%rsp), C_ARG_1
+        C_call  (GCALL(__tsan_func_entry))
+        popq    C_ARG_1
+#endif
     /* Load Caml_state into r14 (was passed as an argument from C) */
         movq    C_ARG_1, %r14
     /* Initial entry point is G(caml_program) */
@@ -679,6 +709,13 @@ LBL(108):
         movq    Cstack_prev(%rsp), %r10
         movq    %r10, Caml_state(c_stack)
         addq    $24, %rsp; CFI_ADJUST(-24)
+#if defined(WITH_THREAD_SANITIZER)
+    /* TSan exit function from C */
+        pushq   %rax
+        movq    $0, C_ARG_1
+        C_call  (GCALL(__tsan_func_exit))
+        popq    %rax
+#endif
     /* Restore callee-save registers. */
         POP_CALLEE_SAVE_REGS
     /* Return to caller. */
@@ -773,6 +810,17 @@ ENDFUNCTION(G(caml_raise_exception))
 
 FUNCTION(G(caml_callback_asm))
 CFI_STARTPROC
+#if defined(WITH_THREAD_SANITIZER)
+    /* TSan enter function from C */
+        pushq   C_ARG_1
+        pushq   C_ARG_2
+        pushq   C_ARG_3
+        movq    24(%rsp), C_ARG_1
+        C_call  (GCALL(__tsan_func_entry))
+        popq    C_ARG_3
+        popq    C_ARG_2
+        popq    C_ARG_1
+#endif
     /* Save callee-save registers */
         PUSH_CALLEE_SAVE_REGS
     /* Initial loading of arguments */

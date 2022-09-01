@@ -2347,6 +2347,7 @@ asmcomp/asmlibrarian.cmx : \
     asmcomp/asmlibrarian.cmi
 asmcomp/asmlibrarian.cmi :
 asmcomp/asmlink.cmo : \
+    asmcomp/thread_sanitizer.cmi \
     lambda/runtimedef.cmi \
     utils/profile.cmi \
     utils/misc.cmi \
@@ -2365,6 +2366,7 @@ asmcomp/asmlink.cmo : \
     asmcomp/asmgen.cmi \
     asmcomp/asmlink.cmi
 asmcomp/asmlink.cmx : \
+    asmcomp/thread_sanitizer.cmx \
     lambda/runtimedef.cmx \
     utils/profile.cmx \
     utils/misc.cmx \
