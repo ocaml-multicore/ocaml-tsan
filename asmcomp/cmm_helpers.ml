@@ -2612,7 +2612,6 @@ let entry_point namelist =
                          [cconst_symbol entry_sym], dbg ()),
                   Csequence(incr_global_inited (), next)))
       namelist (cconst_int 1) in
-  let body = Thread_sanitizer.wrap_entry_exit body in
   let fun_name = "caml_program" in
   let fun_dbg = placeholder_fun_dbg ~human_name:fun_name in
   Cfunction {fun_name;
