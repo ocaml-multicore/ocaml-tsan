@@ -168,6 +168,7 @@ META
 /runtime/ocamlrun
 /runtime/ocamlrund
 /runtime/ocamlruni
+/runtime/ocamlrunt
 /runtime/ld.conf
 /runtime/.gdb_history
 /runtime/build_config.h
