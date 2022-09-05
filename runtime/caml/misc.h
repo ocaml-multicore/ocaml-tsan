@@ -561,12 +561,23 @@ CAMLextern int caml_snwprintf(wchar_t * buf,
    functions. */
 #define CAMLno_tsan
 #define CAMLno_asan
+/* __has_feature is Clang-specific, but GCC defines __SANITIZE_ADDRESS__ and
+ * __SANITIZE_THREAD__. */
 #if defined(__has_feature)
 #  if __has_feature(thread_sanitizer)
 #    undef CAMLno_tsan
 #    define CAMLno_tsan __attribute__((no_sanitize("thread")))
 #  endif
 #  if __has_feature(address_sanitizer)
+#    undef CAMLno_asan
+#    define CAMLno_asan __attribute__((no_sanitize("address")))
+#  endif
+#else
+#  if __SANITIZE_THREAD__
+#    undef CAMLno_tsan
+#    define CAMLno_tsan __attribute__((no_sanitize("thread")))
+#  endif
+#  if __SANITIZE_ADDRESS__
 #    undef CAMLno_asan
 #    define CAMLno_asan __attribute__((no_sanitize("address")))
 #  endif
