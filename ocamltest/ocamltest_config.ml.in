@@ -89,3 +89,5 @@ let function_sections = %%FUNCTION_SECTIONS%%
 let instrumented_runtime = %%INSTRUMENTED_RUNTIME%%
 
 let frame_pointers = %%WITH_FRAME_POINTERS%%
+
+let tsan = %%WITH_TSAN%%
