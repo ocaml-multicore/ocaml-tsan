@@ -1805,7 +1805,8 @@ module Default = struct
         Compenv.fatal "Cannot use another runtime with `-tsan`";
       set thread_sanitizer ();
       runtime_variant := "t";
-      Compenv.defer (ProcessObjects ["-fsanitize=thread"])
+      (* Pass necessary options to linker *)
+      Compenv.defer (ProcessObjects ["-fsanitize=thread"; "-lunwind"])
     let _function_sections () =
       assert Config.function_sections;
       Compenv.first_ccopts := ("-ffunction-sections" ::(!Compenv.first_ccopts));
