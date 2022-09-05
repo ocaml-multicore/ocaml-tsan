@@ -181,6 +181,11 @@ header_t caml_get_header_val(value v) {
 }
 
 
+CAMLno_tsan /* FIXME Race reports from this function clog the tests of user
+               programs, so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports.
+               */
 static int try_update_object_header(value v, volatile value *p, value result,
                                     mlsize_t infix_offset) {
   int success = 0;
@@ -230,7 +235,13 @@ static scanning_action_flags oldify_scanning_flags =
 
 /* Note that the tests on the tag depend on the fact that Infix_tag,
    Forward_tag, and No_scan_tag are contiguous. */
-static void oldify_one (void* st_v, value v, volatile value *p)
+static
+CAMLno_tsan /* FIXME Race reports from this function clog the tests of user
+               programs, so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports.
+               */
+void oldify_one (void* st_v, value v, volatile value *p)
 {
   struct oldify_state* st = st_v;
   value result;
