@@ -257,6 +257,10 @@ static intnat pool_sweep(struct caml_heap_state* local,
 
 /* Adopt pool from the pool_freelist avail and full pools
    to satisfy an alloction */
+CAMLno_tsan /* Race reports from this function clog the tests of user programs,
+               so we disable instrumentation here. For a justification of the
+               race report, see https://github.com/ocaml/ocaml/pull/11110.
+               */
 static pool* pool_global_adopt(struct caml_heap_state* local, sizeclass sz)
 {
   pool* r = NULL;
