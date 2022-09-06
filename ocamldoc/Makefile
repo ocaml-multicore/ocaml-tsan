@@ -70,6 +70,10 @@ COMPFLAGS = \
   -safe-string -strict-sequence -strict-formats -bin-annot -principal
 
 LINKFLAGS = -g $(INCLUDES)
+OPTLINKFLAGS=
+ifeq "$(WITH_TSAN)" "true"
+OPTLINKFLAGS += -cclib "-fsanitize=thread"
+endif
 
 CMOFILES=\
   odoc_config.cmo \
@@ -169,7 +173,8 @@ $(OCAMLDOC): $(EXECMOFILES)
 $(eval $(call PROGRAM_SYNONYM,ocamldoc.opt))
 
 $(OCAMLDOC_OPT): $(EXECMXFILES)
-	$(OCAMLOPT_CMD) -o $@ -linkall $(LINKFLAGS) $(OCAMLDOC_NCLIBRARIES) $^
+	$(OCAMLOPT_CMD) -o $@ -linkall $(LINKFLAGS) $(OPTLINKFLAGS) \
+		$(OCAMLDOC_NCLIBRARIES) $^
 
 $(OCAMLDOC_LIBCMA): $(LIBCMOFILES)
 	$(OCAMLC) -a -o $@ $(LINKFLAGS) $^

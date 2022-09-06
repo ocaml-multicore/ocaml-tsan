@@ -35,6 +35,10 @@ CAMLOPT = $(OCAMLRUN) $(ROOTDIR)/ocamlopt$(EXE) $(STDLIBFLAGS)
 COMPFLAGS = -g -absname -w +a-4-9-41-42-44-45-48 -warn-error +A \
             -safe-string -strict-sequence -strict-formats -bin-annot
 LINKFLAGS = -g
+OPTLINKFLAGS =
+ifeq "$(WITH_TSAN)" "true"
+OPTLINKFLAGS += -cclib "-fsanitize=thread"
+endif
 
 OBJS=cset.cmo syntax.cmo parser.cmo lexer.cmo table.cmo lexgen.cmo \
      compact.cmo common.cmo output.cmo outputbis.cmo main.cmo
@@ -52,7 +56,7 @@ ocamllex$(EXE): $(OBJS)
 	$(CAMLC) $(LINKFLAGS) -compat-32 -o $@ $^
 
 ocamllex.opt$(EXE): $(OBJS:.cmo=.cmx)
-	$(CAMLOPT_CMD) $(LINKFLAGS) -o $@ $^
+	$(CAMLOPT_CMD) $(LINKFLAGS) $(OPTLINKFLAGS) -o $@ $^
 
 clean::
 	rm -f $(programs) $(programs:=.exe)

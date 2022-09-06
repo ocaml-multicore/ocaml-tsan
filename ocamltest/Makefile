@@ -204,6 +204,10 @@ compdeps_paths=$(addprefix $(ROOTDIR)/compilerlibs/,$(compdeps_names))
 deps_paths=$(compdeps_paths) $(addprefix $(unix_path)/,$(unix_name))
 deps_byte=$(addsuffix .cma,$(deps_paths))
 deps_opt=$(addsuffix .cmxa,$(deps_paths))
+opt_link_flags=
+ifeq "$(WITH_TSAN)" "true"
+opt_link_flags += -cclib "-fsanitize=thread"
+endif
 
 $(eval $(call PROGRAM_SYNONYM,ocamltest))
 
@@ -218,7 +222,7 @@ ocamltest$(EXE): $(deps_byte) $(bytecode_modules)
 $(eval $(call PROGRAM_SYNONYM,ocamltest.opt))
 
 ocamltest.opt$(EXE): $(deps_opt) $(native_modules)
-	$(ocamlopt_cmd) $(unix_include)-o $@ $^
+	$(ocamlopt_cmd) $(opt_link_flags) $(unix_include)-o $@ $^
 
 %.cmx: %.ml $(deps_opt)
 	$(ocamlopt) -c $<

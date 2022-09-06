@@ -43,6 +43,10 @@ INCLUDES = $(addprefix -I ,$(DIRS))
 COMPFLAGS = -absname -w +a-4-9-41-42-44-45-48-70 -strict-sequence \
 -warn-error +A -principal -safe-string -strict-formats -bin-annot $(INCLUDES)
 LINKFLAGS = $(INCLUDES)
+OPTLINKFLAGS =
+ifeq "$(WITH_TSAN)" "true"
+OPTLINKFLAGS += -cclib "-fsanitize=thread"
+endif
 VPATH := $(filter-out -I,$(INCLUDES))
 
 programs_byte := \
@@ -64,7 +68,8 @@ $(programs_byte:%=%$(EXE)):
 	$(CAMLC) $(LINKFLAGS) -I $(ROOTDIR) -o $@ $(filter-out %.cmi,$^)
 
 $(programs_opt:%=%$(EXE)):
-	$(CAMLOPT_CMD) $(LINKFLAGS) -I $(ROOTDIR) -o $@ $(filter-out %.cmi,$^)
+	$(CAMLOPT_CMD) $(LINKFLAGS) $(OPTLINKFLAGS) -I $(ROOTDIR) -o $@ \
+		$(filter-out %.cmi,$^)
 
 clean::
 	rm -f $(programs_byte) $(programs_byte:%=%.exe)
