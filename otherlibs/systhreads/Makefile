@@ -75,9 +75,10 @@ else # Windows
 	$(MKLIB) -o $(LIBNAME) -ocamlc "$(CAMLC)" -linkall $^
 endif
 
+# FIXME OPTLINKFLAGS needed here?
 # See remark above: force static linking of libthreadsnat.a
 $(LIBNAME).cmxa: $(THREADS_NCOBJS)
-	$(CAMLOPT) -linkall -a -cclib -lthreadsnat -o $@ $^
+	$(CAMLOPT) -linkall -a -cclib -lthreadsnat $(OPTLINKFLAGS) -o $@ $^
 
 # Note: I removed "-cclib -lunix" from the line above.
 # Indeed, if we link threads.cmxa, then we must also link unix.cmxa,
@@ -96,7 +97,7 @@ else
 st_stubs.%.$(O): st_stubs.c $(RUNTIME_HEADERS) $(wildcard *.h)
 endif
 	$(CC) -c $(OC_CFLAGS) $(CFLAGS) $(OC_CPPFLAGS) $(CPPFLAGS) \
-	  $(OUTPUTOBJ)$@ $<
+	  $(OC_TSAN_CFLAGS) $(OUTPUTOBJ)$@ $<
 
 .PHONY: partialclean
 partialclean:

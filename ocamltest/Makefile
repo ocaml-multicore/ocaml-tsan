@@ -143,7 +143,7 @@ ocamltest$(EXE): $(deps_byte) $(bytecode_modules)
 $(eval $(call PROGRAM_SYNONYM,ocamltest.opt))
 
 ocamltest.opt$(EXE): $(deps_opt) $(native_modules)
-	$(ocamlopt_cmd) $(ocamltest_unix_include)-o $@ $^
+	$(ocamlopt_cmd) $(OPTLINKFLAGS) $(ocamltest_unix_include)-o $@ $^
 
 %.cmx: %.ml $(deps_opt)
 	$(ocamlopt) -c $<
