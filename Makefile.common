@@ -109,6 +109,14 @@ OPTCOMPFLAGS=
 ifeq "$(FUNCTION_SECTIONS)" "true"
 OPTCOMPFLAGS += -function-sections
 endif
+ifeq "$(WITH_TSAN)" "true"
+OPTCOMPFLAGS += -tsan
+endif
+
+OPTLINKFLAGS=
+ifeq "$(WITH_TSAN)" "true"
+OPTLINKFLAGS += -I $(ROOTDIR)/runtime -tsan
+endif
 
 # Escape special characters in the argument string.
 # There are four characters that need escaping:
