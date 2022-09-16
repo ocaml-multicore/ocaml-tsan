@@ -96,7 +96,7 @@ else
 st_stubs.%.$(O): st_stubs.c $(RUNTIME_HEADERS) $(wildcard *.h)
 endif
 	$(CC) -c $(OC_CFLAGS) $(CFLAGS) $(OC_CPPFLAGS) $(CPPFLAGS) \
-	  $(OUTPUTOBJ)$@ $<
+	  $(OC_TSAN_CFLAGS) $(OUTPUTOBJ)$@ $<
 
 .PHONY: partialclean
 partialclean:
