@@ -72,12 +72,44 @@ let wrap_entry_exit expr =
   let call_exit = Cmm_helpers.return_unit dbg_none @@ Cop (
       Cextcall ("__tsan_func_exit", typ_void, [], false), [], dbg_none)
   in
-  let rec insert_call_exit = function
-    | Clet (v, e, body) -> Clet (v, e, insert_call_exit body)
-    | Clet_mut (v, typ, e, body) -> Clet_mut (v, typ, e, insert_call_exit body)
-    | Cphantom_let (v, e, body) -> Cphantom_let (v, e, insert_call_exit body)
-    | Cassign (v, body) -> Cassign (v, insert_call_exit body)
-    | Cop (Capply fn, args, dbg_none) ->
+  (* [is_tail] is true when the expression is in tail position *)
+  let rec insert_call_exit is_tail = function
+    | Clet (v, e, body) -> Clet (v, e, insert_call_exit is_tail body)
+    | Clet_mut (v, typ, e, body) -> Clet_mut (v, typ, e, insert_call_exit is_tail body)
+    | Cphantom_let (v, e, body) -> Cphantom_let (v, e, insert_call_exit is_tail body)
+    | Cassign (v, body) -> Cassign (v, insert_call_exit is_tail body)
+    | Csequence (op1, op2) -> Csequence (op1, insert_call_exit is_tail op2)
+    | Cifthenelse (cond, t_dbg, t, f_dbg, f, dbg_none) ->
+        Cifthenelse (cond, t_dbg, insert_call_exit is_tail t, f_dbg,
+          insert_call_exit is_tail f, dbg_none)
+    | Cswitch (e, cases, handlers, dbg_none) ->
+        let handlers = Array.map
+          (fun (handler, handler_dbg) ->
+            (insert_call_exit is_tail handler, handler_dbg))
+          handlers
+        in
+        Cswitch (e, cases, handlers, dbg_none)
+    | Ccatch (isrec, handlers, next) ->
+        let handlers = List.map
+            (fun (id, args, e, dbg_none) -> (id, args, insert_call_exit is_tail e, dbg_none))
+            handlers
+        in
+        Ccatch (isrec, handlers, insert_call_exit is_tail next)
+    | Cexit (ex, args) ->
+        (* A [Cexit] is like a goto to the beginning of a handler. Therefore,
+           it is never the last thing evaluated in a function; there is no need
+           to insert a call to [__tsan_func_exit] here. *)
+        Cexit (ex, args)
+    | Ctrywith (e, v, handler, dbg_none) ->
+        (* This is a [try ... with] in tail position. We need to insert a call
+           to [__tsan_func_exit] at the tail of both the body and the handler.
+           However, these expressions are no longer in tail position (as code
+           is inserted at the end of a [try ... with] block to pop the
+           exception handler. *)
+        Ctrywith (insert_call_exit false e, v, insert_call_exit false handler, dbg_none)
+    | Cop (Capply fn, args, dbg_none) when is_tail ->
+        (* This is a tail call. We insert the call to [__tsan_func_exit] right
+           before the call, but after evaluating the arguments. *)
         let fun_ = List.hd args in
         let var_args =
           List.map (fun x -> VP.create (V.create_local "arg"), x)
@@ -90,34 +122,13 @@ let wrap_entry_exit expr =
                 dbg_none)))
         in
         List.fold_right (fun (id,arg) acc -> Clet (id, arg, acc)) var_args tail
-    | Csequence (op1, op2) -> Csequence (op1, insert_call_exit op2)
-    | Cifthenelse (cond, t_dbg, t, f_dbg, f, dbg_none) ->
-        Cifthenelse (cond, t_dbg, insert_call_exit t, f_dbg,
-          insert_call_exit f, dbg_none)
-    | Cswitch (e, cases, handlers, dbg_none) ->
-        let handlers = Array.map
-          (fun (handler, handler_dbg) ->
-            (insert_call_exit handler, handler_dbg))
-          handlers
-        in
-        Cswitch (e, cases, handlers, dbg_none)
-    | Ccatch (isrec, handlers, next) -> (* FIXME ask Fred about Ccatch usage! *)
-        let handlers = List.map
-            (fun (id, args, e, dbg_none) -> (id, args, insert_call_exit e, dbg_none))
-            handlers
-        in
-        Ccatch (isrec, handlers, insert_call_exit next)
-    | Cexit (ex, args) -> (* FIXME ask Fred about Cexit usage! *)
-        Cexit (ex, args)
-    | Ctrywith (e, v, handler, dbg_none) ->
-        Ctrywith (e, v, insert_call_exit handler, dbg_none)
     | Cconst_int (_, _) | Cconst_natint (_, _) | Cconst_float (_, _)
     | Cconst_symbol (_, _) | Cvar _ | Ctuple _ | Cop (_, _, _)
     | Creturn_addr as expr ->
         let id = VP.create (V.create_local "res") in
         Clet (id, expr, Csequence (call_exit, Cvar (VP.var id)))
   in
-  Csequence (call_entry, insert_call_exit expr)
+  Csequence (call_entry, insert_call_exit true expr)
 
 let instrument _label body =
   let rec aux = function
