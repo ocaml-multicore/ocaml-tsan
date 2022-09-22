@@ -64,5 +64,5 @@ let [@inline never] f () =
 
 let () =
   let d = Domain.spawn (fun () -> Unix.sleep 1; r := 1) in
-  f ();
+  f (); Unix.sleep 1;
   Domain.join d
