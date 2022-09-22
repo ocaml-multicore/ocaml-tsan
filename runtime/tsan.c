@@ -12,6 +12,8 @@
 
 #define CAML_INTERNALS
 
+#if defined(WITH_THREAD_SANITIZER)
+
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 #include <execinfo.h> // XXX
@@ -90,3 +92,5 @@ void caml_tsan_exn_func_exit_c(char* limit)
     }
   }
 }
+
+#endif // WITH_THREAD_SANITIZER
