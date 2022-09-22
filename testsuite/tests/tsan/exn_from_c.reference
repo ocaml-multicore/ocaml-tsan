@@ -1,0 +1,84 @@
+entering f
+entering g
+entering h
+entering i
+calling print_and_raise...
+Hello from print_and_raise
+caught Failure "test"
+Raised by primitive operation at Exn_from_c.i in file "exn_from_c.ml", line 25, characters 2-20
+Called from Exn_from_c.h in file "exn_from_c.ml", line 30, characters 2-6
+Called from Exn_from_c.g in file "exn_from_c.ml", line 35, characters 2-6
+Called from Exn_from_c.f in file "exn_from_c.ml", line 40, characters 7-11
+leaving f
+==================
+WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
+  Write of size 8 at <implemspecific> by thread T1 (mutexes: write M92):
+    #0 camlExn_from_c.fun_<implemspecific> <null> (exn_from_c.opt+<implemspecific>)
+    #1 camlStdlib__Domain.body_<implemspecific> <null> (exn_from_c.opt+<implemspecific>)
+    #2 caml_start_program <null> (exn_from_c.opt+<implemspecific>)
+    #3 caml_callback_exn runtime/callback.c:167 (exn_from_c.opt+<implemspecific>)
+    #4 caml_callback runtime/callback.c:253 (exn_from_c.opt+<implemspecific>)
+    #5 domain_thread_func runtime/domain.c:1095 (exn_from_c.opt+<implemspecific>)
+
+  Previous read of size 8 at <implemspecific> by main thread (mutexes: write M88):
+    #0 camlExn_from_c.race_<implemspecific> <null> (exn_from_c.opt+<implemspecific>)
+    #1 camlExn_from_c.f_<implemspecific> <null> (exn_from_c.opt+<implemspecific>)
+    #2 camlExn_from_c.entry <null> (exn_from_c.opt+<implemspecific>)
+    #3 caml_program <null> (exn_from_c.opt+<implemspecific>)
+    #4 caml_start_program <null> (exn_from_c.opt+<implemspecific>)
+    #5 caml_startup_common runtime/startup_nat.c:133 (exn_from_c.opt+<implemspecific>)
+    #6 caml_startup_exn runtime/startup_nat.c:138 (exn_from_c.opt+<implemspecific>)
+    #7 caml_startup runtime/startup_nat.c:143 (exn_from_c.opt+<implemspecific>)
+    #8 caml_main runtime/startup_nat.c:150 (exn_from_c.opt+<implemspecific>)
+    #9 main runtime/main.c:37 (exn_from_c.opt+<implemspecific>)
+
+  As if synchronized via sleep:
+    #0 nanosleep <null> (libtsan.so.2+<implemspecific>)
+    #1 caml_unix_sleep /home/olivier/compiler/tsan/otherlibs/unix/sleep_unix.c:42 (exn_from_c.opt+<implemspecific>)
+    #2 camlUnix.sleep_<implemspecific> <null> (exn_from_c.opt+<implemspecific>)
+    #3 camlExn_from_c.fun_<implemspecific> <null> (exn_from_c.opt+<implemspecific>)
+    #4 camlStdlib__Domain.body_<implemspecific> <null> (exn_from_c.opt+<implemspecific>)
+    #5 caml_start_program <null> (exn_from_c.opt+<implemspecific>)
+    #6 caml_callback_exn runtime/callback.c:167 (exn_from_c.opt+<implemspecific>)
+    #7 caml_callback runtime/callback.c:253 (exn_from_c.opt+<implemspecific>)
+    #8 domain_thread_func runtime/domain.c:1095 (exn_from_c.opt+<implemspecific>)
+
+  Mutex M92 (<implemspecific>) created at:
+    #0 pthread_mutex_init <null> (libtsan.so.2+<implemspecific>)
+    #1 caml_plat_mutex_init runtime/platform.c:54 (exn_from_c.opt+<implemspecific>)
+    #2 caml_init_domains runtime/domain.c:883 (exn_from_c.opt+<implemspecific>)
+    #3 caml_init_gc runtime/gc_ctrl.c:343 (exn_from_c.opt+<implemspecific>)
+    #4 caml_startup_common runtime/startup_nat.c:113 (exn_from_c.opt+<implemspecific>)
+    #5 caml_startup_exn runtime/startup_nat.c:138 (exn_from_c.opt+<implemspecific>)
+    #6 caml_startup runtime/startup_nat.c:143 (exn_from_c.opt+<implemspecific>)
+    #7 caml_main runtime/startup_nat.c:150 (exn_from_c.opt+<implemspecific>)
+    #8 main runtime/main.c:37 (exn_from_c.opt+<implemspecific>)
+
+  Mutex M88 (<implemspecific>) created at:
+    #0 pthread_mutex_init <null> (libtsan.so.2+<implemspecific>)
+    #1 caml_plat_mutex_init runtime/platform.c:54 (exn_from_c.opt+<implemspecific>)
+    #2 caml_init_domains runtime/domain.c:883 (exn_from_c.opt+<implemspecific>)
+    #3 caml_init_gc runtime/gc_ctrl.c:343 (exn_from_c.opt+<implemspecific>)
+    #4 caml_startup_common runtime/startup_nat.c:113 (exn_from_c.opt+<implemspecific>)
+    #5 caml_startup_exn runtime/startup_nat.c:138 (exn_from_c.opt+<implemspecific>)
+    #6 caml_startup runtime/startup_nat.c:143 (exn_from_c.opt+<implemspecific>)
+    #7 caml_main runtime/startup_nat.c:150 (exn_from_c.opt+<implemspecific>)
+    #8 main runtime/main.c:37 (exn_from_c.opt+<implemspecific>)
+
+  Thread T1 (tid=<implemspecific>, running) created by main thread at:
+    #0 pthread_create <null> (libtsan.so.2+<implemspecific>)
+    #1 caml_domain_spawn runtime/domain.c:1150 (exn_from_c.opt+<implemspecific>)
+    #2 caml_c_call <null> (exn_from_c.opt+<implemspecific>)
+    #3 camlStdlib__Domain.spawn_<implemspecific> <null> (exn_from_c.opt+<implemspecific>)
+    #4 camlExn_from_c.entry <null> (exn_from_c.opt+<implemspecific>)
+    #5 caml_program <null> (exn_from_c.opt+<implemspecific>)
+    #6 caml_start_program <null> (exn_from_c.opt+<implemspecific>)
+    #7 caml_startup_common runtime/startup_nat.c:133 (exn_from_c.opt+<implemspecific>)
+    #8 caml_startup_exn runtime/startup_nat.c:138 (exn_from_c.opt+<implemspecific>)
+    #9 caml_startup runtime/startup_nat.c:143 (exn_from_c.opt+<implemspecific>)
+    #10 caml_main runtime/startup_nat.c:150 (exn_from_c.opt+<implemspecific>)
+    #11 main runtime/main.c:37 (exn_from_c.opt+<implemspecific>)
+
+SUMMARY: ThreadSanitizer: data race (<systemspecific>/exn_from_c.opt+<implemspecific>) in camlExn_from_c.fun_<implemspecific>
+==================
+ThreadSanitizer: reported 1 warnings
