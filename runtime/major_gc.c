@@ -688,6 +688,10 @@ void caml_shrink_mark_stack (void)
 
 void caml_darken_cont(value cont);
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 static void mark_slice_darken(struct mark_stack* stk, value child,
                               intnat* work)
 {

@@ -1,13 +1,13 @@
 entering f
 entering g
 calling C code
-Hello from my_c_callback
+Hello from print_and_call_ocaml_h
 entering h
 entering i
 throwing Exn...
 caught an ExnB
-Raised by primitive operation at Exn_in_callback.g in file "exn_in_callback.ml", line 52, characters 2-18
-Called from Exn_in_callback.f in file "exn_in_callback.ml", line 59, characters 7-11
+Raised by primitive operation at Exn_in_callback.g in file "exn_in_callback.ml", line 44, characters 2-27
+Called from Exn_in_callback.f in file "exn_in_callback.ml", line 50, characters 7-11
 leaving f
 ==================
 WARNING: ThreadSanitizer: data race (pid=<implemspecific>)

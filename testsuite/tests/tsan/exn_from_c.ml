@@ -10,10 +10,8 @@ include unix
 set TSAN_OPTIONS="detect_deadlocks=0"
 
 *)
-exception ExnA
-exception ExnB
 
-external print_and_call_ocaml_h : unit -> unit = "print_and_call_ocaml_h"
+external print_and_raise : unit -> unit = "print_and_raise"
 
 open Printf
 
@@ -23,33 +21,25 @@ let [@inline never] race () = ignore @@ !r
 
 let [@inline never] i () =
   printf "entering i\n%!";
-  printf "throwing Exn...\n%!";
-  (*race ();*)
-  ignore (raise ExnB);
+  printf "calling print_and_raise...\n%!";
+  print_and_raise ();
   printf "leaving i\n%!"
 
 let [@inline never] h () =
   printf "entering h\n%!";
   i ();
-  (* try i () with
-  | ExnA -> printf "caught an ExnA\n%!";
-  *)
   printf "leaving h\n%!"
-
-let _ = Callback.register "ocaml_h" h
 
 let [@inline never] g () =
   printf "entering g\n%!";
-  printf "calling C code\n%!";
-  print_and_call_ocaml_h ();
-  printf "back from C code\n%!";
+  h ();
   printf "leaving g\n%!"
 
 let [@inline never] f () =
   printf "entering f\n%!";
-  (try g () with
-  | ExnB ->
-    printf "caught an ExnB\n%!";
+  (try g ()
+  with Failure msg ->
+    printf "caught Failure \"%s\"\n%!" msg;
     Printexc.print_backtrace stdout;
     race ());
   printf "leaving f\n%!"
