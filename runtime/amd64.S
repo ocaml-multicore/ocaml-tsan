@@ -841,6 +841,7 @@ LBL(118):
 CFI_ENDPROC
 ENDFUNCTION(G(caml_raise_exn))
 
+#if defined(WITH_THREAD_SANITIZER)
 FUNCTION(G(caml_tsan_raise_notrace_exn))
 CFI_STARTPROC
         ENTER_FUNCTION
@@ -850,6 +851,7 @@ CFI_STARTPROC
         jmp   LBL(118)
 CFI_ENDPROC
 ENDFUNCTION(G(caml_tsan_raise_notrace_exn))
+#endif
 
 FUNCTION(G(caml_reraise_exn))
 CFI_STARTPROC
