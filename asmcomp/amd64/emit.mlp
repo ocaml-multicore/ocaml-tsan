@@ -867,7 +867,7 @@ let emit_instr env fallthrough i =
           record_frame env Reg.Set.empty (Dbg_raise i.dbg)
       | Lambda.Raise_notrace ->
           if !Clflags.thread_sanitizer then begin
-            emit_call "caml_raise_exn";
+            emit_call "caml_tsan_raise_notrace_exn";
             record_frame env Reg.Set.empty (Dbg_raise i.dbg)
           end else begin
             I.mov (domain_field Domainstate.Domain_exn_handler) rsp;
