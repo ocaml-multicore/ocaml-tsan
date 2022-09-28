@@ -830,7 +830,6 @@ LBL(117):
         C_call  (GCALL(caml_stash_backtrace))
 #if defined(WITH_THREAD_SANITIZER)
 LBL(118):
-        /* FIXME also need the exception value? */
         movq    (%r13), C_ARG_1   /* arg 1: pc of raise */
         leaq    8(%r13), C_ARG_2  /* arg 2: sp at raise */
         movq    Caml_state(exn_handler), C_ARG_3 /* arg 3: sp of handler */
@@ -841,6 +840,16 @@ LBL(118):
         ret
 CFI_ENDPROC
 ENDFUNCTION(G(caml_raise_exn))
+
+FUNCTION(G(caml_tsan_raise_notrace_exn))
+CFI_STARTPROC
+        ENTER_FUNCTION
+        movq    %rsp, %r13        /* Save OCaml stack pointer */
+        movq    %rax, %r12        /* Save exception bucket */
+        movq    Caml_state(c_stack), %rsp
+        jmp   LBL(118)
+CFI_ENDPROC
+ENDFUNCTION(G(caml_tsan_raise_notrace_exn))
 
 FUNCTION(G(caml_reraise_exn))
 CFI_STARTPROC
