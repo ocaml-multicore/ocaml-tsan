@@ -122,6 +122,16 @@
 #define LEAVE_FUNCTION
 #endif
 
+#ifdef WITH_FRAME_POINTERS
+#define STACK_RETADDR(reg)  (1 * 8)(reg)
+#define STACK_ARG_1(reg)    (2 * 8 + 0 * 8)(reg)
+#define STACK_ARG_2(reg)    (2 * 8 + 1 * 8)(reg)
+#else
+#define STACK_RETADDR(reg)  (0 * 8)(reg)
+#define STACK_ARG_1(reg)    (1 * 8 + 0 * 8)(reg)
+#define STACK_ARG_2(reg)    (1 * 8 + 1 * 8)(reg)
+#endif
+
 
 #ifdef DEBUG
 #define CHECK_STACK_ALIGNMENT \
@@ -253,12 +263,11 @@
         CFI_DEF_CFA_OFFSET(16);                \
         POP_EXN_HANDLER
 
-// TODO OFFSET should account for framepointer
 #if defined(WITH_THREAD_SANITIZER)
-#define TSAN_ENTER_FUNCTION(OFFSET)                             \
+#define TSAN_ENTER_FUNCTION                                     \
         SAVE_ALL_REGS;                                          \
         /* arg 1: pc of raise */                                \
-        movq    OFFSET(%rsp), C_ARG_1;                          \
+        movq    STACK_RETADDR(%rsp), C_ARG_1;                   \
         SWITCH_OCAML_TO_C;                                      \
         C_call  (GCALL(__tsan_func_entry));                     \
         SWITCH_C_TO_OCAML;                                      \
@@ -271,7 +280,7 @@
         SWITCH_C_TO_OCAML;                                      \
         RESTORE_ALL_REGS;
 #else
-#define TSAN_ENTER_FUNCTION(OFFSET)
+#define TSAN_ENTER_FUNCTION
 #define TSAN_EXIT_FUNCTION
 #endif
 
@@ -616,7 +625,7 @@ FUNCTION(G(caml_c_call))
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
         ENTER_FUNCTION
-        TSAN_ENTER_FUNCTION(0)
+        TSAN_ENTER_FUNCTION
 LBL(caml_c_call):
     /* Arguments:
         C arguments         : %rdi, %rsi, %rdx, %rcx, %r8, and %r9
@@ -830,8 +839,8 @@ LBL(117):
         C_call  (GCALL(caml_stash_backtrace))
 #if defined(WITH_THREAD_SANITIZER)
 LBL(118):
-        movq    (%r13), C_ARG_1   /* arg 1: pc of raise */
-        leaq    8(%r13), C_ARG_2  /* arg 2: sp at raise */
+        movq    STACK_RETADDR(%r13), C_ARG_1   /* arg 1: pc of raise */
+        leaq    STACK_ARG_1(%r13), C_ARG_2  /* arg 2: sp at raise */
         movq    Caml_state(exn_handler), C_ARG_3 /* arg 3: sp of handler */
         C_call  (GCALL(caml_tsan_exn_func_exit))
 #endif
