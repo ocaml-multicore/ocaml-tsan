@@ -85,6 +85,7 @@ config_main.ml: config.mlp $(ROOTDIR)/Makefile.config Makefile config.common.ml
 	    $(call SUBST,SYSTHREAD_SUPPORT) \
 	    $(call SUBST,TARGET) \
 	    $(call SUBST,WITH_FRAME_POINTERS) \
+	    $(call SUBST,WITH_TSAN) \
 	    $(call SUBST,WITH_PROFINFO) \
 	    $(call SUBST,FLAT_FLOAT_ARRAY) \
 	    $(call SUBST,FUNCTION_SECTIONS) \

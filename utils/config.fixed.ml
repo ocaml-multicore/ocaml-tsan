@@ -50,6 +50,7 @@ let windows_unicode = false
 let flat_float_array = true
 let function_sections = false
 let afl_instrument = false
+let tsan = false
 let architecture = "none"
 let model = "default"
 let system = "unknown"
