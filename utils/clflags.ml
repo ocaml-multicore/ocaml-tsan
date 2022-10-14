@@ -169,7 +169,7 @@ let pic_code = ref (match Config.architecture with (* -fPIC *)
 let runtime_variant =
   ref (match Config.force_instrumented_runtime with (* -runtime-variant *)
         | true -> "i"
-        | false -> "")
+        | false -> if Config.tsan then "t" else "")
 
 let with_runtime = ref true         (* -with-runtime *)
 
@@ -181,8 +181,6 @@ let inlining_report = ref false    (* -inlining-report *)
 
 let afl_instrument = ref Config.afl_instrument (* -afl-instrument *)
 let afl_inst_ratio = ref 100           (* -afl-inst-ratio *)
-
-let thread_sanitizer = ref false (* -tsan *)
 
 let function_sections = ref false      (* -function-sections *)
 
