@@ -497,7 +497,7 @@ beforedepend:: parsing/lexer.ml
 
 ocamlc.opt$(EXE): compilerlibs/ocamlcommon.cmxa \
                   compilerlibs/ocamlbytecomp.cmxa $(BYTESTART:.cmo=.cmx)
-	$(CAMLOPT_CMD) $(OC_COMMON_LDFLAGS) $(OPTLINKFLAGS) -o $@ $^ -cclib "$(BYTECCLIBS)"
+	$(CAMLOPT_CMD) $(OC_COMMON_LDFLAGS) -o $@ $^ -cclib "$(BYTECCLIBS)" -I runtime
 
 partialclean::
 	rm -f ocamlc.opt$(EXE)
@@ -508,7 +508,7 @@ ocamlopt.opt$(EXE): \
                     compilerlibs/ocamlcommon.cmxa \
                     compilerlibs/ocamloptcomp.cmxa \
                     $(OPTSTART:.cmo=.cmx)
-	$(CAMLOPT_CMD) $(OC_COMMON_LDFLAGS) -o $@ $^
+	$(CAMLOPT_CMD) $(OC_COMMON_LDFLAGS) -o $@ $^ -I runtime
 
 partialclean::
 	rm -f ocamlopt.opt$(EXE)
@@ -724,10 +724,8 @@ libasmruni_OBJECTS = \
 libasmrunpic_OBJECTS = $(runtime_NATIVE_C_SOURCES:.c=.npic.$(O)) \
   $(runtime_ASM_OBJECTS:.$(O)=_libasmrunpic.$(O))
 
-# FIXME Add tsan.c properly
 libasmrunt_OBJECTS = \
-  $(runtime_NATIVE_C_SOURCES:.c=.nt.$(O)) runtime/tsan.nt.$(O) \
-	$(runtime_ASM_OBJECTS:.$(O)=.t.$(O))
+  $(runtime_NATIVE_C_SOURCES:.c=.nt.$(O)) $(runtime_ASM_OBJECTS:.$(O)=.t.$(O))
 
 ## General (non target-specific) assembler and compiler flags
 
@@ -991,7 +989,8 @@ runtime/%.i.o: runtime/%.S
 	$(ASPP) $(OC_ASPPFLAGS) $(OC_INSTR_CPPFLAGS) -o $@ $< || $(ASPP_ERROR)
 
 runtime/%.t.o: runtime/%.S
-	$(ASPP) $(OC_ASPPFLAGS) $(OC_TSAN_CPPFLAGS) $(ocamlrunt_CPPFLAGS) -o $@ $< \
+	$(ASPP) $(OC_ASPPFLAGS) $(OC_TSAN_ASPPFLAGS) $(OC_TSAN_CPPFLAGS) \
+		$(ocamlrunt_CPPFLAGS) -o $@ $< \
 	  || $(ASPP_ERROR)
 
 runtime/%_libasmrunpic.o: runtime/%.S
@@ -1060,8 +1059,8 @@ stdlib/libcamlrun.$(A): runtime-all
 	cd stdlib; $(LN) ../runtime/libcamlrun.$(A) .
 clean::
 	rm -f $(addprefix runtime/, *.o *.obj *.a *.lib *.so *.dll ld.conf)
-	rm -f $(addprefix runtime/, ocamlrun ocamlrund ocamlruni ocamlrunt ocamlruns \
-		sak)
+	rm -f $(addprefix runtime/, ocamlrun ocamlrund ocamlruni ocamlruns \
+		ocamlrunt sak)
 	rm -f $(addprefix runtime/, ocamlrun.exe ocamlrund.exe ocamlruni.exe \
 	  ocamlrunt.exe ocamlruns.exe sak.exe)
 	rm -f runtime/primitives runtime/primitives.new runtime/prims.c \
@@ -1385,7 +1384,8 @@ ocamlnat_dependencies := \
   $(TOPLEVELSTART:.cmo=.cmx)
 
 ocamlnat$(EXE): $(ocamlnat_dependencies)
-	$(CAMLOPT_CMD) $(OC_COMMON_LDFLAGS) -linkall -I toplevel/native -o $@ $^
+	$(CAMLOPT_CMD) $(OC_COMMON_LDFLAGS) -linkall -I toplevel/native -o $@ \
+		$^ -I runtime
 
 COMPILE_NATIVE_MODULE = \
   $(CAMLOPT_CMD) $(OC_COMMON_CFLAGS) -I $(@D) $(INCLUDES) $(OC_NATIVE_CFLAGS)

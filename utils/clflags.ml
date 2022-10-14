@@ -166,7 +166,7 @@ let pic_code = ref (match Config.architecture with (* -fPIC *)
                      | "amd64" -> true
                      | _       -> false)
 
-let runtime_variant = ref ""
+let runtime_variant = ref (if Config.tsan then "t" else "")
 
 let with_runtime = ref true         (* -with-runtime *)
 
@@ -178,8 +178,6 @@ let inlining_report = ref false    (* -inlining-report *)
 
 let afl_instrument = ref Config.afl_instrument (* -afl-instrument *)
 let afl_inst_ratio = ref 100           (* -afl-inst-ratio *)
-
-let thread_sanitizer = ref false (* -tsan *)
 
 let function_sections = ref false      (* -function-sections *)
 

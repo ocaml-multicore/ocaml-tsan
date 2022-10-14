@@ -1429,7 +1429,7 @@ let transl_function f =
     else
       transl env body in
   let cmm_body =
-    if !Clflags.thread_sanitizer then
+    if Config.tsan then
       Thread_sanitizer.instrument f.label cmm_body
     else
       cmm_body in
@@ -1534,10 +1534,8 @@ let compunit (ulam, preallocated_blocks, constants) =
     else
       transl empty_env ulam in
   let init_code =
-    if !Clflags.thread_sanitizer then
-      Thread_sanitizer.wrap_entry_exit init_code
-    else
-      init_code
+    if Config.tsan then Thread_sanitizer.wrap_entry_exit init_code
+    else init_code
   in
   let c1 = [Cfunction {fun_name = Compilenv.make_symbol (Some "entry");
                        fun_args = [];

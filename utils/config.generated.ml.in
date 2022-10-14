@@ -106,3 +106,5 @@ let target = {@QS@|@target@|@QS@}
 let systhread_supported = @systhread_support@
 
 let flexdll_dirs = [@flexdll_dir@]
+
+let tsan = @tsan@
