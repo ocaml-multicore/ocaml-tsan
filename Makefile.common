@@ -104,6 +104,9 @@ OC_NATIVE_CPPFLAGS=\
 
 # Flags to pass to the C preprocessor when preprocessing assembly files
 OC_ASPPFLAGS=-I $(ROOTDIR)/runtime $(OC_NATIVE_CPPFLAGS)
+ifeq "$(WITH_TSAN)" "true"
+OC_ASPPFLAGS += -DWITH_THREAD_SANITIZER
+endif
 
 OPTCOMPFLAGS=
 ifeq "$(FUNCTION_SECTIONS)" "true"

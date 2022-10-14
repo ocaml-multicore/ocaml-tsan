@@ -47,10 +47,6 @@ COMPFLAGS=-strict-sequence -principal -absname \
           -warn-error +a \
           -bin-annot -safe-string -strict-formats $(INCLUDES)
 LINKFLAGS=
-OPTLINKFLAGS=
-ifeq "$(WITH_TSAN)" "true"
-OPTLINKFLAGS += -tsan
-endif
 
 ifeq "$(strip $(NATDYNLINKOPTS))" ""
 OCAML_NATDYNLINKOPTS=
