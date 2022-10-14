@@ -182,6 +182,9 @@ INSTALL_SOURCE_ARTIFACTS=@install_source_artifacts@
 
 OC_CFLAGS=@oc_cflags@
 OC_TSAN_CFLAGS=@oc_tsan_cflags@
+ifeq "$(WITH_TSAN)" "true"
+OC_CFLAGS += $(OC_TSAN_CFLAGS)
+endif
 CFLAGS?=@CFLAGS@
 OC_CPPFLAGS=-I$(ROOTDIR)/runtime @oc_cppflags@
 CPPFLAGS?=@CPPFLAGS@
@@ -226,7 +229,9 @@ RUNTIMED=@debug_runtime@
 INSTRUMENTED_RUNTIME=@instrumented_runtime@
 INSTRUMENTED_RUNTIME_LIBS=@instrumented_runtime_libs@
 WITH_TSAN=@tsan@
+ifeq "$(WITH_TSAN)" "true"
 TSAN_RUNTIME_LIBS=@tsan_runtime_libs@
+endif
 WITH_DEBUGGER=@with_debugger@
 WITH_CAMLTEX=@with_camltex@
 WITH_OCAMLDOC=@ocamldoc@

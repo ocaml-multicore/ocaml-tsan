@@ -16177,6 +16177,14 @@ fi
 
 if $tsan
 then :
+  if $force_instrumented_runtime
+then :
+  as_fn_error $? "Enabling tsan option incompatible with force-instrumented-runtime option" "$LINENO" 5
+fi
+fi
+
+if $tsan
+then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&5
 printf "%s\n" "$as_me: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&6;}
   case $ocaml_cv_cc_vendor in #(

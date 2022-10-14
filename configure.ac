@@ -1500,6 +1500,12 @@ AS_IF([test "x$enable_tsan" = "xyes" ],
   [tsan=false])
 
 AS_IF([$tsan],
+  [AS_IF([$force_instrumented_runtime],
+    [AC_MSG_ERROR([Enabling tsan option incompatible with force-instrumented-runtime option])],
+    [])],
+  [])
+
+AS_IF([$tsan],
   [AC_MSG_NOTICE([using thread sanitizer with vendor=$ocaml_cv_cc_vendor])
   AS_CASE([$ocaml_cv_cc_vendor],
     [gcc-[[0123456789]]-*|gcc-10-*],

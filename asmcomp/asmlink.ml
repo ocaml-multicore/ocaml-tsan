@@ -239,7 +239,7 @@ let make_startup_file ~ppf_dump units_list ~crc_interfaces =
     List.flatten (List.map (fun (info,_,_) -> info.ui_defines) units_list) in
   let entry = Cmm_helpers.entry_point name_list in
   let entry =
-    if !Clflags.thread_sanitizer then
+    if Config.tsan then
       match entry with
       | Cfunction ({ fun_body; _ } as cf) ->
           Cmm.Cfunction { cf with fun_body =
