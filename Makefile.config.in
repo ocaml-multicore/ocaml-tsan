@@ -222,7 +222,9 @@ RUNTIMED=@debug_runtime@
 INSTRUMENTED_RUNTIME=@instrumented_runtime@
 INSTRUMENTED_RUNTIME_LIBS=@instrumented_runtime_libs@
 WITH_TSAN=@tsan@
+ifeq "$(WITH_TSAN)" "true"
 TSAN_RUNTIME_LIBS=@tsan_runtime_libs@
+endif
 WITH_DEBUGGER=@with_debugger@
 WITH_CAMLTEX=@with_camltex@
 WITH_OCAMLDOC=@ocamldoc@

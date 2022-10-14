@@ -178,8 +178,8 @@ META
 
 /stdlib/camlheader
 /stdlib/target_camlheader
-/stdlib/camlheader[di]
-/stdlib/target_camlheader[di]
+/stdlib/camlheader[dit]
+/stdlib/target_camlheader[dit]
 /stdlib/camlheader_ur
 /stdlib/labelled-*
 /stdlib/caml
