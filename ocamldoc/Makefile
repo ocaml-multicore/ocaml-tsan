@@ -203,10 +203,10 @@ DEPEND_PREREQS = $(LEXERS:.mll=.ml) \
 	$(OCAMLC) $(COMPFLAGS) -c $<
 
 %.cmx: %.ml
-	$(OCAMLOPT) $(COMPFLAGS) $(OPTCOMPFLAGS) -c $<
+	$(OCAMLOPT) $(COMPFLAGS) -c $<
 
 %.cmxs: %.ml
-	$(OCAMLOPT_CMD) -shared -o $@ $(COMPFLAGS) $(OPTCOMPFLAGS) $<
+	$(OCAMLOPT_CMD) -shared -o $@ $(COMPFLAGS) $<
 
 # Installation targets
 ######################
