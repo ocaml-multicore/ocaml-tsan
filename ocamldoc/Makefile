@@ -169,7 +169,8 @@ $(OCAMLDOC): $(EXECMOFILES)
 $(eval $(call PROGRAM_SYNONYM,ocamldoc.opt))
 
 $(OCAMLDOC_OPT): $(EXECMXFILES)
-	$(OCAMLOPT_CMD) -o $@ -linkall $(LINKFLAGS) $(OCAMLDOC_NCLIBRARIES) $^
+	$(OCAMLOPT_CMD) -o $@ -linkall $(LINKFLAGS) $(OPTLINKFLAGS) \
+		$(OCAMLDOC_NCLIBRARIES) $^
 
 $(OCAMLDOC_LIBCMA): $(LIBCMOFILES)
 	$(OCAMLC) -a -o $@ $(LINKFLAGS) $^
@@ -203,10 +204,10 @@ DEPEND_PREREQS = $(LEXERS:.mll=.ml) \
 	$(OCAMLC) $(COMPFLAGS) -c $<
 
 %.cmx: %.ml
-	$(OCAMLOPT) $(COMPFLAGS) -c $<
+	$(OCAMLOPT) $(COMPFLAGS) $(OPTCOMPFLAGS) -c $<
 
 %.cmxs: %.ml
-	$(OCAMLOPT_CMD) -shared -o $@ $(COMPFLAGS) $<
+	$(OCAMLOPT_CMD) -shared -o $@ $(COMPFLAGS) $(OPTCOMPFLAGS) $<
 
 # Installation targets
 ######################

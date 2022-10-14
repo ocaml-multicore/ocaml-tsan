@@ -499,7 +499,7 @@ beforedepend:: parsing/lexer.ml
 
 ocamlc.opt$(EXE): compilerlibs/ocamlcommon.cmxa \
                   compilerlibs/ocamlbytecomp.cmxa $(BYTESTART:.cmo=.cmx)
-	$(CAMLOPT_CMD) $(LINKFLAGS) -o $@ $^ -cclib "$(BYTECCLIBS)"
+	$(CAMLOPT_CMD) $(LINKFLAGS) $(OPTLINKFLAGS) -o $@ $^ -cclib "$(BYTECCLIBS)"
 
 partialclean::
 	rm -f ocamlc.opt$(EXE)
@@ -510,7 +510,7 @@ ocamlopt.opt$(EXE): \
                     compilerlibs/ocamlcommon.cmxa \
                     compilerlibs/ocamloptcomp.cmxa \
                     $(OPTSTART:.cmo=.cmx)
-	$(CAMLOPT_CMD) $(LINKFLAGS) -o $@ $^
+	$(CAMLOPT_CMD) $(LINKFLAGS) $(OPTLINKFLAGS) -o $@ $^
 
 partialclean::
 	rm -f ocamlopt.opt$(EXE)
@@ -628,6 +628,7 @@ runtime_COMMON_C_SOURCES = \
   str \
   sync \
   sys \
+  tsan \
   $(UNIX_OR_WIN32) \
   weak
 
@@ -919,7 +920,7 @@ $(DEPDIR)/runtime/%.npic.$(D): \
   OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(SHAREDLIB_CFLAGS)
 
 runtime/%.nt.$(O): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlrunt_CPPFLAGS)
-runtime/%.nt.$(O): OC_CFLAGS += $(OC_NATIVE_CFLAGS)
+runtime/%.nt.$(O): OC_CFLAGS += $(OC_NATIVE_CFLAGS) $(OC_TSAN_CFLAGS)
 $(DEPDIR)/runtime/%.nt.$(D): \
   OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlrunt_CPPFLAGS)
 
@@ -1059,7 +1060,8 @@ stdlib/libcamlrun.$(A): runtime-all
 	cd stdlib; $(LN) ../runtime/libcamlrun.$(A) .
 clean::
 	rm -f $(addprefix runtime/, *.o *.obj *.a *.lib *.so *.dll ld.conf)
-	rm -f $(addprefix runtime/, ocamlrun ocamlrund ocamlruni ocamlruns sak)
+	rm -f $(addprefix runtime/, ocamlrun ocamlrund ocamlruni ocamlruns \
+		ocamlrunt sak)
 	rm -f $(addprefix runtime/, ocamlrun.exe ocamlrund.exe ocamlruni.exe \
 	  ocamlrunt.exe ocamlruns.exe sak.exe)
 	rm -f runtime/primitives runtime/primitives.new runtime/prims.c \
@@ -1357,7 +1359,7 @@ ocamlnat_dependencies := \
   $(TOPLEVELSTART:.cmo=.cmx)
 
 ocamlnat$(EXE): $(ocamlnat_dependencies)
-	$(CAMLOPT_CMD) $(LINKFLAGS) -linkall -I toplevel/native -o $@ $^
+	$(CAMLOPT_CMD) $(LINKFLAGS) $(OPTLINKFLAGS) -linkall -I toplevel/native -o $@ $^
 
 toplevel/topdirs.cmx: toplevel/topdirs.ml
 	$(CAMLOPT_CMD) $(COMPFLAGS) $(OPTCOMPFLAGS) -I toplevel/native -c $<

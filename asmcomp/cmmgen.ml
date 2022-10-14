@@ -1535,7 +1535,7 @@ let compunit (ulam, preallocated_blocks, constants) =
       transl empty_env ulam in
   let init_code =
     if !Clflags.thread_sanitizer then
-      Csequence (Thread_sanitizer.init_code (), init_code)
+      Thread_sanitizer.wrap_entry_exit init_code
     else
       init_code
   in

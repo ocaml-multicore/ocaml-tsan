@@ -200,7 +200,7 @@ stdlib.cma: $(OBJS)
 	$(CAMLC) -a -o $@ $^
 
 stdlib.cmxa: $(OBJS:.cmo=.cmx)
-	$(CAMLOPT) -a -o $@ $^
+	$(CAMLOPT) $(OPTLINKFLAGS) -a -o $@ $^
 
 .PHONY: distclean
 distclean: clean

@@ -601,6 +601,10 @@ static void realloc_mark_stack (struct mark_stack* stk)
   mark_stack_prune(stk);
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 Caml_inline void mark_stack_push_range(struct mark_stack* stk,
                                        value* start, value* end)
 {
@@ -684,6 +688,10 @@ void caml_shrink_mark_stack (void)
 
 void caml_darken_cont(value cont);
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 static void mark_slice_darken(struct mark_stack* stk, value child,
                               intnat* work)
 {
@@ -724,6 +732,10 @@ static void mark_slice_darken(struct mark_stack* stk, value child,
   }
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 static intnat do_some_marking(struct mark_stack* stk, intnat budget) {
   while (stk->count > 0) {
     mark_entry me = stk->stack[--stk->count];
