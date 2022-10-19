@@ -229,9 +229,6 @@ WITH_TSAN=@tsan@
 ifeq "$(WITH_TSAN)" "true"
 TSAN_RUNTIME_LIBS=@tsan_runtime_libs@
 endif
-ifeq "$(WITH_TSAN)" "true"
-OC_CFLAGS += $(OC_TSAN_CFLAGS)
-endif
 WITH_DEBUGGER=@with_debugger@
 WITH_CAMLTEX=@with_camltex@
 WITH_OCAMLDOC=@ocamldoc@

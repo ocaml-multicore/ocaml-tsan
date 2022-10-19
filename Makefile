@@ -499,7 +499,7 @@ beforedepend:: parsing/lexer.ml
 
 ocamlc.opt$(EXE): compilerlibs/ocamlcommon.cmxa \
                   compilerlibs/ocamlbytecomp.cmxa $(BYTESTART:.cmo=.cmx)
-	$(CAMLOPT_CMD) $(LINKFLAGS) -o $@ $^ -cclib "$(BYTECCLIBS)"
+	$(CAMLOPT_CMD) $(LINKFLAGS) -o $@ $^ -cclib "$(BYTECCLIBS)" -I runtime
 
 partialclean::
 	rm -f ocamlc.opt$(EXE)
@@ -510,7 +510,7 @@ ocamlopt.opt$(EXE): \
                     compilerlibs/ocamlcommon.cmxa \
                     compilerlibs/ocamloptcomp.cmxa \
                     $(OPTSTART:.cmo=.cmx)
-	$(CAMLOPT_CMD) $(LINKFLAGS) -o $@ $^
+	$(CAMLOPT_CMD) $(LINKFLAGS) -o $@ $^ -I runtime
 
 partialclean::
 	rm -f ocamlopt.opt$(EXE)
@@ -682,6 +682,12 @@ runtime_BYTECODE_STATIC_LIBRARIES += runtime/libcamlruni.$(A)
 runtime_NATIVE_STATIC_LIBRARIES += runtime/libasmruni.$(A)
 endif
 
+ifeq "$(WITH_TSAN)" "true"
+runtime_PROGRAMS += runtime/ocamlrunt$(EXE)
+runtime_BYTECODE_STATIC_LIBRARIES += runtime/libcamlrunt.$(A)
+runtime_NATIVE_STATIC_LIBRARIES += runtime/libasmrunt.$(A)
+endif
+
 ifeq "$(UNIX_OR_WIN32)" "unix"
 ifeq "$(SUPPORTS_SHARED_LIBRARIES)" "true"
 runtime_BYTECODE_STATIC_LIBRARIES += runtime/libcamlrun_pic.$(A)
@@ -706,6 +712,8 @@ libcamlruni_OBJECTS = $(runtime_BYTECODE_C_SOURCES:.c=.bi.$(O))
 
 libcamlrunpic_OBJECTS = $(runtime_BYTECODE_C_SOURCES:.c=.bpic.$(O))
 
+libcamlrunt_OBJECTS = $(runtime_BYTECODE_C_SOURCES:.c=.bt.$(O))
+
 libasmrun_OBJECTS = \
   $(runtime_NATIVE_C_SOURCES:.c=.n.$(O)) $(runtime_ASM_OBJECTS)
 
@@ -724,11 +732,9 @@ libasmrunt_OBJECTS = \
 ## General (non target-specific) assembler and compiler flags
 
 runtime_CPPFLAGS = -DCAMLDLLIMPORT=
-ifeq "$(WITH_TSAN)" "true"
-runtime_CPPFLAGS += -DWITH_THREAD_SANITIZER
-endif
 ocamlrund_CPPFLAGS = -DDEBUG
 ocamlruni_CPPFLAGS = -DCAML_INSTR
+ocamlrunt_CPPFLAGS = -DWITH_THREAD_SANITIZER
 
 ## Runtime targets
 
@@ -827,10 +833,10 @@ runtime/build_config.h: $(ROOTDIR)/Makefile.config $(SAK)
 ## Runtime libraries and programs
 
 runtime/ocamlrun$(EXE): runtime/prims.$(O) runtime/libcamlrun.$(A)
-	$(MKEXE) -o $@ $^ $(TSAN_RUNTIME_LIBS) $(BYTECCLIBS)
+	$(MKEXE) -o $@ $^ $(BYTECCLIBS)
 
 runtime/ocamlruns$(EXE): runtime/prims.$(O) runtime/libcamlrun_non_shared.$(A)
-	$(call MKEXE_VIA_CC,$@,$^ $(TSAN_RUNTIME_LIBS) $(BYTECCLIBS))
+	$(call MKEXE_VIA_CC,$@,$^ $(BYTECCLIBS))
 
 runtime/libcamlrun.$(A): $(libcamlrun_OBJECTS)
 	$(call MKLIB,$@, $^)
@@ -839,22 +845,28 @@ runtime/libcamlrun_non_shared.$(A): $(libcamlrun_non_shared_OBJECTS)
 	$(call MKLIB,$@, $^)
 
 runtime/ocamlrund$(EXE): runtime/prims.$(O) runtime/libcamlrund.$(A)
-	$(MKEXE) $(MKEXEDEBUGFLAG) -o $@ $^ $(TSAN_RUNTIME_LIBS) $(BYTECCLIBS)
+	$(MKEXE) $(MKEXEDEBUGFLAG) -o $@ $^ $(BYTECCLIBS)
 
 runtime/libcamlrund.$(A): $(libcamlrund_OBJECTS)
 	$(call MKLIB,$@, $^)
 
 runtime/ocamlruni$(EXE): runtime/prims.$(O) runtime/libcamlruni.$(A)
-	$(MKEXE) -o $@ $^ $(INSTRUMENTED_RUNTIME_LIBS) $(TSAN_RUNTIME_LIBS) $(BYTECCLIBS)
+	$(MKEXE) -o $@ $^ $(INSTRUMENTED_RUNTIME_LIBS) $(BYTECCLIBS)
 
 runtime/libcamlruni.$(A): $(libcamlruni_OBJECTS)
+	$(call MKLIB,$@, $^)
+
+runtime/ocamlrunt$(EXE): runtime/prims.$(O) runtime/libcamlrunt.$(A)
+	$(MKEXE) -o $@ $^ $(TSAN_RUNTIME_LIBS) $(BYTECCLIBS)
+
+runtime/libcamlrunt.$(A): $(libcamlrunt_OBJECTS)
 	$(call MKLIB,$@, $^)
 
 runtime/libcamlrun_pic.$(A): $(libcamlrunpic_OBJECTS)
 	$(call MKLIB,$@, $^)
 
 runtime/libcamlrun_shared.$(SO): $(libcamlrunpic_OBJECTS)
-	$(MKDLL) -o $@ $^ $(TSAN_RUNTIME_LIBS) $(BYTECCLIBS)
+	$(MKDLL) -o $@ $^ $(BYTECCLIBS)
 
 runtime/libasmrun.$(A): $(libasmrun_OBJECTS)
 	$(call MKLIB,$@, $^)
@@ -866,6 +878,9 @@ runtime/libasmruni.$(A): $(libasmruni_OBJECTS)
 	$(call MKLIB,$@, $^)
 
 runtime/libasmrun_pic.$(A): $(libasmrunpic_OBJECTS)
+	$(call MKLIB,$@, $^)
+
+runtime/libasmrunt.$(A): $(libasmrunt_OBJECTS)
 	$(call MKLIB,$@, $^)
 
 runtime/libasmrun_shared.$(SO): $(libasmrunpic_OBJECTS)
@@ -885,6 +900,10 @@ $(DEPDIR)/runtime/%.bi.$(D): OC_CPPFLAGS += $(ocamlruni_CPPFLAGS)
 runtime/%.bpic.$(O): OC_CFLAGS += $(SHAREDLIB_CFLAGS)
 $(DEPDIR)/runtime/%.bpic.$(D): OC_CFLAGS += $(SHAREDLIB_CFLAGS)
 
+runtime/%.bt.$(O): OC_CPPFLAGS += $(ocamlrunt_CPPFLAGS)
+runtime/%.bt.$(O): OC_CFLAGS += $(OC_TSAN_CFLAGS)
+$(DEPDIR)/runtime/%.bt.$(D): OC_CPPFLAGS += $(ocamlrunt_CPPFLAGS)
+
 runtime/%.n.$(O): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS)
 $(DEPDIR)/runtime/%.n.$(D): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS)
 
@@ -899,6 +918,11 @@ $(DEPDIR)/runtime/%.ni.$(D): \
 runtime/%.npic.$(O): OC_CFLAGS += $(OC_NATIVE_CPPFLAGS) $(SHAREDLIB_CFLAGS)
 $(DEPDIR)/runtime/%.npic.$(D): \
   OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(SHAREDLIB_CFLAGS)
+
+runtime/%.nt.$(O): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlrunt_CPPFLAGS)
+runtime/%.nt.$(O): OC_CFLAGS += $(OC_NATIVE_CFLAGS) $(OC_TSAN_CFLAGS)
+$(DEPDIR)/runtime/%.nt.$(D): \
+  OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlrunt_CPPFLAGS)
 
 ## Compilation of runtime C files
 
@@ -940,6 +964,12 @@ endif
 $(foreach runtime_OBJECT_TYPE, $(runtime_OBJECT_TYPES), \
   $(eval $(call COMPILE_C_FILE,runtime/$(runtime_OBJECT_TYPE),runtime/%)))
 
+# Do not compile interp.c with ThreadSanitizer instrumentation, to avoid
+# considerably slowing down the compiler build
+ifeq "$(WITH_TSAN)" "true"
+runtime/interp.*.$(O): OC_CFLAGS = $(filter-out $(OC_TSAN_CFLAGS), $(OC_CFLAGS))
+endif
+
 runtime/$(UNIX_OR_WIN32)_non_shared.%.$(O): \
   OC_CPPFLAGS += -DBUILDING_LIBCAMLRUNS
 
@@ -965,6 +995,11 @@ runtime/%.d.o: runtime/%.S
 
 runtime/%.i.o: runtime/%.S
 	$(ASPP) $(OC_ASPPFLAGS) $(OC_INSTR_CPPFLAGS) -o $@ $< || $(ASPP_ERROR)
+
+runtime/%.t.o: runtime/%.S
+	$(ASPP) $(OC_ASPPFLAGS) $(OC_TSAN_ASPPFLAGS) $(OC_TSAN_CPPFLAGS) \
+		$(ocamlrunt_CPPFLAGS) -o $@ $< \
+	  || $(ASPP_ERROR)
 
 runtime/%_libasmrunpic.o: runtime/%.S
 	$(ASPP) $(OC_ASPPFLAGS) $(SHAREDLIB_CFLAGS) -o $@ $<
@@ -1035,7 +1070,7 @@ clean::
 	rm -f $(addprefix runtime/, ocamlrun ocamlrund ocamlruni ocamlruns \
 		ocamlrunt sak)
 	rm -f $(addprefix runtime/, ocamlrun.exe ocamlrund.exe ocamlruni.exe \
-	  ocamlruns.exe sak.exe)
+	  ocamlrunt.exe ocamlruns.exe sak.exe)
 	rm -f runtime/primitives runtime/primitives.new runtime/prims.c \
 	  $(runtime_BUILT_HEADERS)
 	rm -f runtime/domain_state*.inc
@@ -1331,7 +1366,8 @@ ocamlnat_dependencies := \
   $(TOPLEVELSTART:.cmo=.cmx)
 
 ocamlnat$(EXE): $(ocamlnat_dependencies)
-	$(CAMLOPT_CMD) $(LINKFLAGS) -linkall -I toplevel/native -o $@ $^
+	$(CAMLOPT_CMD) $(LINKFLAGS) -linkall -I toplevel/native -o $@ $^ \
+		-I runtime
 
 toplevel/topdirs.cmx: toplevel/topdirs.ml
 	$(CAMLOPT_CMD) $(COMPFLAGS) $(OPTCOMPFLAGS) -I toplevel/native -c $<

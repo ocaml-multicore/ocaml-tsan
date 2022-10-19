@@ -210,7 +210,7 @@ $(eval $(call PROGRAM_SYNONYM,ocamltest))
 ocamltest_unix.%: flags+=$(unix_include) -opaque
 
 ocamltest$(EXE): $(deps_byte) $(bytecode_modules)
-	$(ocamlc_cmd) $(unix_include)-custom -o $@ $^
+	$(ocamlc_cmd) -I ../runtime $(unix_include)-custom -o $@ $^
 
 %.cmo: %.ml $(deps_byte)
 	$(ocamlc) -c $<
@@ -218,7 +218,7 @@ ocamltest$(EXE): $(deps_byte) $(bytecode_modules)
 $(eval $(call PROGRAM_SYNONYM,ocamltest.opt))
 
 ocamltest.opt$(EXE): $(deps_opt) $(native_modules)
-	$(ocamlopt_cmd) $(unix_include)-o $@ $^
+	$(ocamlopt_cmd) $(unix_include)-o $@ $^ -I ../runtime
 
 %.cmx: %.ml $(deps_opt)
 	$(ocamlopt) -c $<

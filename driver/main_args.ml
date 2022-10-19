@@ -1737,7 +1737,10 @@ module Default = struct
     let _pack = set make_package
     let _plugin _p = plugin := true
     let _pp s = preprocessor := (Some s)
-    let _runtime_variant s = runtime_variant := s
+    let _runtime_variant s =
+      if Config.tsan && not (List.mem s ["";"t"]) then
+        Compenv.fatal "Cannot use another runtime with `-tsan`";
+      runtime_variant := s
     let _stop_after pass =
       let module P = Compiler_pass in
         match P.of_string pass with
