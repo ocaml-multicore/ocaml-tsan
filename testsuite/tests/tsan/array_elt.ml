@@ -3,7 +3,6 @@
 * tsan
 ** native
 
-ocamlopt_flags = "-tsan"
 include unix
 set TSAN_OPTIONS="detect_deadlocks=0"
 
