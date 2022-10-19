@@ -975,6 +975,15 @@ LBL(do_perform):
         movq    Handler_parent(%r11), %r10 /* %r10 := parent stack */
         cmpq    $0, %r10                   /* parent is NULL? */
         je      LBL(112)
+#if defined(WITH_THREAD_SANITIZER)
+        SAVE_ALL_REGS
+        movq    (%rsp), C_ARG_1   /* arg 1: pc of perform */
+        leaq    8(%rsp), C_ARG_2  /* arg 2: sp at perform */
+        SWITCH_OCAML_TO_C
+        C_call  (GCALL(caml_tsan_func_exit_on_perform))
+        SWITCH_C_TO_OCAML
+        RESTORE_ALL_REGS
+#endif
         SWITCH_OCAML_STACKS /* preserves r11 and rsi */
      /* We have to null the Handler_parent after the switch because the
         Handler_parent is needed to unwind the stack for backtraces */
@@ -1018,6 +1027,18 @@ CFI_STARTPROC
     /*  check if stack null, then already used */
         testq   %r10, %r10
         jz      2f
+        TSAN_ENTER_FUNCTION
+#if defined(WITH_THREAD_SANITIZER)
+        SAVE_ALL_REGS
+        movq    Stack_sp(%r10), %r11
+        movq    (%r11), C_ARG_1   /* arg 1: pc of perform */
+        leaq    8(%r11), C_ARG_2  /* arg 2: sp at perform */
+        movq    %r10, C_ARG_3     /* arg 3: fiber */
+        SWITCH_OCAML_TO_C
+        C_call  (GCALL(caml_tsan_func_entry_on_resume))
+        SWITCH_C_TO_OCAML
+        RESTORE_ALL_REGS
+#endif
     /* Find end of list of stacks and add current */
         movq    %r10, %rsi
 1:      movq    Stack_handler(%rsi), %rcx
@@ -1043,6 +1064,7 @@ FUNCTION(G(caml_runstack))
 CFI_STARTPROC
         CFI_SIGNAL_FRAME
         ENTER_FUNCTION
+        TSAN_ENTER_FUNCTION
     /* %rax -> fiber, %rbx -> fun, %rdi -> arg */
         andq    $-2, %rax       /* %rax = Ptr_val(%rax) */
     /* save old stack pointer and exception handler */
@@ -1100,6 +1122,7 @@ LBL(frame_runstack):
         movq    %r13, %rsp
         CFI_RESTORE_STATE
         movq    %r12, %rax
+    TSAN_EXIT_FUNCTION
     /* Invoke handle_value (or handle_exn) */
         LEAVE_FUNCTION
         jmp     *(%rbx)

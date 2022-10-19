@@ -726,8 +726,10 @@ libasmruni_OBJECTS = \
 libasmrunpic_OBJECTS = $(runtime_NATIVE_C_SOURCES:.c=.npic.$(O)) \
   $(runtime_ASM_OBJECTS:.$(O)=_libasmrunpic.$(O))
 
+# FIXME Add tsan.c properly
 libasmrunt_OBJECTS = \
-  $(runtime_NATIVE_C_SOURCES:.c=.nt.$(O)) $(runtime_ASM_OBJECTS:.$(O)=.t.$(O))
+  $(runtime_NATIVE_C_SOURCES:.c=.nt.$(O)) runtime/tsan.nt.$(O) \
+	$(runtime_ASM_OBJECTS:.$(O)=.t.$(O))
 
 ## General (non target-specific) assembler and compiler flags
 
@@ -1060,8 +1062,8 @@ stdlib/libcamlrun.$(A): runtime-all
 	cd stdlib; $(LN) ../runtime/libcamlrun.$(A) .
 clean::
 	rm -f $(addprefix runtime/, *.o *.obj *.a *.lib *.so *.dll ld.conf)
-	rm -f $(addprefix runtime/, ocamlrun ocamlrund ocamlruni ocamlruns \
-		ocamlrunt sak)
+	rm -f $(addprefix runtime/, ocamlrun ocamlrund ocamlruni ocamlrunt ocamlruns \
+		sak)
 	rm -f $(addprefix runtime/, ocamlrun.exe ocamlrund.exe ocamlruni.exe \
 	  ocamlrunt.exe ocamlruns.exe sak.exe)
 	rm -f runtime/primitives runtime/primitives.new runtime/prims.c \
