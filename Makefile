@@ -964,12 +964,6 @@ endif
 $(foreach runtime_OBJECT_TYPE, $(runtime_OBJECT_TYPES), \
   $(eval $(call COMPILE_C_FILE,runtime/$(runtime_OBJECT_TYPE),runtime/%)))
 
-# Do not compile interp.c with ThreadSanitizer instrumentation, to avoid
-# considerably slowing down the compiler build
-ifeq "$(WITH_TSAN)" "true"
-runtime/interp.*.$(O): OC_CFLAGS = $(filter-out $(OC_TSAN_CFLAGS), $(OC_CFLAGS))
-endif
-
 runtime/$(UNIX_OR_WIN32)_non_shared.%.$(O): \
   OC_CPPFLAGS += -DBUILDING_LIBCAMLRUNS
 
