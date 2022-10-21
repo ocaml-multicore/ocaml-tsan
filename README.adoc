@@ -12,6 +12,10 @@ compiler to add ThreadSanitizer support to OCaml 5.0.
   may change in the future.*
 * OCaml ThreadSanitizer support inherits the portability limitations of
   ThreadSanitizer: it is not available on Windows.
+* TSan investigates _a particular execution_ and therefore will not
+  detect races in code paths that are not visited.
+* TSan may still report false positives in some rare cases (see section
+  6.4 of the WBIA ’09 paper below).
 * Currently, ThreadSanitizer detection only works for native executables, not
   bytecode programs.
 
@@ -40,9 +44,9 @@ eval $(opam env --switch=5.1.0+tsan)
 opam pin add ocaml-variants.5.1.0+tsan git+https://github.com/OlivierNicole/ocaml-tsan
 ....
 
-Building the switch may take a bit longer than usual as part due to some
-unavoidable ThreadSanitizer-incurred slowdowns in parts of the process. Expect
-a few minutes of build time.
+Building the switch may take a bit longer than usual due to some unavoidable
+ThreadSanitizer-incurred slowdowns in parts of the process. Expect a few
+minutes of build time.
 
 On this switch, your programs will now be compiled with ThreadSanitizer
 instrumentation, including the packages you may install with `opam`.
@@ -239,17 +243,8 @@ more information on the status of this work, see
 https://github.com/OlivierNicole/ocaml-tsan/wiki/Status-of-ThreadSanitizer-for-OCaml[the
 dedicated wiki page].
 
-=== Caveats
-
-* TSan investigates _a particular execution_ and therefore will not
-detect races in code paths that are not visited.
-* TSan may still report false positives in some rare cases (see section
-6.4 of the WBIA ’09 paper below).
-
 === Resources
 
-* Anmol’s blog post:
-https://anmolsahoo25.github.io/blog/thread-sanitizer-ocaml/
 * Clang/LLVM TSan documentation:
 https://clang.llvm.org/docs/ThreadSanitizer.html
 * Google Sanitizer wiki:
