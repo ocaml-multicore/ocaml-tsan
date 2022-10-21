@@ -23,6 +23,7 @@
 #include "caml/frame_descriptors.h"
 #include "caml/fiber.h"
 #include "caml/domain_state.h"
+#include "caml/stack.h"
 
 extern void __tsan_func_exit(void*);
 
@@ -91,20 +92,22 @@ void caml_tsan_func_exit_on_perform(uintnat pc, char* sp)
   }
 }
 
-void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
-                                    struct stack_info* stack)
+CAMLno_tsan void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
+                                    struct stack_info const* stack)
 {
   caml_frame_descrs fds = caml_get_frame_descrs();
 
-  caml_next_frame_descriptor(fds, &pc, &sp, stack);
+  caml_next_frame_descriptor(fds, &pc, &sp, (struct stack_info*)stack);
   if (pc == 0) {
     stack = stack->handler->parent;
     if (!stack) {
       return;
     }
 
-    pc = *(uintnat*)stack->sp;
-    sp = (char*)stack->sp + 8;
+    char* p = (char*)stack->sp;
+    Pop_frame_pointer(p);
+    pc = *(uintnat*)p;
+    sp = p + sizeof(value);
   }
 
   caml_tsan_func_entry_on_resume(pc, sp, stack);
