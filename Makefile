@@ -627,7 +627,6 @@ runtime_COMMON_C_SOURCES = \
   str \
   sync \
   sys \
-  tsan \
   $(UNIX_OR_WIN32) \
   weak
 
@@ -648,6 +647,7 @@ runtime_NATIVE_ONLY_C_SOURCES = \
   fail_nat \
   frame_descriptors \
   startup_nat \
+  tsan \
   signals_nat
 runtime_NATIVE_C_SOURCES = \
   $(runtime_COMMON_C_SOURCES:%=runtime/%.c) \
