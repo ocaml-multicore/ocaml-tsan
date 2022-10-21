@@ -17,7 +17,7 @@ compiler to add ThreadSanitizer support to OCaml 5.0.
 
 === Trying it out
 
-You first need to install [libunwind](https://github.com/libunwind/libunwind)
+You first need to install https://github.com/libunwind/libunwind[libunwind]
 on your system.
 
 **Warning:** when building the opam switch, or installing opam packages, or
