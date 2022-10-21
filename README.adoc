@@ -8,15 +8,14 @@ compiler to add ThreadSanitizer support to OCaml 5.0.
 
 === Caveats
 
+* *This current prototype is still experimental; in addition, its interface
+  may change in the future.*
 * OCaml ThreadSanitizer support inherits the portability limitations of
   ThreadSanitizer: it is not available on Windows.
 * Currently, ThreadSanitizer detection only works for native executables, not
   bytecode programs.
 
 === Trying it out
-
-*The current prototype is experimental; in addition, its interface is
-subject to changes.*
 
 You first need to install [libunwind](https://github.com/libunwind/libunwind)
 on your system.
