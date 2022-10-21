@@ -16,9 +16,15 @@
 OCAMLDOC = $(ROOTDIR)/ocamldoc/ocamldoc$(EXE)
 OCAMLDOC_OPT = $(ROOTDIR)/ocamldoc/ocamldoc.opt$(EXE)
 
+ifeq "$(WITH_TSAN)" "true"
+OCAMLRUN_TO_USE = $(ROOTDIR)/runtime/ocamlrunt
+else
+OCAMLRUN_TO_USE = $(OCAMLRUN)
+endif
+
 ifeq "$(TARGET)" "$(HOST)"
   ifeq "$(SUPPORTS_SHARED_LIBRARIES)" "true"
-    OCAMLDOC_RUN_BYTE = $(OCAMLRUN) -I $(ROOTDIR)/otherlibs/unix \
+    OCAMLDOC_RUN_BYTE = $(OCAMLRUN_TO_USE) -I $(ROOTDIR)/otherlibs/unix \
                                     -I $(ROOTDIR)/otherlibs/str ./$(OCAMLDOC)
   else
     # if shared-libraries are not supported, unix.cma and str.cma
@@ -27,7 +33,7 @@ ifeq "$(TARGET)" "$(HOST)"
     OCAMLDOC_RUN_BYTE = ./$(OCAMLDOC)
   endif
 else
-  OCAMLDOC_RUN_BYTE = $(OCAMLRUN) ./$(OCAMLDOC)
+  OCAMLDOC_RUN_BYTE = $(OCAMLRUN_TO_USE) ./$(OCAMLDOC)
 endif
 
 OCAMLDOC_RUN_OPT = ./$(OCAMLDOC_OPT)
