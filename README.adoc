@@ -1,0 +1,275 @@
+https://github.com/OlivierNicole/ocaml-tsan/actions/workflows/build.yml[image:https://github.com/OlivierNicole/ocaml-tsan/actions/workflows/build.yml/badge.svg[Build]]
+
+== ThreadSanitizer support for OCaml 5
+
+ThreadSanitizer is an effective approach to locate data races in
+concurrent code bases. This is an experimental extension of the OCaml
+compiler to add ThreadSanitizer support to OCaml 5.0.
+
+=== Caveats
+
+* OCaml ThreadSanitizer support inherits the portability limitations of
+  ThreadSanitizer: it is not available on Windows.
+* Currently, ThreadSanitizer detection only works for native executables, not
+  bytecode programs.
+
+=== Trying it out
+
+*The current prototype is experimental; in addition, its interface is
+subject to changes.*
+
+You first need to install [libunwind](https://github.com/libunwind/libunwind)
+on your system.
+
+**Warning:** when building the opam switch, or installing opam packages, or
+simply running an OCaml program (including the OCaml compiler), you should
+disable TSan's deadlock detection by setting the `TSAN_OPTIONS` environment
+variable:
+....
+export TSAN_OPTIONS="detect_deadlocks=0"
+....
+We are aware that this is not convenient; we are working to fix this defect in
+prevision of the first release of the tool.
+
+Then install the compiler with ThreadSanitizer instrumentation in a new opam
+switch using the following sequence of commands:
+
+....
+opam update
+opam switch create 5.1.0+tsan --empty --repo=default,beta=git+https://github.com/ocaml/ocaml-beta-repository.git,alpha=git+https://github.com/kit-ty-kate/opam-alpha-repository.git
+eval $(opam env --switch=5.1.0+tsan)
+opam pin add ocaml-variants.5.1.0+tsan git+https://github.com/OlivierNicole/ocaml-tsan
+....
+
+Building the switch may take a bit longer than usual as part due to some
+unavoidable ThreadSanitizer-incurred slowdowns in parts of the process. Expect
+a few minutes of build time.
+
+On this switch, your programs will now be compiled with ThreadSanitizer
+instrumentation, including the packages you may install with `opam`.
+
+If you link against C files, it is best to instrument them to detect data races
+in them as well, by passing `-fsanitize=thread` to GCC or clang. Note that if
+you use Dune, this setting can be added to a Dune profile by adding e.g. the
+following to your `dune-workspace`:
+
+....
+(env
+ (tsan
+  (c_flags -fsanitize=thread)))
+....
+
+Then you only need to select this profile, e.g. `dune exec --profile tsan
+myexecutable.exe` or `dune runtest --profile tsan`.
+
+=== Examples
+
+==== A simple race
+
+The simplest of data races can be created by having two accesses to the
+same mutable location, one of them being a write:
+
+[source,ocaml]
+----
+type t = { mutable x : int }
+
+let v = { x = 0 }
+
+let () =
+  let t1 = Domain.spawn (fun () -> v.x <- 10; Unix.sleep 1) in
+  let t2 = Domain.spawn (fun () -> ignore v.x; Unix.sleep 1) in
+  Domain.join t1;
+  Domain.join t2
+----
+
+Running this program with ThreadSanitizer instrumentation will output
+the following report:
+
+....
+==================
+WARNING: ThreadSanitizer: data race (pid=2992451)
+  Read of size 8 at 0x7fb319ffe490 by thread T4 (mutexes: write M96):
+    #0 camlTmp.fun_600 <null> (a.out+0x43cc60)
+    #1 camlStdlib__Domain.body_707 <null> (a.out+0x47c8a9)
+    #2 caml_start_program <null> (a.out+0x4f822f)
+    #3 caml_callback_exn runtime/callback.c:167 (a.out+0x4c59b6)
+    #4 caml_callback runtime/callback.c:253 (a.out+0x4c64ea)
+    #5 domain_thread_func runtime/domain.c:1095 (a.out+0x4c98e2)
+    #6 <null> <null> (libtsan.so.0+0x333cf)
+
+  Previous write of size 8 at 0x7fb319ffe490 by thread T1 (mutexes: write M92):
+    #0 camlTmp.fun_596 <null> (a.out+0x43cc06)
+    #1 camlStdlib__Domain.body_707 <null> (a.out+0x47c8a9)
+    #2 caml_start_program <null> (a.out+0x4f822f)
+    #3 caml_callback_exn runtime/callback.c:167 (a.out+0x4c59b6)
+    #4 caml_callback runtime/callback.c:253 (a.out+0x4c64ea)
+    #5 domain_thread_func runtime/domain.c:1095 (a.out+0x4c98e2)
+    #6 <null> <null> (libtsan.so.0+0x333cf)
+
+  Mutex M96 (0x00000056c118) created at:
+    #0 pthread_mutex_init <null> (libtsan.so.0+0x4d483)
+    #1 caml_plat_mutex_init runtime/platform.c:54 (a.out+0x4e95b4)
+    #2 caml_init_domains runtime/domain.c:883 (a.out+0x4c95a2)
+    #3 caml_init_gc runtime/gc_ctrl.c:343 (a.out+0x4d4db2)
+    #4 caml_startup_common runtime/startup_nat.c:113 (a.out+0x4f748d)
+    #5 caml_startup_exn runtime/startup_nat.c:138 (a.out+0x4f75dd)
+    #6 caml_startup runtime/startup_nat.c:143 (a.out+0x4f760b)
+    #7 caml_main runtime/startup_nat.c:150 (a.out+0x4f764b)
+    #8 main runtime/main.c:37 (a.out+0x4df63b)
+
+  Mutex M92 (0x00000056c000) created at:
+    #0 pthread_mutex_init <null> (libtsan.so.0+0x4d483)
+    #1 caml_plat_mutex_init runtime/platform.c:54 (a.out+0x4e95b4)
+    #2 caml_init_domains runtime/domain.c:883 (a.out+0x4c95a2)
+    #3 caml_init_gc runtime/gc_ctrl.c:343 (a.out+0x4d4db2)
+    #4 caml_startup_common runtime/startup_nat.c:113 (a.out+0x4f748d)
+    #5 caml_startup_exn runtime/startup_nat.c:138 (a.out+0x4f75dd)
+    #6 caml_startup runtime/startup_nat.c:143 (a.out+0x4f760b)
+    #7 caml_main runtime/startup_nat.c:150 (a.out+0x4f764b)
+    #8 main runtime/main.c:37 (a.out+0x4df63b)
+
+  Thread T4 (tid=2992456, running) created by main thread at:
+    #0 pthread_create <null> (libtsan.so.0+0x5fd75)
+    #1 caml_domain_spawn runtime/domain.c:1150 (a.out+0x4cac20)
+    #2 caml_c_call <null> (a.out+0x4f7fb3)
+    #3 camlStdlib__Domain.spawn_689 <null> (a.out+0x47c783)
+    #4 camlTmp.entry <null> (a.out+0x43cd17)
+    #5 caml_program <null> (a.out+0x43a41e)
+    #6 caml_start_program <null> (a.out+0x4f822f)
+    #7 caml_startup_common runtime/startup_nat.c:133 (a.out+0x4f75a6)
+    #8 caml_startup_exn runtime/startup_nat.c:138 (a.out+0x4f75dd)
+    #9 caml_startup runtime/startup_nat.c:143 (a.out+0x4f760b)
+    #10 caml_main runtime/startup_nat.c:150 (a.out+0x4f764b)
+    #11 main runtime/main.c:37 (a.out+0x4df63b)
+
+  Thread T1 (tid=2992453, running) created by main thread at:
+    #0 pthread_create <null> (libtsan.so.0+0x5fd75)
+    #1 caml_domain_spawn runtime/domain.c:1150 (a.out+0x4cac20)
+    #2 caml_c_call <null> (a.out+0x4f7fb3)
+    #3 camlStdlib__Domain.spawn_689 <null> (a.out+0x47c783)
+    #4 camlTmp.entry <null> (a.out+0x43ccfd)
+    #5 caml_program <null> (a.out+0x43a41e)
+    #6 caml_start_program <null> (a.out+0x4f822f)
+    #7 caml_startup_common runtime/startup_nat.c:133 (a.out+0x4f75a6)
+    #8 caml_startup_exn runtime/startup_nat.c:138 (a.out+0x4f75dd)
+    #9 caml_startup runtime/startup_nat.c:143 (a.out+0x4f760b)
+    #10 caml_main runtime/startup_nat.c:150 (a.out+0x4f764b)
+    #11 main runtime/main.c:37 (a.out+0x4df63b)
+
+SUMMARY: ThreadSanitizer: data race (/tmp/a.out+0x43cc60) in camlTmp.fun_600
+==================
+ThreadSanitizer: reported 1 warnings
+....
+
+If the mutable field is replaced with an `Atomic` reference, the warning
+disappears:
+
+[source,ocaml]
+----
+let v = Atomic.make 0
+
+let () =
+  let t1 = Domain.spawn (fun () -> Atomic.set v 10; Unix.sleep 1) in
+  let t2 = Domain.spawn (fun () -> ignore (Atomic.get v); Unix.sleep 1) in
+  Domain.join t1;
+  Domain.join t2
+----
+
+==== Synchronization using an atomic variable
+
+Synchronizing the two accesses above by busy-waiting on an atomic
+boolean will be detected by ThreadSanitizer and no data race will be
+reported:
+
+[source,ocaml]
+----
+type t = { mutable x : int }
+
+let v = { x = 0 }
+
+let v_modified = Atomic.make false
+
+let () =
+  let t1 =
+    Domain.spawn (fun () ->
+        v.x <- 10;
+        Atomic.set v_modified true;
+        Unix.sleep 1)
+  in
+  let t2 =
+    Domain.spawn (fun () ->
+        while not (Atomic.get v_modified) do () done;
+        ignore v.x;
+        Unix.sleep 1)
+  in
+  Domain.join t1;
+  Domain.join t2
+----
+
+More efficiently, such synchronization can be implemented using a
+`Mutex.t` with the same result.
+
+=== Background
+
+There are two components to ThreadSanitizer (TSan): 1. *A run-time
+library* to track accesses to shared data and report races 2. *Compiler
+instrumentation* that emits calls to the run-time library
+
+Internally the run-time library associates with each word of application
+memory at least 2 ``shadow words''. Each shadow word contains
+information about a recent memory access to that word, including a
+``scalar clock''. Those clocks serve to establish a happens-before (HB)
+relation, i.e. an event orderings that we are certain of.
+
+This information is maintained as a ``shadow state'' in a separate
+memory region, and updated at every (instrumented) memory access. A data
+race is reported every time two memory accesses are made to overlapping
+memory regions, and: - one of them is a write, and - there is no
+established happens-before relation between them. More information about
+TSan’s algorithm on
+https://github.com/google/sanitizers/wiki/ThreadSanitizerAlgorithm[their
+wiki].
+
+The run-time library is reusable across different programming languages
+(C,C++,Go, …).
+
+=== Status
+
+The ThreadSanitizer support in OCaml 5.0 is still an ongoing effort. For
+more information on the status of this work, see
+https://github.com/OlivierNicole/ocaml-tsan/wiki/Status-of-ThreadSanitizer-for-OCaml[the
+dedicated wiki page].
+
+=== Caveats
+
+* TSan investigates _a particular execution_ and therefore will not
+detect races in code paths that are not visited.
+* TSan may still report false positives in some rare cases (see section
+6.4 of the WBIA ’09 paper below).
+
+=== Resources
+
+* Anmol’s blog post:
+https://anmolsahoo25.github.io/blog/thread-sanitizer-ocaml/
+* Clang/LLVM TSan documentation:
+https://clang.llvm.org/docs/ThreadSanitizer.html
+* Google Sanitizer wiki:
+** TSan C/C++ Manual:
+https://github.com/google/sanitizers/wiki/ThreadSanitizerCppManual
+** TSan Algorithm:
+https://github.com/google/sanitizers/wiki/ThreadSanitizerAlgorithm
+* Slides from GCC Cauldron 2012:
+https://gcc.gnu.org/wiki/cauldron2012?action=AttachFile&do=get&target=kcc.pdf
+* Papers
+** Serebryany and Iskhodzhanov: _ThreadSanitizer – data race detection
+in practice_, WBIA’09
+https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/35604.pdf.
+Note that the algorithm presented in this paper is not the one used in
+the new version of TSan.
+** Chabby and Ramanathan: _A Study of Real-World Data Races in Golang_,
+PLDI’22 https://arxiv.org/pdf/2204.00764.pdf
+** Ahmad et al.: _Kard: Lightweight Data Race Detection with Per-Thread
+Memory Protection_, ASPLOS’21
+https://web.ics.purdue.edu/~ahmad37/papers/ahmad-kard.pdf
+* ThreadSanitizer Google group:
+https://groups.google.com/g/thread-sanitizer

@@ -244,7 +244,7 @@ static value raise_unhandled;
 
 /* The interpreter itself */
 
-value caml_interprete(code_t prog, asize_t prog_size)
+CAMLno_tsan value caml_interprete(code_t prog, asize_t prog_size)
 {
 #ifdef PC_REG
   register code_t pc PC_REG;
