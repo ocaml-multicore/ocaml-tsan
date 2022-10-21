@@ -65,7 +65,7 @@ $(programs_byte:%=%$(EXE)):
 
 $(programs_opt:%=%$(EXE)):
 	$(CAMLOPT_CMD) $(LINKFLAGS) -I $(ROOTDIR) -o $@ $(filter-out %.cmi,$^) \
-		-I ../runtime
+	  -I ../runtime
 
 clean::
 	rm -f $(programs_byte) $(programs_byte:%=%.exe)
