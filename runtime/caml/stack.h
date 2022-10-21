@@ -56,7 +56,7 @@
 #define Wosize_gc_regs (13 /* int regs */ + 16 /* float regs */)
 #define Saved_return_address(sp) *((intnat *)((sp) - 8))
 #define Pop_frame_pointer(sp)
-#endif
+#endif /* TARGET_amd64 */
 
 #ifdef TARGET_arm64
 /* Size of the gc_regs structure, in words.
