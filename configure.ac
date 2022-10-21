@@ -1501,7 +1501,8 @@ AS_IF([test "x$enable_tsan" = "xyes" ],
 
 AS_IF([$tsan],
   [AS_IF([$force_instrumented_runtime],
-    [AC_MSG_ERROR([Enabling tsan option incompatible with force-instrumented-runtime option])],
+    [AC_MSG_ERROR([Enabling tsan option incompatible with \
+force-instrumented-runtime option])],
     [])],
   [])
 

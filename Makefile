@@ -992,7 +992,7 @@ runtime/%.i.o: runtime/%.S
 
 runtime/%.t.o: runtime/%.S
 	$(ASPP) $(OC_ASPPFLAGS) $(OC_TSAN_ASPPFLAGS) $(OC_TSAN_CPPFLAGS) \
-		$(ocamlrunt_CPPFLAGS) -o $@ $< \
+	    $(ocamlrunt_CPPFLAGS) -o $@ $< \
 	  || $(ASPP_ERROR)
 
 runtime/%_libasmrunpic.o: runtime/%.S
@@ -1062,7 +1062,7 @@ stdlib/libcamlrun.$(A): runtime-all
 clean::
 	rm -f $(addprefix runtime/, *.o *.obj *.a *.lib *.so *.dll ld.conf)
 	rm -f $(addprefix runtime/, ocamlrun ocamlrund ocamlruni ocamlruns \
-		ocamlrunt sak)
+	  ocamlrunt sak)
 	rm -f $(addprefix runtime/, ocamlrun.exe ocamlrund.exe ocamlruni.exe \
 	  ocamlrunt.exe ocamlruns.exe sak.exe)
 	rm -f runtime/primitives runtime/primitives.new runtime/prims.c \
@@ -1361,7 +1361,7 @@ ocamlnat_dependencies := \
 
 ocamlnat$(EXE): $(ocamlnat_dependencies)
 	$(CAMLOPT_CMD) $(LINKFLAGS) -linkall -I toplevel/native -o $@ $^ \
-		-I runtime
+	  -I runtime
 
 toplevel/topdirs.cmx: toplevel/topdirs.ml
 	$(CAMLOPT_CMD) $(COMPFLAGS) $(OPTCOMPFLAGS) -I toplevel/native -c $<
