@@ -27,6 +27,10 @@
 
 extern void __tsan_func_exit(void*);
 
+const char * __tsan_default_suppressions() {
+  return "deadlock:caml_plat_lock\n";
+}
+
 void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
 {
   caml_domain_state* domain_state = Caml_state;
