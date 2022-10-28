@@ -168,7 +168,6 @@ META
 /runtime/ocamlrun
 /runtime/ocamlrund
 /runtime/ocamlruni
-/runtime/ocamlrunt
 /runtime/ld.conf
 /runtime/.gdb_history
 /runtime/build_config.h
@@ -178,8 +177,8 @@ META
 
 /stdlib/camlheader
 /stdlib/target_camlheader
-/stdlib/camlheader[dit]
-/stdlib/target_camlheader[dit]
+/stdlib/camlheader[di]
+/stdlib/target_camlheader[di]
 /stdlib/camlheader_ur
 /stdlib/labelled-*
 /stdlib/caml

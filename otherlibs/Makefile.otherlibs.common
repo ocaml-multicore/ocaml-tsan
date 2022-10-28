@@ -149,10 +149,5 @@ include $(addprefix $(DEPDIR)/, $(COBJS:.$(O)=.$(D)))
 endif
 endif
 
-ifeq "$(WITH_TSAN)" "true"
-OC_CFLAGS += $(OC_TSAN_CFLAGS)
-LINKOPTS += $(TSAN_RUNTIME_LIBS)
-endif
-
 $(DEPDIR)/%.$(D): %.c | $(DEPDIR)
-	$(DEP_CC) $(OC_CPPFLAGS) $(CPPFLAGS) $(TSAN_FLAGS) $< -MT '$*.$(O)' -MF $@
+	$(DEP_CC) $(OC_CPPFLAGS) $(CPPFLAGS) $< -MT '$*.$(O)' -MF $@
