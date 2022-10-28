@@ -696,10 +696,7 @@ let action_of_file name =
   else
     ProcessOtherFile name
 
-let deferred_actions =
-  ref (if Config.tsan
-       then [ProcessObjects ["-fsanitize=thread"; "-lunwind"]]
-       else [])
+let deferred_actions = ref []
 let defer action =
   deferred_actions := action :: !deferred_actions
 
