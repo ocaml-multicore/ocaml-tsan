@@ -16,7 +16,9 @@
 # Makefile for the str library
 
 LIBNAME=str
-COBJS=strstubs.$(O)
+COBJS_BYTECODE=strstubs.b.$(O)
+COBJS_NATIVE=strstubs.n.$(O)
+COBJS=$(COBJS_BYTECODE) $(COBJS_NATIVE)
 CLIBNAME=camlstr
 CAMLOBJS=str.cmo
 
