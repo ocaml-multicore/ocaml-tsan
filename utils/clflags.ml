@@ -166,7 +166,7 @@ let pic_code = ref (match Config.architecture with (* -fPIC *)
                      | "amd64" -> true
                      | _       -> false)
 
-let runtime_variant = ref (if Config.tsan then "t" else "")
+let runtime_variant = ref ""
 
 let with_runtime = ref true         (* -with-runtime *)
 

@@ -50,10 +50,6 @@ ifeq "$(INSTRUMENTED_RUNTIME)" "true"
 all: camlheaderi target_camlheaderi
 endif
 
-ifeq "$(WITH_TSAN)" "true"
-all: camlheadert target_camlheadert
-endif
-
 .PHONY: allopt opt.opt # allopt and opt.opt are synonyms
 allopt: stdlib.cmxa std_exit.cmx
 opt.opt: allopt
@@ -84,11 +80,6 @@ install::
 	$(INSTALL_DATA) target_camlheaderi "$(INSTALL_LIBDIR)/camlheaderi"
 endif
 
-ifeq "$(WITH_TSAN)" "true"
-install::
-	$(INSTALL_DATA) target_camlheadert "$(INSTALL_LIBDIR)/camlheadert"
-endif
-
 .PHONY: installopt
 installopt: installopt-default
 
@@ -116,8 +107,7 @@ TARGETHEADERPROGRAM = target_$(HEADERPROGRAM)
 CAMLHEADERS =\
   camlheader target_camlheader camlheader_ur \
   camlheaderd target_camlheaderd \
-  camlheaderi target_camlheaderi \
-  camlheadert target_camlheadert
+  camlheaderi target_camlheaderi
 
 # The % in pattern rules must always match something, hence the slightly strange
 # patterns and $(subst ...) since `camlheader%:` wouldn't match `camlheader`
