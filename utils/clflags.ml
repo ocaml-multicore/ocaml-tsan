@@ -170,7 +170,7 @@ let pic_code = ref (match Config.architecture with (* -fPIC *)
 let runtime_variant =
   ref (match Config.force_instrumented_runtime with (* -runtime-variant *)
         | true -> "i"
-        | false -> if Config.tsan then "t" else "")
+        | false -> "")
 
 let with_runtime = ref true         (* -with-runtime *)
 
