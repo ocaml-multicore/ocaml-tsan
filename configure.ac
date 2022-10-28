@@ -54,6 +54,8 @@ oc_ldflags=""
 oc_dll_ldflags=""
 oc_exe_ldflags=""
 oc_tsan_cflags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
+oc_tsan_asppflags="-DWITH_THREAD_SANITIZER"
 ostype="Unix"
 SO="so"
 toolchain="cc"
@@ -117,6 +119,8 @@ AC_SUBST([ccomptype])
 AC_SUBST([toolchain])
 AC_SUBST([oc_cflags])
 AC_SUBST([oc_tsan_cflags])
+AC_SUBST([oc_tsan_asppflags])
+AC_SUBST([oc_tsan_cppflags])
 AC_SUBST([oc_cppflags])
 AC_SUBST([oc_ldflags])
 AC_SUBST([oc_dll_ldflags])
