@@ -177,6 +177,8 @@ INSTALL_SOURCE_ARTIFACTS=@install_source_artifacts@
 
 OC_CFLAGS=@oc_cflags@
 OC_TSAN_CFLAGS=@oc_tsan_cflags@
+OC_TSAN_ASPPFLAGS=@oc_tsan_asppflags@
+OC_TSAN_CPPFLAGS=@oc_tsan_cppflags@
 CFLAGS?=@CFLAGS@
 OC_CPPFLAGS=-I$(ROOTDIR)/runtime @oc_cppflags@
 CPPFLAGS?=@CPPFLAGS@
