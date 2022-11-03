@@ -103,10 +103,10 @@ let wrap_entry_exit expr =
     | Ctrywith (e, v, handler, dbg_none) ->
         (* This is a [try ... with] in tail position. We need to insert a call
            to [__tsan_func_exit] at the tail of both the body and the handler.
-           However, these expressions are no longer in tail position (as code
-           is inserted at the end of a [try ... with] block to pop the
-           exception handler. *)
-        Ctrywith (insert_call_exit false e, v, insert_call_exit false handler, dbg_none)
+           However, the body expression is not in tail position (as code is
+           inserted at the end of it to pop the exception handler). The handler
+           expression is still in tail position. *)
+        Ctrywith (insert_call_exit false e, v, insert_call_exit true handler, dbg_none)
     | Cop (Capply fn, args, dbg_none) when is_tail ->
         (* This is a tail call. We insert the call to [__tsan_func_exit] right
            before the call, but after evaluating the arguments. *)
