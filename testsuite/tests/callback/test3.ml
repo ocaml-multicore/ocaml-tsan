@@ -1,9 +1,10 @@
 (* TEST
+   * no-tsan
    include unix
    modules = "test3_.c"
-   * libunix
-   ** bytecode
-   ** native
+   ** libunix
+   *** bytecode
+   *** native
 *)
 
 (* Tests nested calls from C (main C) to OCaml (main OCaml) to C (caml_to_c) to
