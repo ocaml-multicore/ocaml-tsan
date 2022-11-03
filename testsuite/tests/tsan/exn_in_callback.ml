@@ -55,6 +55,7 @@ let [@inline never] f () =
   printf "leaving f\n%!"
 
 let () =
+  Printexc.record_backtrace true;
   let d = Domain.spawn (fun () -> Unix.sleep 1; r := 1) in
   f (); Unix.sleep 1;
   Domain.join d
