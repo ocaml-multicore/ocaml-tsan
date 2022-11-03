@@ -1,4 +1,5 @@
 (* TEST
+* no-tsan
 flags = "-w -a"
 ocamlrunparam += "l=100000"
 *)
