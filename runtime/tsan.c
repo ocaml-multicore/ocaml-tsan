@@ -28,7 +28,9 @@
 extern void __tsan_func_exit(void*);
 
 const char * __tsan_default_suppressions() {
-  return "deadlock:caml_plat_lock\n";
+  return "deadlock:caml_plat_lock\n"
+         "race:create_domain\n"
+    ;
 }
 
 void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
