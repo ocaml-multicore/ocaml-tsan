@@ -924,6 +924,17 @@ ENDFUNCTION(G(caml_callback_asm))
 
 FUNCTION(G(caml_callback2_asm))
 CFI_STARTPROC
+#if defined(WITH_THREAD_SANITIZER)
+    /* TSan enter function from C */
+        pushq   C_ARG_1
+        pushq   C_ARG_2
+        pushq   C_ARG_3
+        movq    24(%rsp), C_ARG_1
+        C_call  (GCALL(__tsan_func_entry))
+        popq    C_ARG_3
+        popq    C_ARG_2
+        popq    C_ARG_1
+#endif
     /* Save callee-save registers */
         PUSH_CALLEE_SAVE_REGS
     /* Initial loading of arguments */
@@ -939,6 +950,17 @@ ENDFUNCTION(G(caml_callback2_asm))
 
 FUNCTION(G(caml_callback3_asm))
 CFI_STARTPROC
+#if defined(WITH_THREAD_SANITIZER)
+    /* TSan enter function from C */
+        pushq   C_ARG_1
+        pushq   C_ARG_2
+        pushq   C_ARG_3
+        movq    24(%rsp), C_ARG_1
+        C_call  (GCALL(__tsan_func_entry))
+        popq    C_ARG_3
+        popq    C_ARG_2
+        popq    C_ARG_1
+#endif
     /* Save callee-save registers */
         PUSH_CALLEE_SAVE_REGS
     /* Initial loading of arguments */
