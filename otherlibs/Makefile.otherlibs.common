@@ -97,13 +97,13 @@ lib$(CLIBNAME)nat.$(A): $(COBJS)
 INSTALL_LIBDIR_LIBNAME = $(INSTALL_LIBDIR)/$(LIBNAME)
 
 install::
-	if test -f dll$(CLIBNAME).b$(EXT_DLL); then \
+	if test -f dll$(CLIBNAME)$(EXT_DLL); then \
 	  $(INSTALL_PROG) \
-	    dll$(CLIBNAME)$.b(EXT_DLL) "$(INSTALL_STUBLIBDIR)"; \
+	    dll$(CLIBNAME)$(EXT_DLL) "$(INSTALL_STUBLIBDIR)"; \
 	fi
-	if test -f dll$(CLIBNAME).n$(EXT_DLL); then \
+	if test -f dll$(CLIBNAME)nat$(EXT_DLL); then \
 	  $(INSTALL_PROG) \
-	    dll$(CLIBNAME).n$(EXT_DLL) "$(INSTALL_STUBLIBDIR)"; \
+	    dll$(CLIBNAME)nat$(EXT_DLL) "$(INSTALL_STUBLIBDIR)"; \
 	fi
 ifneq "$(STUBSLIB_BYTECODE)" ""
 	$(INSTALL_DATA) $(STUBSLIB_BYTECODE) "$(INSTALL_LIBDIR)/"
