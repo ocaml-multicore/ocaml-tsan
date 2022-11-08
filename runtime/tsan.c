@@ -67,10 +67,12 @@ void caml_tsan_exn_func_exit_c(char* limit)
 
   while (1) {
     const int ret = unw_step(&cursor);
-    CAMLassert(ret >= 0);
-    if (ret == 0) {
+    if (ret < 0) {
+      caml_fatal_error("libunwind function unw_step failed with code %d", ret);
+    } else if (ret == 0) { /* No more frames */
       break;
     }
+
 
     unw_get_reg(&cursor, UNW_REG_SP, &sp);
     __tsan_func_exit(NULL);
