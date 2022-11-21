@@ -193,6 +193,12 @@ let tsan = make
      "tsan available"
      "tsan not available")
 
+let no_tsan = make
+  "no-tsan"
+  (Actions_helpers.pass_or_skip (not Ocamltest_config.tsan)
+     "tsan not available"
+     "tsan available")
+
 let has_symlink = make
   "has_symlink"
   (Actions_helpers.pass_or_skip (Unix.has_symlink () )
@@ -318,4 +324,5 @@ let _ =
     file_exists;
     copy;
     tsan;
+    no_tsan;
   ]

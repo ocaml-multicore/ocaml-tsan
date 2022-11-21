@@ -618,6 +618,10 @@ Caml_inline void mark_stack_push_range(struct mark_stack* stk,
   me->end = end;
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 /* returns the work done by skipping unmarkable objects */
 static intnat mark_stack_push_block(struct mark_stack* stk, value block)
 {

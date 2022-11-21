@@ -28,7 +28,9 @@
 extern void __tsan_func_exit(void*);
 
 const char * __tsan_default_suppressions() {
-  return "deadlock:caml_plat_lock\n";
+  return "deadlock:caml_plat_lock\n"
+         "race:create_domain\n"
+    ;
 }
 
 void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
@@ -59,18 +61,27 @@ void caml_tsan_exn_func_exit_c(char* limit)
   unw_context_t uc;
   unw_cursor_t cursor;
   unw_word_t sp;
+  int ret;
 
-  unw_getcontext(&uc);
-  unw_init_local(&cursor, &uc);
+  ret = unw_getcontext(&uc);
+  if (ret != 0)
+      caml_fatal_error("unw_getcontextfailed failed with code %d", ret);
+  ret = unw_init_local(&cursor, &uc);
+  if (ret != 0)
+      caml_fatal_error("unw_init_local failed with code %d", ret);
 
   while (1) {
-    const int ret = unw_step(&cursor);
-    CAMLassert(ret >= 0);
-    if (ret == 0) {
+    ret = unw_step(&cursor);
+    if (ret < 0) {
+      caml_fatal_error("unw_step failed with code %d", ret);
+    } else if (ret == 0) {
+      /* No more frames */
       break;
     }
 
-    unw_get_reg(&cursor, UNW_REG_SP, &sp);
+    ret = unw_get_reg(&cursor, UNW_REG_SP, &sp);
+    if (ret != 0)
+      caml_fatal_error("unw_get_ret failed with code %d", ret);
     __tsan_func_exit(NULL);
 
     if ((char*)sp >= limit) {
