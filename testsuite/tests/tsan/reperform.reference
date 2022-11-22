@@ -1,0 +1,239 @@
+entering f
+entering g
+entering h
+E1 handler before continue
+==================
+WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
+  Write of size 8 at <implemspecific> by main thread (mutexes: write M88):
+    #0 camlReperform__race_<implemspecific> <implemspecific> (<implemspecific>)
+    #1 camlReperform__fun_<implemspecific> <implemspecific> (<implemspecific>)
+    #2 camlReperform__fiber1_<implemspecific> <implemspecific> (<implemspecific>)
+    #3 camlReperform__main_<implemspecific> <implemspecific> (<implemspecific>)
+    #4 camlReperform__entry <implemspecific> (<implemspecific>)
+    #5 caml_program <implemspecific> (<implemspecific>)
+    #6 caml_start_program <implemspecific> (<implemspecific>)
+    #7 caml_startup_common <implemspecific> (<implemspecific>)
+    #8 caml_startup_exn <implemspecific> (<implemspecific>)
+    #9 caml_startup <implemspecific> (<implemspecific>)
+    #10 caml_main <implemspecific> (<implemspecific>)
+    #11 main <implemspecific> (<implemspecific>)
+
+  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M92):
+    #0 camlReperform__other_domain_<implemspecific> <implemspecific> (<implemspecific>)
+    #1 camlStdlib__Domain__body_<implemspecific> <implemspecific> (<implemspecific>)
+    #2 caml_start_program <implemspecific> (<implemspecific>)
+    #3 caml_callback_exn <implemspecific> (<implemspecific>)
+    #4 caml_callback <implemspecific> (<implemspecific>)
+    #5 domain_thread_func <implemspecific> (<implemspecific>)
+
+  As if synchronized via sleep:
+    #0 nanosleep <implemspecific> (<implemspecific>)
+    #1 caml_unix_sleep <implemspecific> (<implemspecific>)
+    #2 caml_c_call <implemspecific> (<implemspecific>)
+    #3 camlReperform__entry <implemspecific> (<implemspecific>)
+    #4 caml_program <implemspecific> (<implemspecific>)
+    #5 caml_start_program <implemspecific> (<implemspecific>)
+    #6 caml_startup_common <implemspecific> (<implemspecific>)
+    #7 caml_startup_exn <implemspecific> (<implemspecific>)
+    #8 caml_startup <implemspecific> (<implemspecific>)
+    #9 caml_main <implemspecific> (<implemspecific>)
+    #10 main <implemspecific> (<implemspecific>)
+
+  Mutex M88 (<implemspecific>) created at:
+    #0 pthread_mutex_init <implemspecific> (<implemspecific>)
+    #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
+    #2 caml_init_domains <implemspecific> (<implemspecific>)
+    #3 caml_init_gc <implemspecific> (<implemspecific>)
+    #4 caml_startup_common <implemspecific> (<implemspecific>)
+    #5 caml_startup_exn <implemspecific> (<implemspecific>)
+    #6 caml_startup <implemspecific> (<implemspecific>)
+    #7 caml_main <implemspecific> (<implemspecific>)
+    #8 main <implemspecific> (<implemspecific>)
+
+  Mutex M92 (<implemspecific>) created at:
+    #0 pthread_mutex_init <implemspecific> (<implemspecific>)
+    #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
+    #2 caml_init_domains <implemspecific> (<implemspecific>)
+    #3 caml_init_gc <implemspecific> (<implemspecific>)
+    #4 caml_startup_common <implemspecific> (<implemspecific>)
+    #5 caml_startup_exn <implemspecific> (<implemspecific>)
+    #6 caml_startup <implemspecific> (<implemspecific>)
+    #7 caml_main <implemspecific> (<implemspecific>)
+    #8 main <implemspecific> (<implemspecific>)
+
+  Thread T1 (tid=<implemspecific>, running) created by main thread at:
+    #0 pthread_create <implemspecific> (<implemspecific>)
+    #1 caml_domain_spawn <implemspecific> (<implemspecific>)
+    #2 caml_c_call <implemspecific> (<implemspecific>)
+    #3 camlStdlib__Domain__spawn_<implemspecific> <implemspecific> (<implemspecific>)
+    #4 camlReperform__entry <implemspecific> (<implemspecific>)
+    #5 caml_program <implemspecific> (<implemspecific>)
+    #6 caml_start_program <implemspecific> (<implemspecific>)
+    #7 caml_startup_common <implemspecific> (<implemspecific>)
+    #8 caml_startup_exn <implemspecific> (<implemspecific>)
+    #9 caml_startup <implemspecific> (<implemspecific>)
+    #10 caml_main <implemspecific> (<implemspecific>)
+    #11 main <implemspecific> (<implemspecific>)
+
+SUMMARY: ThreadSanitizer: data race (<systemspecific>/reperform.ml+<implemspecific>) in camlReperform__race_<implemspecific>
+==================
+==================
+WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
+  Write of size 8 at <implemspecific> by main thread (mutexes: write M88):
+    #0 camlReperform__race_<implemspecific> <implemspecific> (<implemspecific>)
+    #1 camlReperform__h_<implemspecific> <implemspecific> (<implemspecific>)
+    #2 camlReperform__g_<implemspecific> <implemspecific> (<implemspecific>)
+    #3 camlReperform__f_<implemspecific> <implemspecific> (<implemspecific>)
+    #4 caml_runstack <implemspecific> (<implemspecific>)
+    #5 camlReperform__fiber2_<implemspecific> <implemspecific> (<implemspecific>)
+    #6 caml_runstack <implemspecific> (<implemspecific>)
+    #7 camlReperform__fun_<implemspecific> <implemspecific> (<implemspecific>)
+    #8 camlReperform__fiber1_<implemspecific> <implemspecific> (<implemspecific>)
+    #9 camlReperform__main_<implemspecific> <implemspecific> (<implemspecific>)
+    #10 camlReperform__entry <implemspecific> (<implemspecific>)
+    #11 caml_program <implemspecific> (<implemspecific>)
+    #12 caml_start_program <implemspecific> (<implemspecific>)
+    #13 caml_startup_common <implemspecific> (<implemspecific>)
+    #14 caml_startup_exn <implemspecific> (<implemspecific>)
+    #15 caml_startup <implemspecific> (<implemspecific>)
+    #16 caml_main <implemspecific> (<implemspecific>)
+    #17 main <implemspecific> (<implemspecific>)
+
+  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M92):
+    #0 camlReperform__other_domain_<implemspecific> <implemspecific> (<implemspecific>)
+    #1 camlStdlib__Domain__body_<implemspecific> <implemspecific> (<implemspecific>)
+    #2 caml_start_program <implemspecific> (<implemspecific>)
+    #3 caml_callback_exn <implemspecific> (<implemspecific>)
+    #4 caml_callback <implemspecific> (<implemspecific>)
+    #5 domain_thread_func <implemspecific> (<implemspecific>)
+
+  As if synchronized via sleep:
+    #0 nanosleep <implemspecific> (<implemspecific>)
+    #1 caml_unix_sleep <implemspecific> (<implemspecific>)
+    #2 caml_c_call <implemspecific> (<implemspecific>)
+    #3 camlReperform__entry <implemspecific> (<implemspecific>)
+    #4 caml_program <implemspecific> (<implemspecific>)
+    #5 caml_start_program <implemspecific> (<implemspecific>)
+    #6 caml_startup_common <implemspecific> (<implemspecific>)
+    #7 caml_startup_exn <implemspecific> (<implemspecific>)
+    #8 caml_startup <implemspecific> (<implemspecific>)
+    #9 caml_main <implemspecific> (<implemspecific>)
+    #10 main <implemspecific> (<implemspecific>)
+
+  Mutex M88 (<implemspecific>) created at:
+    #0 pthread_mutex_init <implemspecific> (<implemspecific>)
+    #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
+    #2 caml_init_domains <implemspecific> (<implemspecific>)
+    #3 caml_init_gc <implemspecific> (<implemspecific>)
+    #4 caml_startup_common <implemspecific> (<implemspecific>)
+    #5 caml_startup_exn <implemspecific> (<implemspecific>)
+    #6 caml_startup <implemspecific> (<implemspecific>)
+    #7 caml_main <implemspecific> (<implemspecific>)
+    #8 main <implemspecific> (<implemspecific>)
+
+  Mutex M92 (<implemspecific>) created at:
+    #0 pthread_mutex_init <implemspecific> (<implemspecific>)
+    #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
+    #2 caml_init_domains <implemspecific> (<implemspecific>)
+    #3 caml_init_gc <implemspecific> (<implemspecific>)
+    #4 caml_startup_common <implemspecific> (<implemspecific>)
+    #5 caml_startup_exn <implemspecific> (<implemspecific>)
+    #6 caml_startup <implemspecific> (<implemspecific>)
+    #7 caml_main <implemspecific> (<implemspecific>)
+    #8 main <implemspecific> (<implemspecific>)
+
+  Thread T1 (tid=<implemspecific>, running) created by main thread at:
+    #0 pthread_create <implemspecific> (<implemspecific>)
+    #1 caml_domain_spawn <implemspecific> (<implemspecific>)
+    #2 caml_c_call <implemspecific> (<implemspecific>)
+    #3 camlStdlib__Domain__spawn_<implemspecific> <implemspecific> (<implemspecific>)
+    #4 camlReperform__entry <implemspecific> (<implemspecific>)
+    #5 caml_program <implemspecific> (<implemspecific>)
+    #6 caml_start_program <implemspecific> (<implemspecific>)
+    #7 caml_startup_common <implemspecific> (<implemspecific>)
+    #8 caml_startup_exn <implemspecific> (<implemspecific>)
+    #9 caml_startup <implemspecific> (<implemspecific>)
+    #10 caml_main <implemspecific> (<implemspecific>)
+    #11 main <implemspecific> (<implemspecific>)
+
+SUMMARY: ThreadSanitizer: data race (<systemspecific>/reperform.ml+<implemspecific>) in camlReperform__race_<implemspecific>
+==================
+leaving h
+leaving g
+leaving f
+value handler
+E1 handler after continue
+result=1339
+==================
+WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
+  Write of size 8 at <implemspecific> by main thread (mutexes: write M88):
+    #0 camlReperform__race_<implemspecific> <implemspecific> (<implemspecific>)
+    #1 camlReperform__entry <implemspecific> (<implemspecific>)
+    #2 caml_program <implemspecific> (<implemspecific>)
+    #3 caml_start_program <implemspecific> (<implemspecific>)
+    #4 caml_startup_common <implemspecific> (<implemspecific>)
+    #5 caml_startup_exn <implemspecific> (<implemspecific>)
+    #6 caml_startup <implemspecific> (<implemspecific>)
+    #7 caml_main <implemspecific> (<implemspecific>)
+    #8 main <implemspecific> (<implemspecific>)
+
+  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M92):
+    #0 camlReperform__other_domain_<implemspecific> <implemspecific> (<implemspecific>)
+    #1 camlStdlib__Domain__body_<implemspecific> <implemspecific> (<implemspecific>)
+    #2 caml_start_program <implemspecific> (<implemspecific>)
+    #3 caml_callback_exn <implemspecific> (<implemspecific>)
+    #4 caml_callback <implemspecific> (<implemspecific>)
+    #5 domain_thread_func <implemspecific> (<implemspecific>)
+
+  As if synchronized via sleep:
+    #0 nanosleep <implemspecific> (<implemspecific>)
+    #1 caml_unix_sleep <implemspecific> (<implemspecific>)
+    #2 caml_c_call <implemspecific> (<implemspecific>)
+    #3 camlReperform__entry <implemspecific> (<implemspecific>)
+    #4 caml_program <implemspecific> (<implemspecific>)
+    #5 caml_start_program <implemspecific> (<implemspecific>)
+    #6 caml_startup_common <implemspecific> (<implemspecific>)
+    #7 caml_startup_exn <implemspecific> (<implemspecific>)
+    #8 caml_startup <implemspecific> (<implemspecific>)
+    #9 caml_main <implemspecific> (<implemspecific>)
+    #10 main <implemspecific> (<implemspecific>)
+
+  Mutex M88 (<implemspecific>) created at:
+    #0 pthread_mutex_init <implemspecific> (<implemspecific>)
+    #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
+    #2 caml_init_domains <implemspecific> (<implemspecific>)
+    #3 caml_init_gc <implemspecific> (<implemspecific>)
+    #4 caml_startup_common <implemspecific> (<implemspecific>)
+    #5 caml_startup_exn <implemspecific> (<implemspecific>)
+    #6 caml_startup <implemspecific> (<implemspecific>)
+    #7 caml_main <implemspecific> (<implemspecific>)
+    #8 main <implemspecific> (<implemspecific>)
+
+  Mutex M92 (<implemspecific>) created at:
+    #0 pthread_mutex_init <implemspecific> (<implemspecific>)
+    #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
+    #2 caml_init_domains <implemspecific> (<implemspecific>)
+    #3 caml_init_gc <implemspecific> (<implemspecific>)
+    #4 caml_startup_common <implemspecific> (<implemspecific>)
+    #5 caml_startup_exn <implemspecific> (<implemspecific>)
+    #6 caml_startup <implemspecific> (<implemspecific>)
+    #7 caml_main <implemspecific> (<implemspecific>)
+    #8 main <implemspecific> (<implemspecific>)
+
+  Thread T1 (tid=<implemspecific>, running) created by main thread at:
+    #0 pthread_create <implemspecific> (<implemspecific>)
+    #1 caml_domain_spawn <implemspecific> (<implemspecific>)
+    #2 caml_c_call <implemspecific> (<implemspecific>)
+    #3 camlStdlib__Domain__spawn_<implemspecific> <implemspecific> (<implemspecific>)
+    #4 camlReperform__entry <implemspecific> (<implemspecific>)
+    #5 caml_program <implemspecific> (<implemspecific>)
+    #6 caml_start_program <implemspecific> (<implemspecific>)
+    #7 caml_startup_common <implemspecific> (<implemspecific>)
+    #8 caml_startup_exn <implemspecific> (<implemspecific>)
+    #9 caml_startup <implemspecific> (<implemspecific>)
+    #10 caml_main <implemspecific> (<implemspecific>)
+    #11 main <implemspecific> (<implemspecific>)
+
+SUMMARY: ThreadSanitizer: data race (<systemspecific>/reperform.ml+<implemspecific>) in camlReperform__race_<implemspecific>
+==================
+ThreadSanitizer: reported 3 warnings
