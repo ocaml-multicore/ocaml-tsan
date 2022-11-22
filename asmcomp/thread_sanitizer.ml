@@ -66,8 +66,12 @@ let machtype_of_memory_chunk = function
 let dbg_none = Debuginfo.none
 
 let wrap_entry_exit expr =
-  let call_entry = Cmm_helpers.return_unit dbg_none @@ Cop (
-      Cextcall ("__tsan_func_entry", typ_void, [], false), [Creturn_addr], dbg_none)
+  let call_entry =
+    Cmm_helpers.return_unit dbg_none @@
+    Cop
+      (Cextcall ("__tsan_func_entry", typ_void, [], false),
+       [Creturn_addr],
+       dbg_none)
   in
   let call_exit = Cmm_helpers.return_unit dbg_none @@ Cop (
       Cextcall ("__tsan_func_exit", typ_void, [], false), [], dbg_none)
@@ -75,8 +79,10 @@ let wrap_entry_exit expr =
   (* [is_tail] is true when the expression is in tail position *)
   let rec insert_call_exit is_tail = function
     | Clet (v, e, body) -> Clet (v, e, insert_call_exit is_tail body)
-    | Clet_mut (v, typ, e, body) -> Clet_mut (v, typ, e, insert_call_exit is_tail body)
-    | Cphantom_let (v, e, body) -> Cphantom_let (v, e, insert_call_exit is_tail body)
+    | Clet_mut (v, typ, e, body) ->
+        Clet_mut (v, typ, e, insert_call_exit is_tail body)
+    | Cphantom_let (v, e, body) ->
+        Cphantom_let (v, e, insert_call_exit is_tail body)
     | Cassign (v, body) -> Cassign (v, insert_call_exit is_tail body)
     | Csequence (op1, op2) -> Csequence (op1, insert_call_exit is_tail op2)
     | Cifthenelse (cond, t_dbg, t, f_dbg, f, dbg_none) ->
@@ -91,7 +97,8 @@ let wrap_entry_exit expr =
         Cswitch (e, cases, handlers, dbg_none)
     | Ccatch (isrec, handlers, next) ->
         let handlers = List.map
-            (fun (id, args, e, dbg_none) -> (id, args, insert_call_exit is_tail e, dbg_none))
+            (fun (id, args, e, dbg_none) ->
+              (id, args, insert_call_exit is_tail e, dbg_none))
             handlers
         in
         Ccatch (isrec, handlers, insert_call_exit is_tail next)
@@ -106,7 +113,11 @@ let wrap_entry_exit expr =
            However, the body expression is not in tail position (as code is
            inserted at the end of it to pop the exception handler). The handler
            expression is still in tail position. *)
-        Ctrywith (insert_call_exit false e, v, insert_call_exit true handler, dbg_none)
+        Ctrywith
+          (insert_call_exit false e,
+           v,
+           insert_call_exit true handler,
+           dbg_none)
     | Cop (Capply fn, args, dbg_none) when is_tail ->
         (* This is a tail call. We insert the call to [__tsan_func_exit] right
            before the call, but after evaluating the arguments. *)
