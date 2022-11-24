@@ -24,23 +24,38 @@
 #include "caml/fiber.h"
 #include "caml/domain_state.h"
 #include "caml/stack.h"
+#include "caml/config.h"
+#ifdef TSAN_DEBUG
+#include <execinfo.h> /* For backtrace_symbols */
+#endif
 
 extern void __tsan_func_exit(void*);
 
 const char * __tsan_default_suppressions() {
   return "deadlock:caml_plat_lock\n"
-         "race:create_domain\n"
-    ;
+         "race:create_domain\n";
+}
+
+Caml_inline void caml_tsan_debug_log_pc(const char* msg, uintnat pc)
+{
+#ifdef TSAN_DEBUG
+    char **sym_names = backtrace_symbols((void **)&pc, 1);
+    fprintf(stderr, "%s %s\n", msg, sym_names[0]);
+    free(sym_names);
+#else
+    (void)msg; (void)pc;
+#endif
 }
 
 void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
 {
   caml_domain_state* domain_state = Caml_state;
   caml_frame_descrs fds = caml_get_frame_descrs();
+  uintnat next_pc = pc;
 
   /* iterate on each frame  */
   while (1) {
-    frame_descr* descr = caml_next_frame_descriptor(fds, &pc, &sp,
+    frame_descr* descr = caml_next_frame_descriptor(fds, &next_pc, &sp,
         domain_state->current_stack);
 
     if (descr == NULL) {
@@ -52,7 +67,9 @@ void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
       break;
     }
 
+    caml_tsan_debug_log_pc("forced__tsan_func_exit for", pc);
     __tsan_func_exit(NULL);
+    pc = next_pc;
   }
 }
 
@@ -61,16 +78,25 @@ void caml_tsan_exn_func_exit_c(char* limit)
   unw_context_t uc;
   unw_cursor_t cursor;
   unw_word_t sp;
+#ifdef TSAN_DEBUG
+  unw_word_t prev_pc;
+#endif
   int ret;
 
   ret = unw_getcontext(&uc);
   if (ret != 0)
-      caml_fatal_error("unw_getcontextfailed failed with code %d", ret);
+    caml_fatal_error("unw_getcontextfailed failed with code %d", ret);
   ret = unw_init_local(&cursor, &uc);
   if (ret != 0)
-      caml_fatal_error("unw_init_local failed with code %d", ret);
+    caml_fatal_error("unw_init_local failed with code %d", ret);
 
   while (1) {
+#ifdef TSAN_DEBUG
+    if (unw_get_reg(&cursor, UNW_REG_IP, &prev_pc) < 0) {
+      caml_fatal_error("unw_get_reg failed with code %d", ret);
+    }
+#endif
+
     ret = unw_step(&cursor);
     if (ret < 0) {
       caml_fatal_error("unw_step failed with code %d", ret);
@@ -81,7 +107,10 @@ void caml_tsan_exn_func_exit_c(char* limit)
 
     ret = unw_get_reg(&cursor, UNW_REG_SP, &sp);
     if (ret != 0)
-      caml_fatal_error("unw_get_ret failed with code %d", ret);
+      caml_fatal_error("unw_get_reg failed with code %d", ret);
+#ifdef TSAN_DEBUG
+    caml_tsan_debug_log_pc("forced__tsan_func_exit for", prev_pc);
+#endif
     __tsan_func_exit(NULL);
 
     if ((char*)sp >= limit) {
@@ -90,30 +119,47 @@ void caml_tsan_exn_func_exit_c(char* limit)
   }
 }
 
+/* This function iterates on each stack frame of the current fiber. This is
+   sufficient, since when the top of the stack is reached, the runtime switches
+   to the parent fiber, and re-performs; as a consequence, this function will
+   be called again. */
 void caml_tsan_func_exit_on_perform(uintnat pc, char* sp)
 {
   struct stack_info* stack = Caml_state->current_stack;
   caml_frame_descrs fds = caml_get_frame_descrs();
+  uintnat next_pc = pc;
 
   /* iterate on each frame  */
   while (1) {
-    frame_descr* descr = caml_next_frame_descriptor(fds, &pc, &sp, stack);
+    frame_descr* descr = caml_next_frame_descriptor(fds, &next_pc, &sp, stack);
 
+    caml_tsan_debug_log_pc("forced__tsan_func_exit for", pc);
     __tsan_func_exit(NULL);
 
     if (descr == NULL) {
       break;
     }
+    pc = next_pc;
   }
 }
 
+/* This function is executed after switching to the deeper fiber, but before
+   the linked list of fibers from the current one to the handler's has been
+   restored by restoring the parent link to the handler's stack. As a
+   consequence, this function simply iterates on each stack frame, following
+   links to parent fibers, until that link is NULL. This way, it performs a
+   [__tsan_func_entry] for each stack frame between the current and the
+   handler's stack.
+   We use non-tail recursion to call [__tsan_func_entry] in the reverse order
+   of iteration. */
 CAMLno_tsan void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
-                                    struct stack_info const* stack)
+    struct stack_info const* stack)
 {
   caml_frame_descrs fds = caml_get_frame_descrs();
+  uintnat next_pc = pc;
 
-  caml_next_frame_descriptor(fds, &pc, &sp, (struct stack_info*)stack);
-  if (pc == 0) {
+  caml_next_frame_descriptor(fds, &next_pc, &sp, (struct stack_info*)stack);
+  if (next_pc == 0) {
     stack = stack->handler->parent;
     if (!stack) {
       return;
@@ -121,12 +167,13 @@ CAMLno_tsan void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
 
     char* p = (char*)stack->sp;
     Pop_frame_pointer(p);
-    pc = *(uintnat*)p;
+    next_pc = *(uintnat*)p;
     sp = p + sizeof(value);
   }
 
-  caml_tsan_func_entry_on_resume(pc, sp, stack);
-  __tsan_func_entry((void*)pc);
+  caml_tsan_func_entry_on_resume(next_pc, sp, stack);
+  caml_tsan_debug_log_pc("forced__tsan_func_entry for", pc);
+  __tsan_func_entry((void*)next_pc);
 }
 
 #endif // WITH_THREAD_SANITIZER
