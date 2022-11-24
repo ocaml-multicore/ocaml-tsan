@@ -16,32 +16,22 @@ compiler to add ThreadSanitizer support to OCaml 5.0.
   detect races in code paths that are not visited.
 * TSan may still report false positives in some rare cases (see section
   6.4 of the WBIA ’09 paper below).
-* Currently, ThreadSanitizer detection only works for native executables, not
-  bytecode programs.
+* Currently, ThreadSanitizer detection only works for native x86_64
+  executables; not bytecode programs, nor other architectures.
 
 === Trying it out
 
 You first need to install https://github.com/libunwind/libunwind[libunwind]
 on your system.
 
-**Warning:** when building the opam switch, or installing opam packages, or
-simply running an OCaml program (including the OCaml compiler), you should
-disable TSan's deadlock detection by setting the `TSAN_OPTIONS` environment
-variable:
-....
-export TSAN_OPTIONS="detect_deadlocks=0"
-....
-We are aware that this is not convenient; we are working to fix this defect in
-prevision of the first release of the tool.
-
 Then install the compiler with ThreadSanitizer instrumentation in a new opam
 switch using the following sequence of commands:
 
 ....
 opam update
-opam switch create 5.1.0+tsan --empty --repo=default,beta=git+https://github.com/ocaml/ocaml-beta-repository.git,alpha=git+https://github.com/kit-ty-kate/opam-alpha-repository.git
-eval $(opam env --switch=5.1.0+tsan)
-opam pin add ocaml-variants.5.1.0+tsan git+https://github.com/OlivierNicole/ocaml-tsan
+opam switch create 5.0.0+tsan --empty --repo=default,beta=git+https://github.com/ocaml/ocaml-beta-repository.git,alpha=git+https://github.com/kit-ty-kate/opam-alpha-repository.git
+eval $(opam env --switch=5.0.0+tsan)
+opam pin add ocaml-variants.5.0.0+tsan git+https://github.com/OlivierNicole/ocaml-tsan
 ....
 
 Building the switch may take a bit longer than usual due to some unavoidable
@@ -219,12 +209,12 @@ library* to track accesses to shared data and report races 2. *Compiler
 instrumentation* that emits calls to the run-time library
 
 Internally the run-time library associates with each word of application
-memory at least 2 ``shadow words''. Each shadow word contains
+memory at least 2 "shadow words". Each shadow word contains
 information about a recent memory access to that word, including a
-``scalar clock''. Those clocks serve to establish a happens-before (HB)
+"scalar clock". Those clocks serve to establish a happens-before (HB)
 relation, i.e. an event orderings that we are certain of.
 
-This information is maintained as a ``shadow state'' in a separate
+This information is maintained as a "shadow state" in a separate
 memory region, and updated at every (instrumented) memory access. A data
 race is reported every time two memory accesses are made to overlapping
 memory regions, and: - one of them is a write, and - there is no
