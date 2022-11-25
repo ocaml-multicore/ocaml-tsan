@@ -1,7 +1,7 @@
 (* TEST
-   * no-tsan
    include unix
    modules = "test3_.c"
+   * no-tsan
    ** libunix
    *** bytecode
    *** native
