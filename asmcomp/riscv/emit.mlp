@@ -440,6 +440,8 @@ let emit_instr env i =
   | Lop (Idls_get) ->
       (* Here to maintain build *)
       assert false
+  | Lop (Ireturn_addr) ->
+      failwith "Not implemented"
   | Lreloadretaddr ->
       let n = frame_size env in
       reload_ra n
