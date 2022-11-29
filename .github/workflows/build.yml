@@ -115,9 +115,9 @@ jobs:
           - name: linux-O0
             os: ubuntu-latest
             config_arg: CFLAGS='-O0'
-          - name: macos
-            os: macos-latest
-            config_arg: --enable-tsan
+              #          - name: macos
+              #            os: macos-latest
+              #            config_arg: --enable-tsan
     steps:
       - name: Checkout
         uses: actions/checkout@v2
