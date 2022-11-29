@@ -512,6 +512,7 @@ module BR = Branch_relaxation.Make (struct
     | Lop (Ispecific Imove32) -> 1
     | Lop (Ispecific (Isignext _)) -> 1
     | Lop (Idls_get) -> 1
+    | Lop (Ireturn_addr) -> failwith "Not implemented"
     | Lreloadretaddr -> 0
     | Lreturn -> epilogue_size f
     | Llabel _ -> 0
