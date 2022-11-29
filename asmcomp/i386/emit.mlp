@@ -786,6 +786,8 @@ let emit_instr env fallthrough i =
   | Lop (Idls_get) ->
       (* Here to maintain build *)
       assert false
+  | Lop (Ireturn_addr) ->
+      failwith "Not implemented"
   | Lreloadretaddr ->
       ()
   | Lreturn ->
