@@ -33,7 +33,8 @@ extern void __tsan_func_exit(void*);
 
 const char * __tsan_default_suppressions() {
   return "deadlock:caml_plat_lock\n"
-         "race:create_domain\n";
+         "race:create_domain\n"
+         "race:mark_slice_darken\n";
 }
 
 Caml_inline void caml_tsan_debug_log_pc(const char* msg, uintnat pc)
