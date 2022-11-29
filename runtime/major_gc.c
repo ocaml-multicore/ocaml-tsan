@@ -572,6 +572,10 @@ static void realloc_mark_stack (struct mark_stack* stk)
   }
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 static void mark_stack_push(struct mark_stack* stk, value block,
                             uintnat offset, intnat* work)
 {
