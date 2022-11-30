@@ -170,36 +170,36 @@ jobs:
 #        debug runtime and minor heap verification.
 # debug-s4086: select testsuite run with the debug runtime and a small
 #              minor heap.
-  extra:
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        id:
-          - debug
-          - debug-s4096
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: compiler
-      - name: Unpack Artifact
-        run: |
-          tar --zstd -xf sources.tar.zstd
-          rm -f sources.tar.zstd
-      - name: Run the testsuite (debug runtime)
-        if: ${{ matrix.id == 'debug' }}
-        env:
-          OCAMLRUNPARAM: v=0,V=1
-          USE_RUNTIME: d
-        run: |
-          bash -cxe "SHOW_TIMINGS=1 tools/ci/actions/runner.sh test"
-      - name: Run the testsuite (s=4096, debug runtime)
-        if: ${{ matrix.id == 'debug-s4096' }}
-        env:
-          OCAMLRUNPARAM: s=4096,v=0
-          USE_RUNTIME: d
-        run: |
-          for dir in $PARALLEL_TESTS; do \
-            bash -cxe "SHOW_TIMINGS=1 tools/ci/actions/runner.sh test_prefix $dir"; \
-          done
+#  extra:
+#    needs: build
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        id:
+#          - debug
+#          - debug-s4096
+#    steps:
+#      - name: Download artifact
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: compiler
+#      - name: Unpack Artifact
+#        run: |
+#          tar --zstd -xf sources.tar.zstd
+#          rm -f sources.tar.zstd
+#      - name: Run the testsuite (debug runtime)
+#        if: ${{ matrix.id == 'debug' }}
+#        env:
+#          OCAMLRUNPARAM: v=0,V=1
+#          USE_RUNTIME: d
+#        run: |
+#          bash -cxe "SHOW_TIMINGS=1 tools/ci/actions/runner.sh test"
+#      - name: Run the testsuite (s=4096, debug runtime)
+#        if: ${{ matrix.id == 'debug-s4096' }}
+#        env:
+#          OCAMLRUNPARAM: s=4096,v=0
+#          USE_RUNTIME: d
+#        run: |
+#          for dir in $PARALLEL_TESTS; do \
+#            bash -cxe "SHOW_TIMINGS=1 tools/ci/actions/runner.sh test_prefix $dir"; \
+#          done
