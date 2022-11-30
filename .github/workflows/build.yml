@@ -68,7 +68,7 @@ jobs:
           rm -f sources.tar.zstd
       - name: Packages
         run: |
-          sudo apt-get update -y && sudo apt-get install -y texlive-latex-extra texlive-fonts-recommended hevea sass libunwind
+          sudo apt-get update -y && sudo apt-get install -y texlive-latex-extra texlive-fonts-recommended hevea sass libunwind-dev
       - name: Run the testsuite
         run: |
           MAKE_ARG=-j OCAMLRUNPARAM=b,v=0 bash -xe tools/ci/actions/runner.sh test
