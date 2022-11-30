@@ -2,10 +2,6 @@ name: Build
 
 on:
   push:
-    branches:
-      - '4.**'
-      - '5.**'
-      - 'trunk'
   pull_request:
 
 # Restrict the GITHUB_TOKEN
