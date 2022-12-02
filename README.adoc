@@ -76,80 +76,32 @@ let () =
 ----
 
 Running this program with ThreadSanitizer instrumentation will output
-the following report:
+a report looking like this:
 
 ....
 ==================
-WARNING: ThreadSanitizer: data race (pid=2992451)
-  Read of size 8 at 0x7fb319ffe490 by thread T4 (mutexes: write M96):
-    #0 camlTmp.fun_600 <null> (a.out+0x43cc60)
-    #1 camlStdlib__Domain.body_707 <null> (a.out+0x47c8a9)
-    #2 caml_start_program <null> (a.out+0x4f822f)
-    #3 caml_callback_exn runtime/callback.c:167 (a.out+0x4c59b6)
-    #4 caml_callback runtime/callback.c:253 (a.out+0x4c64ea)
-    #5 domain_thread_func runtime/domain.c:1095 (a.out+0x4c98e2)
-    #6 <null> <null> (libtsan.so.0+0x333cf)
+WARNING: ThreadSanitizer: data race (pid=4170290)
+  Read of size 8 at 0x7f072bbfe498 by thread T4 (mutexes: write M0):
+    #0 camlSimpleRace__fun_524 /tmp/simpleRace.ml:7 (simpleRace.exe+0x43dc9d)
+    #1 camlStdlib__Domain__body_696 /home/olivier/.opam/5.0.0+tsan/.opam-switch/build/ocaml-variants.5.0.0+tsan/stdlib/domain.ml:202 (simpleRace.exe+0x47b5dc)
+    #2 caml_start_program ??:? (simpleRace.exe+0x4f51c3)
+    #3 caml_callback_exn /home/olivier/.opam/5.0.0+tsan/.opam-switch/build/ocaml-variants.5.0.0+tsan/runtime/callback.c:168 (simpleRace.exe+0x4c2b93)
+    #4 caml_callback /home/olivier/.opam/5.0.0+tsan/.opam-switch/build/ocaml-variants.5.0.0+tsan/runtime/callback.c:256 (simpleRace.exe+0x4c36e3)
+    #5 domain_thread_func /home/olivier/.opam/5.0.0+tsan/.opam-switch/build/ocaml-variants.5.0.0+tsan/runtime/domain.c:1093 (simpleRace.exe+0x4c6ad1)
 
-  Previous write of size 8 at 0x7fb319ffe490 by thread T1 (mutexes: write M92):
-    #0 camlTmp.fun_596 <null> (a.out+0x43cc06)
-    #1 camlStdlib__Domain.body_707 <null> (a.out+0x47c8a9)
-    #2 caml_start_program <null> (a.out+0x4f822f)
-    #3 caml_callback_exn runtime/callback.c:167 (a.out+0x4c59b6)
-    #4 caml_callback runtime/callback.c:253 (a.out+0x4c64ea)
-    #5 domain_thread_func runtime/domain.c:1095 (a.out+0x4c98e2)
-    #6 <null> <null> (libtsan.so.0+0x333cf)
+  Previous write of size 8 at 0x7f072bbfe498 by thread T1 (mutexes: write M1):
+    #0 camlSimpleRace__fun_520 /tmp/simpleRace.ml:6 (simpleRace.exe+0x43dc45)
+    #1 camlStdlib__Domain__body_696 /home/olivier/.opam/5.0.0+tsan/.opam-switch/build/ocaml-variants.5.0.0+tsan/stdlib/domain.ml:202 (simpleRace.exe+0x47b5dc)
+    #2 caml_start_program ??:? (simpleRace.exe+0x4f51c3)
+    #3 caml_callback_exn /home/olivier/.opam/5.0.0+tsan/.opam-switch/build/ocaml-variants.5.0.0+tsan/runtime/callback.c:168 (simpleRace.exe+0x4c2b93)
+    #4 caml_callback /home/olivier/.opam/5.0.0+tsan/.opam-switch/build/ocaml-variants.5.0.0+tsan/runtime/callback.c:256 (simpleRace.exe+0x4c36e3)
+    #5 domain_thread_func /home/olivier/.opam/5.0.0+tsan/.opam-switch/build/ocaml-variants.5.0.0+tsan/runtime/domain.c:1093 (simpleRace.exe+0x4c6ad1)
 
-  Mutex M96 (0x00000056c118) created at:
-    #0 pthread_mutex_init <null> (libtsan.so.0+0x4d483)
-    #1 caml_plat_mutex_init runtime/platform.c:54 (a.out+0x4e95b4)
-    #2 caml_init_domains runtime/domain.c:883 (a.out+0x4c95a2)
-    #3 caml_init_gc runtime/gc_ctrl.c:343 (a.out+0x4d4db2)
-    #4 caml_startup_common runtime/startup_nat.c:113 (a.out+0x4f748d)
-    #5 caml_startup_exn runtime/startup_nat.c:138 (a.out+0x4f75dd)
-    #6 caml_startup runtime/startup_nat.c:143 (a.out+0x4f760b)
-    #7 caml_main runtime/startup_nat.c:150 (a.out+0x4f764b)
-    #8 main runtime/main.c:37 (a.out+0x4df63b)
+  Mutex M0 (0x000000567ad8) created at:
+    #0 pthread_mutex_init /home/olivier/other_projects/llvm-project/compiler-rt/lib/tsan/rtl/tsan_interceptors_posix.cpp:1316 (libtsan.so.0+0x3cafb)
+    [...]
 
-  Mutex M92 (0x00000056c000) created at:
-    #0 pthread_mutex_init <null> (libtsan.so.0+0x4d483)
-    #1 caml_plat_mutex_init runtime/platform.c:54 (a.out+0x4e95b4)
-    #2 caml_init_domains runtime/domain.c:883 (a.out+0x4c95a2)
-    #3 caml_init_gc runtime/gc_ctrl.c:343 (a.out+0x4d4db2)
-    #4 caml_startup_common runtime/startup_nat.c:113 (a.out+0x4f748d)
-    #5 caml_startup_exn runtime/startup_nat.c:138 (a.out+0x4f75dd)
-    #6 caml_startup runtime/startup_nat.c:143 (a.out+0x4f760b)
-    #7 caml_main runtime/startup_nat.c:150 (a.out+0x4f764b)
-    #8 main runtime/main.c:37 (a.out+0x4df63b)
-
-  Thread T4 (tid=2992456, running) created by main thread at:
-    #0 pthread_create <null> (libtsan.so.0+0x5fd75)
-    #1 caml_domain_spawn runtime/domain.c:1150 (a.out+0x4cac20)
-    #2 caml_c_call <null> (a.out+0x4f7fb3)
-    #3 camlStdlib__Domain.spawn_689 <null> (a.out+0x47c783)
-    #4 camlTmp.entry <null> (a.out+0x43cd17)
-    #5 caml_program <null> (a.out+0x43a41e)
-    #6 caml_start_program <null> (a.out+0x4f822f)
-    #7 caml_startup_common runtime/startup_nat.c:133 (a.out+0x4f75a6)
-    #8 caml_startup_exn runtime/startup_nat.c:138 (a.out+0x4f75dd)
-    #9 caml_startup runtime/startup_nat.c:143 (a.out+0x4f760b)
-    #10 caml_main runtime/startup_nat.c:150 (a.out+0x4f764b)
-    #11 main runtime/main.c:37 (a.out+0x4df63b)
-
-  Thread T1 (tid=2992453, running) created by main thread at:
-    #0 pthread_create <null> (libtsan.so.0+0x5fd75)
-    #1 caml_domain_spawn runtime/domain.c:1150 (a.out+0x4cac20)
-    #2 caml_c_call <null> (a.out+0x4f7fb3)
-    #3 camlStdlib__Domain.spawn_689 <null> (a.out+0x47c783)
-    #4 camlTmp.entry <null> (a.out+0x43ccfd)
-    #5 caml_program <null> (a.out+0x43a41e)
-    #6 caml_start_program <null> (a.out+0x4f822f)
-    #7 caml_startup_common runtime/startup_nat.c:133 (a.out+0x4f75a6)
-    #8 caml_startup_exn runtime/startup_nat.c:138 (a.out+0x4f75dd)
-    #9 caml_startup runtime/startup_nat.c:143 (a.out+0x4f760b)
-    #10 caml_main runtime/startup_nat.c:150 (a.out+0x4f764b)
-    #11 main runtime/main.c:37 (a.out+0x4df63b)
-
-SUMMARY: ThreadSanitizer: data race (/tmp/a.out+0x43cc60) in camlTmp.fun_600
+SUMMARY: ThreadSanitizer: data race /tmp/simpleRace.ml:7 in camlSimpleRace__fun_524
 ==================
 ThreadSanitizer: reported 1 warnings
 ....
