@@ -135,9 +135,37 @@ bits  63        (64-P) (63-P)        10 9     8 7   0
 #define Profinfo_hd(hd) NO_PROFINFO
 #endif /* WITH_PROFINFO */
 
+/* Macro used to deactivate thread and address sanitizers on some
+   functions. */
+#define CAMLno_tsan
+#define CAMLno_asan
+/* __has_feature is Clang-specific, but GCC defines __SANITIZE_ADDRESS__ and
+ * __SANITIZE_THREAD__. */
+#if defined(__has_feature)
+#  if __has_feature(thread_sanitizer)
+#    undef CAMLno_tsan
+#    define CAMLno_tsan __attribute__((disable_sanitizer_instrumentation))
+#  endif
+#  if __has_feature(address_sanitizer)
+#    undef CAMLno_asan
+#    define CAMLno_asan __attribute__((disable_sanitizer_instrumentation))
+#  endif
+#else
+#  if __SANITIZE_THREAD__
+#    undef CAMLno_tsan
+#    define CAMLno_tsan __attribute__((no_sanitize_thread))
+#  endif
+#  if __SANITIZE_ADDRESS__
+#    undef CAMLno_asan
+#    define CAMLno_asan __attribute__((no_sanitize_address))
+#  endif
+#endif
+
 #define Hp_atomic_val(val) ((atomic_uintnat *)(val) - 1)
-#define Hd_val(val) ((header_t) \
-  (atomic_load_explicit(Hp_atomic_val(val), memory_order_relaxed)))
+CAMLno_tsan Caml_inline header_t Hd_val(value val)
+{
+  return atomic_load_explicit(Hp_atomic_val(val), memory_order_relaxed);
+}
 
 #define Hd_hp(hp) (* ((header_t *) (hp)))              /* Also an l-value. */
 #define Hp_val(val) (((header_t *) (val)) - 1)
