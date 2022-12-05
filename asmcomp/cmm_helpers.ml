@@ -651,7 +651,8 @@ let non_profinfo_mask =
 let get_header ptr dbg =
   (* We cannot deem this as [Immutable] due to the presence of [Obj.truncate]
      and [Obj.set_tag]. *)
-  Cop(mk_load_mut Word_int,
+  Cop(
+    Cload {memory_chunk = Word_int; mutability = Immutable; is_atomic = false},
     [Cop(Cadda, [ptr; Cconst_int(-size_int, dbg)], dbg)], dbg)
 
 let get_header_without_profinfo ptr dbg =
@@ -668,8 +669,9 @@ let get_tag ptr dbg =
     Cop(Cand, [get_header ptr dbg; Cconst_int (255, dbg)], dbg)
   else                                  (* If byte loads are efficient *)
     (* Same comment as [get_header] above *)
-    Cop(mk_load_mut Byte_unsigned,
-        [Cop(Cadda, [ptr; Cconst_int(tag_offset, dbg)], dbg)], dbg)
+    Cop(
+      Cload {memory_chunk = Byte_unsigned; mutability = Immutable; is_atomic = false},
+      [Cop(Cadda, [ptr; Cconst_int(tag_offset, dbg)], dbg)], dbg)
 
 let get_size ptr dbg =
   Cop(Clsr, [get_header_without_profinfo ptr dbg; Cconst_int (10, dbg)], dbg)
