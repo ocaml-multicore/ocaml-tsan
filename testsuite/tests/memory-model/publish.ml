@@ -1,8 +1,9 @@
 (* TEST
   modules="opt.ml barrier.ml hist.ml shared.ml run.ml outcome.ml"
   * not-bsd
-  ** bytecode
-  ** native
+  ** no-tsan
+  *** bytecode
+  *** native
 *)
 
 (* Memory model: test the _publish idiom *)
