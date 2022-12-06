@@ -177,6 +177,10 @@ void caml_final_domain_terminate (caml_domain_state *domain_state)
   }
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 static int no_orphaned_work (void)
 {
   return
@@ -224,6 +228,10 @@ static void orph_ephe_list_verify_status (int status)
 
 static intnat ephe_mark (intnat budget, uintnat for_cycle, int force_alive);
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 void caml_add_to_orphaned_ephe_list(struct caml_ephe_info* ephe_info)
 {
   caml_plat_lock(&orphaned_lock);
@@ -248,6 +256,10 @@ void caml_add_to_orphaned_ephe_list(struct caml_ephe_info* ephe_info)
   caml_plat_unlock(&orphaned_lock);
 }
 
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 void caml_adopt_orphaned_work (void)
 {
   caml_domain_state* domain_state = Caml_state;
