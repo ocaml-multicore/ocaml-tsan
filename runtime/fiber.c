@@ -61,6 +61,11 @@ uintnat caml_get_init_stack_wsize (void)
   return stack_wsize;
 }
 
+
+CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
+               so we disable instrumentation here. However, Further
+               investigation would be needed about the cause of these race
+               reports. */
 void caml_change_max_stack_size (uintnat new_max_wsize)
 {
   struct stack_info *current_stack = Caml_state->current_stack;
