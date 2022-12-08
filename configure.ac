@@ -53,6 +53,7 @@ ocamlc_cppflags=""
 oc_ldflags=""
 oc_dll_ldflags=""
 oc_tsan_cflags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+oc_tsan_ldflags=""
 oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
 oc_tsan_asppflags="-DWITH_THREAD_SANITIZER"
 oc_exe_ldflags=""
@@ -138,6 +139,7 @@ AC_SUBST([ccomptype])
 AC_SUBST([toolchain])
 AC_SUBST([oc_cflags])
 AC_SUBST([oc_tsan_cflags])
+AC_SUBST([oc_tsan_ldflags])
 AC_SUBST([oc_tsan_asppflags])
 AC_SUBST([oc_tsan_cppflags])
 AC_SUBST([oc_cppflags])
@@ -1583,6 +1585,14 @@ AS_IF([$tsan],
     [],
     [oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan"])],
   [AC_MSG_NOTICE([not using thread sanitizer])]
+)
+
+AS_IF([$tsan],
+  [AS_CASE([$target],
+    [*-apple-darwin*],
+    [],
+    [oc_tsan_ldflags="-lunwind"])],
+  []
 )
 
 ## Sockets

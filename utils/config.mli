@@ -245,6 +245,10 @@ val afl_instrument : bool
 val tsan : bool
 (** Whether ThreadSanitizer instrumentation is enabled *)
 
+val tsan_ld_flags : string
+(* Flags to pass to the system linker when build ThreadSanitizer-instrumented
+   programs *)
+
 
 (** Access to configuration values *)
 val print_config : out_channel -> unit
