@@ -75,6 +75,7 @@ let flat_float_array = %%FLAT_FLOAT_ARRAY%%
 let function_sections = %%FUNCTION_SECTIONS%%
 let afl_instrument = %%AFL_INSTRUMENT%%
 let tsan = %%WITH_TSAN%%
+let tsan_ld_flags = "%%OC_TSAN_LDFLAGS%%"
 
 let architecture = "%%ARCH%%"
 let model = "%%MODEL%%"
