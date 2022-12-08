@@ -30,6 +30,12 @@
 #endif
 
 extern void __tsan_func_exit(void*);
+#if defined(__GNUC__) && !defined(__clang__)
+/* GCC already has __tsan_func_entry declared for some reason */
+#else
+extern void __tsan_func_entry(void*);
+#endif
+
 
 const char * __tsan_default_suppressions() {
   return "deadlock:caml_plat_lock\n"
