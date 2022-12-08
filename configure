@@ -843,6 +843,7 @@ oc_ldflags
 oc_cppflags
 oc_tsan_cppflags
 oc_tsan_asppflags
+oc_tsan_ldflags
 oc_tsan_cflags
 oc_cflags
 toolchain
@@ -3208,6 +3209,7 @@ oc_ldflags=""
 oc_dll_ldflags=""
 oc_exe_ldflags=""
 oc_tsan_cflags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+oc_tsan_ldflags=""
 oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
 oc_tsan_asppflags="-DWITH_THREAD_SANITIZER"
 ostype="Unix"
@@ -3254,6 +3256,7 @@ OCAML_VERSION_SHORT=5.0
 # Note: This is present for the flexdll bootstrap where it exposed as the old
 # TOOLPREF variable. It would be better if flexdll where updated to require
 # WINDRES instead.
+
 
 
 
@@ -16319,6 +16322,16 @@ else $as_nop
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: not using thread sanitizer" >&5
 printf "%s\n" "$as_me: not using thread sanitizer" >&6;}
 
+fi
+
+if $tsan
+then :
+  case $target in #(
+  *-apple-darwin*) :
+     ;; #(
+  *) :
+    oc_tsan_ldflags="$oc_tsan_ldflags -lunwind" ;;
+esac
 fi
 
 ## Sockets
