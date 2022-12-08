@@ -30,7 +30,9 @@
 #endif
 
 extern void __tsan_func_exit(void*);
-#ifndef __GNUC__ /* GCC already has this function declared for some reason */
+#if defined(__GNUC__) && !defined(__clang__)
+/* GCC already has __tsan_func_entry declared for some reason */
+#else
 extern void __tsan_func_entry(void*);
 #endif
 
