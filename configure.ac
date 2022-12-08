@@ -1513,7 +1513,7 @@ AS_IF([test "x$enable_tsan" = "xyes" ],
 AS_IF([$tsan],
   [AC_MSG_NOTICE([using thread sanitizer with vendor=$ocaml_cv_cc_vendor])
   AS_CASE([$ocaml_cv_cc_vendor],
-    [gcc-[[0123456789]]-*|gcc-10-*],
+    [gcc-[[0123456789]]-*|gcc-10-*|clang-*],
     [],
     [oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan"])],
   [AC_MSG_NOTICE([not using thread sanitizer])]
