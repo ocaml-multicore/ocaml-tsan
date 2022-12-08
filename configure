@@ -16406,7 +16406,7 @@ then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&5
 printf "%s\n" "$as_me: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&6;}
   case $ocaml_cv_cc_vendor in #(
-  gcc-[0123456789]-*|gcc-10-*) :
+  gcc-[0123456789]-*|gcc-10-*|clang-*) :
      ;; #(
   *) :
     oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan" ;;
