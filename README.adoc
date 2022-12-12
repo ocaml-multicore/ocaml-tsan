@@ -1,5 +1,3 @@
-https://github.com/OlivierNicole/ocaml-tsan/actions/workflows/build.yml[image:https://github.com/OlivierNicole/ocaml-tsan/actions/workflows/build.yml/badge.svg[Build]]
-
 == ThreadSanitizer support for OCaml 5
 
 ThreadSanitizer is an effective approach to locate data races in
@@ -155,12 +153,6 @@ let () =
 More efficiently, such synchronization can be implemented using a
 `Mutex.t` with the same result.
 
-=== Troubleshooting
-
-Programs that would normally fail due to a stack overflow can crash and report
-a segmentation fault instead. This is a ThreadSanitizer limitation that we
-haven't worked around yet.
-
 === Background
 
 There are two components to ThreadSanitizer (TSan): 1. *A run-time
@@ -185,12 +177,19 @@ wiki].
 The run-time library is reusable across different programming languages
 (C,C++,Go, …).
 
-=== Status
+=== Performance cost
 
-The ThreadSanitizer support in OCaml 5.0 is still an ongoing effort. For
-more information on the status of this work, see
-https://github.com/OlivierNicole/ocaml-tsan/wiki/Status-of-ThreadSanitizer-for-OCaml[the
-dedicated wiki page].
+ThreadSanitizer for OCaml incurs a slowdown and increases memory consumption.
+Preliminary benchmarks show a slowdown in the range 7x-13x and a memory
+consumption increase in the range 2x-7x.
+
+=== Troubleshooting
+
+* *My program crashed when compiled on your ThreadSanitizer switch.* +
+  Try to check whether your program makes an excessive usage of the stack.
+  Programs that overflow the stack crash with misleading reports such as
+  SIGSEGV. This is a ThreadSanitizer limitation that we are trying to work
+  around.
 
 === Resources
 
