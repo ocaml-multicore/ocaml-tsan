@@ -53,6 +53,7 @@ ocamlc_cppflags=""
 oc_ldflags=""
 oc_dll_ldflags=""
 oc_tsan_cflags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+oc_tsan_ldflags=""
 oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
 oc_tsan_asppflags="-DWITH_THREAD_SANITIZER"
 oc_exe_ldflags=""
@@ -138,6 +139,7 @@ AC_SUBST([ccomptype])
 AC_SUBST([toolchain])
 AC_SUBST([oc_cflags])
 AC_SUBST([oc_tsan_cflags])
+AC_SUBST([oc_tsan_ldflags])
 AC_SUBST([oc_tsan_asppflags])
 AC_SUBST([oc_tsan_cppflags])
 AC_SUBST([oc_cppflags])
@@ -1579,10 +1581,18 @@ AS_IF([test "x$enable_tsan" = "xyes" ],
 AS_IF([$tsan],
   [AC_MSG_NOTICE([using thread sanitizer with vendor=$ocaml_cv_cc_vendor])
   AS_CASE([$ocaml_cv_cc_vendor],
-    [gcc-[[0123456789]]-*|gcc-10-*],
+    [gcc-[[0123456789]]-*|gcc-10-*|clang-*],
     [],
     [oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan"])],
   [AC_MSG_NOTICE([not using thread sanitizer])]
+)
+
+AS_IF([$tsan],
+  [AS_CASE([$target],
+    [*-apple-darwin*],
+    [],
+    [oc_tsan_ldflags="-lunwind"])],
+  []
 )
 
 ## Sockets
