@@ -63,7 +63,7 @@ Build () {
 
 Test () {
   echo Running the testsuite
-  $MAKE -C testsuite parallel
+  $MAKE -C testsuite all
   cd ..
 }
 
