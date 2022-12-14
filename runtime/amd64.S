@@ -941,10 +941,25 @@ LBL(112):
         movq    0(%rbx), %r10  /* load performer stack from continuation */
         subq    $1, %r10       /* r10 := Ptr_val(r10) */
         movq    Caml_state(current_stack), %rsi
-        SWITCH_OCAML_STACKS
     /* No parent stack. Raise Effect.Unhandled. */
+        SWITCH_OCAML_STACKS
+#if defined(WITH_THREAD_SANITIZER)
+        /* We must let the TSan runtime know that switched back to the
+           original performer stack. For that, we perform the necessary calls
+           to __tsan_func_entry via caml_tsan_func_entry_on_resume. */
+        SAVE_ALL_REGS
+        movq    Stack_sp(%r10), %r11
+        movq    (%r11), C_ARG_1   /* arg 1: pc of perform */
+        leaq    8(%r11), C_ARG_2  /* arg 2: sp at perform */
+        movq    %r10, C_ARG_3     /* arg 3: fiber */
+        SWITCH_OCAML_TO_C
+        C_call  (GCALL(caml_tsan_func_entry_on_resume))
+        SWITCH_C_TO_OCAML
+        RESTORE_ALL_REGS
+#endif
         movq    %rax, C_ARG_1
         LEA_VAR(caml_raise_unhandled_effect, %rax)
+        TSAN_ENTER_FUNCTION
         jmp     LBL(caml_c_call)
 CFI_ENDPROC
 ENDFUNCTION(G(caml_perform))
@@ -992,7 +1007,8 @@ CFI_STARTPROC
         movq    %rsi, Handler_parent(%rcx)
         SWITCH_OCAML_STACKS
         jmp     *(%rbx)
-2:      LEA_VAR(caml_raise_continuation_already_resumed, %rax)
+2:      TSAN_ENTER_FUNCTION
+        LEA_VAR(caml_raise_continuation_already_resumed, %rax)
         jmp LBL(caml_c_call)
 CFI_ENDPROC
 ENDFUNCTION(G(caml_resume))
@@ -1072,6 +1088,7 @@ ENDFUNCTION(G(caml_runstack))
 
 FUNCTION(G(caml_ml_array_bound_error))
 CFI_STARTPROC
+        TSAN_ENTER_FUNCTION
         LEA_VAR(caml_array_bound_error_asm, %rax)
         jmp     LBL(caml_c_call)
 CFI_ENDPROC
