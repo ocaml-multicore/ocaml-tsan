@@ -9,16 +9,9 @@ set TSAN_OPTIONS="detect_deadlocks=0"
 
 *)
 
-(* This performs two effects. We trigger race reports in order to check
-   correctness of the backtrace in three places:
-    - In the effect handler after performing once;
-    - After resuming;
-    - In the value handler when the computation returned. *)
 open Printf
 open Effect
 open Effect.Deep
-
-type _ Effect.t += E : int -> int t
 
 let g_ref = ref 0
 
