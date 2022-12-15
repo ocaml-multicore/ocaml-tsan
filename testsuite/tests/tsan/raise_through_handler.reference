@@ -4,7 +4,7 @@ entering g
 In exception handler
 ==================
 WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
-  Write of size 8 at <implemspecific> by main thread (mutexes: write M88):
+  Write of size 8 at <implemspecific> by main thread (mutexes: write M<implemspecific>):
     #0 camlRaise_through_handler__race_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlRaise_through_handler__main_<implemspecific> <implemspecific> (<implemspecific>)
     #2 camlRaise_through_handler__entry <implemspecific> (<implemspecific>)
@@ -16,7 +16,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #8 caml_main <implemspecific> (<implemspecific>)
     #9 main <implemspecific> (<implemspecific>)
 
-  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M92):
+  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M<implemspecific>):
     #0 camlRaise_through_handler__other_domain_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlStdlib__Domain__body_<implemspecific> <implemspecific> (<implemspecific>)
     #2 caml_start_program <implemspecific> (<implemspecific>)
@@ -37,7 +37,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #9 caml_main <implemspecific> (<implemspecific>)
     #10 main <implemspecific> (<implemspecific>)
 
-  Mutex M88 (<implemspecific>) created at:
+  Mutex M<implemspecific> (<implemspecific>) created at:
     #0 pthread_mutex_init <implemspecific> (<implemspecific>)
     #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
@@ -48,7 +48,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #7 caml_main <implemspecific> (<implemspecific>)
     #8 main <implemspecific> (<implemspecific>)
 
-  Mutex M92 (<implemspecific>) created at:
+  Mutex M<implemspecific> (<implemspecific>) created at:
     #0 pthread_mutex_init <implemspecific> (<implemspecific>)
     #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
@@ -73,7 +73,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #10 caml_main <implemspecific> (<implemspecific>)
     #11 main <implemspecific> (<implemspecific>)
 
-SUMMARY: ThreadSanitizer: data race (<systemspecific>/raise_through_handler.ml+<implemspecific>) in camlRaise_through_handler__race_<implemspecific>
+SUMMARY: ThreadSanitizer: data race (<systemspecific>:<implemspecific>) in camlRaise_through_handler__race_<implemspecific>
 ==================
 result = 44
 ThreadSanitizer: reported 1 warnings
