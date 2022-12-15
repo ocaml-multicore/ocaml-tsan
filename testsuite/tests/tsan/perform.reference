@@ -5,7 +5,7 @@ entering h and perform-ing
 in the effect handler
 ==================
 WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
-  Write of size 8 at <implemspecific> by main thread (mutexes: write M88):
+  Write of size 8 at <implemspecific> by main thread (mutexes: write M<implemspecific>):
     #0 camlPerform.race_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlPerform.fun_<implemspecific> <implemspecific> (<implemspecific>)
     #2 camlPerform.main_<implemspecific> <implemspecific> (<implemspecific>)
@@ -18,7 +18,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #9 caml_main <implemspecific> (<implemspecific>)
     #10 main <implemspecific> (<implemspecific>)
 
-  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M92):
+  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M<implemspecific>):
     #0 camlPerform.other_domain_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlStdlib__Domain.body_<implemspecific> <implemspecific> (<implemspecific>)
     #2 caml_start_program <implemspecific> (<implemspecific>)
@@ -39,7 +39,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #9 caml_main <implemspecific> (<implemspecific>)
     #10 main <implemspecific> (<implemspecific>)
 
-  Mutex M88 (<implemspecific>) created at:
+  Mutex M<implemspecific> (<implemspecific>) created at:
     #0 pthread_mutex_init <implemspecific> (<implemspecific>)
     #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
@@ -50,7 +50,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #7 caml_main <implemspecific> (<implemspecific>)
     #8 main <implemspecific> (<implemspecific>)
 
-  Mutex M92 (<implemspecific>) created at:
+  Mutex M<implemspecific> (<implemspecific>) created at:
     #0 pthread_mutex_init <implemspecific> (<implemspecific>)
     #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
@@ -75,12 +75,12 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #10 caml_main <implemspecific> (<implemspecific>)
     #11 main <implemspecific> (<implemspecific>)
 
-SUMMARY: ThreadSanitizer: data race (<systemspecific>/perform.ml+<implemspecific>) in camlPerform.race_<implemspecific>
+SUMMARY: ThreadSanitizer: data race (<systemspecific>:<implemspecific>) in camlPerform.race_<implemspecific>
 ==================
 resuming h
 ==================
 WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
-  Write of size 8 at <implemspecific> by main thread (mutexes: write M88):
+  Write of size 8 at <implemspecific> by main thread (mutexes: write M<implemspecific>):
     #0 camlPerform.race_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlPerform.h_<implemspecific> <implemspecific> (<implemspecific>)
     #2 camlPerform.g_<implemspecific> <implemspecific> (<implemspecific>)
@@ -97,7 +97,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #13 caml_main <implemspecific> (<implemspecific>)
     #14 main <implemspecific> (<implemspecific>)
 
-  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M92):
+  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M<implemspecific>):
     #0 camlPerform.other_domain_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlStdlib__Domain.body_<implemspecific> <implemspecific> (<implemspecific>)
     #2 caml_start_program <implemspecific> (<implemspecific>)
@@ -118,7 +118,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #9 caml_main <implemspecific> (<implemspecific>)
     #10 main <implemspecific> (<implemspecific>)
 
-  Mutex M88 (<implemspecific>) created at:
+  Mutex M<implemspecific> (<implemspecific>) created at:
     #0 pthread_mutex_init <implemspecific> (<implemspecific>)
     #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
@@ -129,7 +129,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #7 caml_main <implemspecific> (<implemspecific>)
     #8 main <implemspecific> (<implemspecific>)
 
-  Mutex M92 (<implemspecific>) created at:
+  Mutex M<implemspecific> (<implemspecific>) created at:
     #0 pthread_mutex_init <implemspecific> (<implemspecific>)
     #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
@@ -154,7 +154,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #10 caml_main <implemspecific> (<implemspecific>)
     #11 main <implemspecific> (<implemspecific>)
 
-SUMMARY: ThreadSanitizer: data race (<systemspecific>/perform.ml+<implemspecific>) in camlPerform.race_<implemspecific>
+SUMMARY: ThreadSanitizer: data race (<systemspecific>:<implemspecific>) in camlPerform.race_<implemspecific>
 ==================
 leaving h
 leaving g
@@ -162,7 +162,7 @@ computation, leaving f
 value handler
 ==================
 WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
-  Write of size 8 at <implemspecific> by main thread (mutexes: write M88):
+  Write of size 8 at <implemspecific> by main thread (mutexes: write M<implemspecific>):
     #0 camlPerform.race_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlPerform.fun_<implemspecific> <implemspecific> (<implemspecific>)
     #2 camlPerform.fun_<implemspecific> <implemspecific> (<implemspecific>)
@@ -176,7 +176,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #10 caml_main <implemspecific> (<implemspecific>)
     #11 main <implemspecific> (<implemspecific>)
 
-  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M92):
+  Previous read of size 8 at <implemspecific> by thread T1 (mutexes: write M<implemspecific>):
     #0 camlPerform.other_domain_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlStdlib__Domain.body_<implemspecific> <implemspecific> (<implemspecific>)
     #2 caml_start_program <implemspecific> (<implemspecific>)
@@ -197,7 +197,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #9 caml_main <implemspecific> (<implemspecific>)
     #10 main <implemspecific> (<implemspecific>)
 
-  Mutex M88 (<implemspecific>) created at:
+  Mutex M<implemspecific> (<implemspecific>) created at:
     #0 pthread_mutex_init <implemspecific> (<implemspecific>)
     #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
@@ -208,7 +208,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #7 caml_main <implemspecific> (<implemspecific>)
     #8 main <implemspecific> (<implemspecific>)
 
-  Mutex M92 (<implemspecific>) created at:
+  Mutex M<implemspecific> (<implemspecific>) created at:
     #0 pthread_mutex_init <implemspecific> (<implemspecific>)
     #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
@@ -233,7 +233,7 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #10 caml_main <implemspecific> (<implemspecific>)
     #11 main <implemspecific> (<implemspecific>)
 
-SUMMARY: ThreadSanitizer: data race (<systemspecific>/perform.ml+<implemspecific>) in camlPerform.race_<implemspecific>
+SUMMARY: ThreadSanitizer: data race (<systemspecific>:<implemspecific>) in camlPerform.race_<implemspecific>
 ==================
 handler after continue
 result = 44
