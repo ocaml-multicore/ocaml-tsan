@@ -37,8 +37,11 @@ extern void __tsan_func_entry(void*);
 #endif
 
 
+/* This hardcodes a number of suppressions of TSan reports about runtime
+   functions. Some of these races do not have a justification, and should be
+   reported for inspection. */
 const char * __tsan_default_suppressions() {
-  return "deadlock:caml_plat_lock\n"
+  return "deadlock:caml_plat_lock\n" /* Avoids deadlock inversion messages */
          "race:create_domain\n"
          "race:mark_slice_darken\n";
 }

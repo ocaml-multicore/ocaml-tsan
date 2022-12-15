@@ -511,6 +511,10 @@ static intnat pool_sweep(struct caml_heap_state* local, pool** plist,
   return work;
 }
 
+CAMLno_tsan /* Race reports from this function clog the tests of user programs,
+               so we disable instrumentation here. For a justification of the
+               race report, see https://github.com/ocaml/ocaml/pull/11110.
+               */
 static intnat large_alloc_sweep(struct caml_heap_state* local) {
   value* p;
   header_t hd;
