@@ -6,8 +6,6 @@ compiler to add ThreadSanitizer support to OCaml 5.0.
 
 === Caveats
 
-* *This current prototype is still experimental; in addition, its interface
-  may change in the future.*
 * OCaml ThreadSanitizer support inherits the portability limitations of
   ThreadSanitizer: it is not available on Windows.
 * TSan investigates _a particular execution_ and therefore will not
@@ -23,14 +21,11 @@ For Linux, you first need to install
 https://github.com/libunwind/libunwind[libunwind] stack unwinding library on
 your system. Most Linux distributions provide a package.
 
-Then install the compiler with ThreadSanitizer instrumentation in a new opam
-switch using the following sequence of commands:
+Then you will need to work in a dedicated opam switch:
 
 ....
 opam update
-opam switch create 5.0.0~rc1+tsan --empty
-eval $(opam env --switch=5.0.0~rc1+tsan)
-opam pin add ocaml-variants.5.0.0~rc1+tsan git+https://github.com/ocaml-multicore/ocaml-tsan.git#tsan_5.0.0-rc1
+opam switch create 5.0.0+tsan
 ....
 
 Building the switch may take a bit longer than usual due to some unavoidable
@@ -155,11 +150,11 @@ More efficiently, such synchronization can be implemented using a
 
 === Background
 
-There are two components to ThreadSanitizer (TSan): 1. *A run-time
-library* to track accesses to shared data and report races 2. *Compiler
-instrumentation* that emits calls to the run-time library
+There are two components to ThreadSanitizer (TSan): 1. *A runtime
+library* to track accesses to shared data and report races 2. A *compiler
+instrumentation* feature that inserts calls to that runtime library.
 
-Internally the run-time library associates with each word of application
+Internally the runtime library associates with each word of application
 memory at least 2 "shadow words". Each shadow word contains
 information about a recent memory access to that word, including a
 "scalar clock". Those clocks serve to establish a happens-before (HB)
@@ -174,9 +169,6 @@ TSan’s algorithm on
 https://github.com/google/sanitizers/wiki/ThreadSanitizerAlgorithm[their
 wiki].
 
-The run-time library is reusable across different programming languages
-(C,C++,Go, …).
-
 === Performance cost
 
 ThreadSanitizer for OCaml incurs a slowdown and increases memory consumption.
@@ -185,33 +177,33 @@ consumption increase in the range 2x-7x.
 
 === Troubleshooting
 
+OCaml-TSan is still considered experimental: although tested on large projects,
+there is a slight chance that it introduces crashes in your code. If you
+encounters problems using it, please do
+https://github.com/ocaml-multicore/ocaml-tsan/issues/new[let us know] and we
+will do our best to improve things.
+
 * *My program crashed when compiled on your ThreadSanitizer switch.* +
-  Try to check whether your program makes an excessive usage of the stack.
-  Programs that overflow the stack crash with misleading reports such as
-  SIGSEGV. This is a ThreadSanitizer limitation that we are trying to work
+  Try to check whether your program pushes a lot of stack frames on the stack.
+  A call tree of depth >64k can cause a buffer overflow in the ThreadSanitizer
+  runtime. This is a ThreadSanitizer limitation that we are trying to work
   around.
+
+* *TSan warns me about this data race, but it’s benign / I don’t want to deal
+  with it for now.* +
+  You can use
+  https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions[a
+  suppressions file] to silence TSan warnings.
 
 === Resources
 
-* Clang/LLVM TSan documentation:
-https://clang.llvm.org/docs/ThreadSanitizer.html
 * Google Sanitizer wiki:
 ** TSan C/C++ Manual:
 https://github.com/google/sanitizers/wiki/ThreadSanitizerCppManual
 ** TSan Algorithm:
 https://github.com/google/sanitizers/wiki/ThreadSanitizerAlgorithm
-* Slides from GCC Cauldron 2012:
-https://gcc.gnu.org/wiki/cauldron2012?action=AttachFile&do=get&target=kcc.pdf
-* Papers
-** Serebryany and Iskhodzhanov: _ThreadSanitizer – data race detection
-in practice_, WBIA’09
-https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/35604.pdf.
-Note that the algorithm presented in this paper is not the one used in
-the new version of TSan.
-** Chabby and Ramanathan: _A Study of Real-World Data Races in Golang_,
-PLDI’22 https://arxiv.org/pdf/2204.00764.pdf
-** Ahmad et al.: _Kard: Lightweight Data Race Detection with Per-Thread
-Memory Protection_, ASPLOS’21
-https://web.ics.purdue.edu/~ahmad37/papers/ahmad-kard.pdf
-* ThreadSanitizer Google group:
-https://groups.google.com/g/thread-sanitizer
+* A good talk about TSan's internals:
+  https://www.youtube.com/watch?v=5erqWdlhQLA[""go test -race" Under the Hood"
+  by Kavya Joshi]
+* More information about the project status and technical details:
+  https://github.com/ocaml-multicore/ocaml-tsan/wiki/Status-of-ThreadSanitizer-for-OCaml
