@@ -327,7 +327,6 @@ AC_ARG_ENABLE([instrumented-runtime],
   [],
   [enable_instrumented_runtime=auto])
 
-# FIXME this doesn't show 'no'
 AC_ARG_ENABLE([tsan],
   [AS_HELP_STRING([--enable-tsan],
     [enable ThreadSanitizer support @<:@default=auto@:>@])],
