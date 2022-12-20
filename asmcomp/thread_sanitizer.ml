@@ -46,9 +46,7 @@ let select_function read_or_write memory_chunk =
 
 module TSan_memory_order = struct
   (* Constants defined in the LLVM ABI *)
-  (* TODO: Not sure whether it's an int, a nativeint or an int32 *)
   let acquire = Cconst_int (2, Debuginfo.none)
-  (*let release = Cconst_int (3, Debuginfo.none)*)
 end
 
 let machtype_of_memory_chunk = function
@@ -203,7 +201,6 @@ let instrument _label body =
     | Cop (Cload {memory_chunk; mutability=Mutable; is_atomic=true},
             [loc], dbginfo) ->
         (* Replace the atomic load with a call to [__tsan_atomicN_load] *)
-        (* TODO: convince myself that this is safe *)
         let ret_typ = machtype_of_memory_chunk memory_chunk in
         Cop (Cextcall
                (Printf.sprintf "__tsan_atomic%d_load" (bit_size memory_chunk),
