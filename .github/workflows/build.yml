@@ -110,7 +110,7 @@ jobs:
         include:
           - name: linux-O0
             os: ubuntu-latest
-            config_arg: CFLAGS='-O0' --enable-tsan
+            config_arg: CFLAGS=-O0 --enable-tsan
           - name: macos
             os: macos-latest
             config_arg: --enable-tsan
@@ -124,7 +124,7 @@ jobs:
         run: brew install parallel libunwind libunwind-headers
       - name: configure tree
         run: |
-          CONFIG_ARG="${{ matrix.config_arg }}" MAKE_ARG=-j XARCH=x64 bash -xe tools/ci/actions/runner.sh configure
+          CONFIG_ARG='${{ matrix.config_arg }}' MAKE_ARG=-j XARCH=x64 bash -xe tools/ci/actions/runner.sh configure
       - name: Build
         run: |
           MAKE_ARG=-j bash -xe tools/ci/actions/runner.sh build
