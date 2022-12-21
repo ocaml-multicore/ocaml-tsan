@@ -670,10 +670,11 @@ let get_tag ptr dbg =
     Cop(Cand, [get_header ptr dbg; Cconst_int (255, dbg)], dbg)
   else                                  (* If byte loads are efficient *)
     (* Same comment as [get_header] above *)
-    Cop(Cload
-          { memory_chunk = Byte_unsigned;
-            mutability = Immutable;
-            is_atomic = false },
+    Cop(
+      Cload
+        { memory_chunk = Byte_unsigned;
+          mutability = Immutable;
+          is_atomic = false },
       [Cop(Cadda, [ptr; Cconst_int(tag_offset, dbg)], dbg)], dbg)
 
 let get_size ptr dbg =
