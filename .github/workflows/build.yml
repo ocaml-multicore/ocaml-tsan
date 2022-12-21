@@ -101,16 +101,16 @@ jobs:
         run: |
           MAKE_ARG=-j OCAMLRUNPARAM=b,v=0 bash -xe tools/ci/actions/runner.sh other-checks
 
-# MacOS build+testsuite run, and Linux O0 run.
+# MacOS build+testsuite run
   others:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - name: linux-O0
-            os: ubuntu-latest
-            config_arg: CFLAGS=-O0 --enable-tsan
+          #- name: linux-O0
+          #  os: ubuntu-latest
+          #  config_arg: CFLAGS=-O0 --enable-tsan
           - name: macos
             os: macos-latest
             config_arg: --enable-tsan
