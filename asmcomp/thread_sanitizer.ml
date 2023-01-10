@@ -48,7 +48,12 @@ let select_function read_or_write memory_chunk =
 
 module TSan_memory_order = struct
   (* Constants defined in the LLVM ABI *)
-  let acquire = Cconst_int (2, Debuginfo.none)
+  (*let relaxed = Cconst_int (0, Debuginfo.none)*)
+  (*let consume = Cconst_int (1, Debuginfo.none)*)
+  (*let acquire = Cconst_int (2, Debuginfo.none)*)
+  (*let release = Cconst_int (3, Debuginfo.none)*)
+  (*let acq_rel = Cconst_int (4, Debuginfo.none)*)
+  let seq_cst = Cconst_int (5, Debuginfo.none)
 end
 
 let machtype_of_memory_chunk = function
@@ -207,9 +212,8 @@ let instrument body =
         Cop (Cextcall
                (Printf.sprintf "__tsan_atomic%d_load" (bit_size memory_chunk),
                ret_typ, [], false),
-          [loc; TSan_memory_order.acquire], dbginfo)
-    | Cop (Cload {memory_chunk=_; mutability=Mutable; is_atomic=_},
-            _ :: _, _) ->
+          [loc; TSan_memory_order.seq_cst], dbginfo)
+    | Cop (Cload {memory_chunk=_; mutability=Mutable; is_atomic=_}, _, _) ->
         invalid_arg "instrument: wrong number of arguments for operation Cload"
     | Cop (Cstore(memory_chunk, init_or_assn), [loc;v], dbginfo) as c ->
         (* Emit a call to [__tsan_writeN] before the store *)
