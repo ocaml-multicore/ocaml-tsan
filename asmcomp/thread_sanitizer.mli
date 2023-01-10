@@ -26,7 +26,7 @@
     surround the expression by external calls to [__tsan_func_entry] and
     [__tsan_func_exit]. If the expression tail is a function call, then
     [__tsan_func_exit] is inserted before that call. *)
-val instrument : string -> Cmm.expression -> Cmm.expression
+val instrument : Cmm.expression -> Cmm.expression
 
 (** Surround an expression by external calls to [__tsan_func_entry] and
     [__tsan_func_exit]. If the expression tail is a function call, then
