@@ -186,7 +186,7 @@ let wrap_entry_exit expr =
   in
   Csequence (call_entry, insert_call_exit true expr)
 
-let instrument _label body =
+let instrument body =
   let rec aux = function
     | Cop (Cload {memory_chunk; mutability=Mutable; is_atomic=false} as load_op,
             [loc], dbginfo) ->
