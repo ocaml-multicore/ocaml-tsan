@@ -1567,14 +1567,30 @@ but no proper monotonic clock source was found.])
     )]
 )
 
+# ThreadSanitizer support is only for Linux/FreeBSD/macOS on amd64.
+# ThreadSanitizer supports more architectures but the OCaml client side is not
+# implemented (yet).
 AS_IF([test "x$enable_tsan" = "xyes" ],
-  [AS_CASE(["$host","$host","$cc_basename"],
-    [[aarch64-*|x86_64-*|powerpc64-*|powerpc64le-*,*-linux*|*-freebsd*\
-     |*-netbsd*,gcc*|clang*]],
-      [tsan=true],
-    [arm64-*|x86_64-*,*-darwin*,gcc*|clang*],
-      [tsan=true],
-      [AC_MSG_ERROR([thread sanitizer not supported on this platform])]
+  [AS_CASE(["$arch"],
+    [amd64],
+      [AS_CASE(["$system"],
+        [linux],
+        [AS_CASE(["$cc_basename"],
+          [gcc*|clang*],
+          [tsan=true],
+          [AC_MSG_ERROR([thread sanitizer not supported with compiler \
+$cc_basename"])]
+         )],
+        [macosx],
+        [AS_CASE(["$cc_basename"],
+          [clang*],
+          [tsan=true],
+          [AC_MSG_ERROR([thread sanitizer not supported with compiler \
+$cc_basename on system $system"])]
+         )],
+        [AC_MSG_ERROR([thread sanitizer not supported on system $system])]
+       )],
+      [AC_MSG_ERROR([thread sanitizer not supported on arch $arch])]
   )],
   [tsan=false])
 
