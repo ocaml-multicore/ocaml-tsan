@@ -1057,8 +1057,8 @@ stdlib/libcamlrun.$(A): runtime-all
 clean::
 	rm -f $(addprefix runtime/, *.o *.obj *.a *.lib *.so *.dll ld.conf)
 	rm -f $(addprefix runtime/, ocamlrun ocamlrund ocamlruni ocamlruns sak)
-	rm -f $(addprefix runtime/, ocamlrun.exe ocamlrund.exe ocamlruni.exe \
-	  ocamlruns.exe sak.exe)
+	rm -f $(addprefix runtime/, \
+	  ocamlrun.exe ocamlrund.exe ocamlruni.exe ocamlruns.exe sak.exe)
 	rm -f runtime/primitives runtime/primitives.new runtime/prims.c \
 	  $(runtime_BUILT_HEADERS)
 	rm -f runtime/domain_state*.inc
