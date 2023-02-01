@@ -59,8 +59,8 @@
 #define Pop_frame_pointer(sp) (sp) += sizeof(value)
 #else
 #define Pop_frame_pointer(sp)
-#endif /* WITH_FRAME_POINTERS */
-#endif /* TARGET_amd64 */
+#endif
+#endif
 
 #ifdef TARGET_arm64
 /* Size of the gc_regs structure, in words.
