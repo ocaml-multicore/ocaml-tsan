@@ -331,9 +331,9 @@ AC_ARG_ENABLE([instrumented-runtime],
 
 AC_ARG_ENABLE([tsan],
   [AS_HELP_STRING([--enable-tsan],
-    [enable ThreadSanitizer support @<:@default=auto@:>@])],
+    [enable ThreadSanitizer support @<:@default=no@:>@])],
   [],
-  [enable_tsan=auto])
+  [enable_tsan=no])
 
 AC_ARG_ENABLE([vmthreads], [],
   [AS_IF([test "x$enableval" != 'xno'],
