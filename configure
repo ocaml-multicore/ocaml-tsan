@@ -1640,7 +1640,7 @@ Optional Features:
                           do not compute dependency information for C sources
   --enable-instrumented-runtime
                           build the instrumented runtime [default=auto]
-  --enable-tsan           enable ThreadSanitizer support [default=auto]
+  --enable-tsan           enable ThreadSanitizer support [default=no]
 
   --disable-systhreads    disable the Win32/POSIX threads library
   --disable-str-lib       do not build the str library
@@ -3676,7 +3676,7 @@ if test ${enable_tsan+y}
 then :
   enableval=$enable_tsan;
 else $as_nop
-  enable_tsan=auto
+  enable_tsan=no
 fi
 
 
