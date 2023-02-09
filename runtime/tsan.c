@@ -44,7 +44,8 @@ const char * __tsan_default_suppressions(void) {
   return "deadlock:caml_plat_lock\n" /* Avoids deadlock inversion messages */
          "race:create_domain\n"
          "race:mark_slice_darken\n"
-         "race:caml_darken_cont\n";
+         "race:caml_darken_cont\n"
+         "race:caml_shared_try_alloc\n";
 }
 
 Caml_inline void caml_tsan_debug_log_pc(const char* msg, uintnat pc)
