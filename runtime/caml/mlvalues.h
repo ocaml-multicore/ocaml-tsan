@@ -161,6 +161,17 @@ bits  63        (64-P) (63-P)        10 9     8 7   0
 #  endif
 #endif
 
+/* Macro used to deactivate ThreadSanitizer on some functions, but only in
+   ThreadSanitizer-enabled compilers. This is used to remove some
+   ThreadSanitizer warnings from the runtime in user programs on a switch
+   configured with --enable-tsan, while still allowing to detect bugs in the
+   runtime. */
+#define CAMLno_user_tsan
+#if defined(WITH_THREAD_SANITIZER)
+#  undef CAMLno_user_tsan
+#  define CAMLno_user_tsan CAMLno_tsan
+#endif
+
 #define Hp_atomic_val(val) ((atomic_uintnat *)(val) - 1)
 CAMLno_tsan Caml_inline header_t Hd_val(value val)
 {
