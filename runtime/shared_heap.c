@@ -256,7 +256,7 @@ Caml_inline void pool_initialize(pool* r,
 }
 
 /* Allocating an object from a pool */
-CAMLno_tsan /* Disable TSan instrumentation for performance. */
+CAMLno_user_tsan /* Disable TSan instrumentation for performance. */
 static intnat pool_sweep(struct caml_heap_state* local,
                          pool**,
                          sizeclass sz ,
@@ -264,10 +264,10 @@ static intnat pool_sweep(struct caml_heap_state* local,
 
 /* Adopt pool from the pool_freelist avail and full pools
    to satisfy an allocation */
-CAMLno_tsan /* Race reports from this function clog the tests of user programs,
-               so we disable instrumentation here. For a justification of the
-               race report, see https://github.com/ocaml/ocaml/pull/11110.
-               */
+CAMLno_user_tsan /* FIXME TSan race reports from this function clog user
+                    programs, so we disable instrumentation here. However,
+                    Further investigation would be needed about the cause of
+                    these race reports. */
 static pool* pool_global_adopt(struct caml_heap_state* local, sizeclass sz)
 {
   pool* r = NULL;
@@ -517,10 +517,10 @@ static intnat pool_sweep(struct caml_heap_state* local, pool** plist,
   return work;
 }
 
-CAMLno_tsan /* Race reports from this function clog the tests of user programs,
-               so we disable instrumentation here. For a justification of the
-               race report, see https://github.com/ocaml/ocaml/pull/11110.
-               */
+CAMLno_user_tsan /* FIXME TSan race reports from this function clog user
+                    programs, so we disable instrumentation here. However,
+                    Further investigation would be needed about the cause of
+                    these race reports. */
 static intnat large_alloc_sweep(struct caml_heap_state* local) {
   value* p;
   header_t hd;

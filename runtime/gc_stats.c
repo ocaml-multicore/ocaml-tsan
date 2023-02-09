@@ -23,10 +23,10 @@ Caml_inline intnat intnat_max(intnat a, intnat b) {
   return (a > b ? a : b);
 }
 
-CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
-               so we disable instrumentation here. However, Further
-               investigation would be needed about the cause of these race
-               reports. */
+CAMLno_user_tsan /* FIXME TSan race reports from this function clog user
+                    programs, so we disable instrumentation here. However,
+                    Further investigation would be needed about the cause of
+                    these race reports. */
 void caml_accum_heap_stats(struct heap_stats* acc, const struct heap_stats* h)
 {
   acc->pool_words += h->pool_words;
@@ -51,10 +51,10 @@ void caml_remove_heap_stats(struct heap_stats* acc, const struct heap_stats* h)
   acc->large_blocks -= h->large_blocks;
 }
 
-CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
-               so we disable instrumentation here. However, Further
-               investigation would be needed about the cause of these race
-               reports. */
+CAMLno_user_tsan /* FIXME TSan race reports from this function clog user
+                    programs, so we disable instrumentation here. However,
+                    Further investigation would be needed about the cause of
+                    these race reports. */
 void caml_accum_alloc_stats(
   struct alloc_stats* acc,
   const struct alloc_stats* s)
@@ -130,10 +130,10 @@ void caml_clear_gc_stats_sample(caml_domain_state *domain) {
   memset(stats, 0, sizeof(*stats));
 }
 
-CAMLno_tsan /* FIXME TSan race reports from this function clog user programs,
-               so we disable instrumentation here. However, Further
-               investigation would be needed about the cause of these race
-               reports. */
+CAMLno_user_tsan /* FIXME TSan race reports from this function clog user
+                    programs, so we disable instrumentation here. However,
+                    Further investigation would be needed about the cause of
+                    these race reports. */
 /* Compute global stats for the whole runtime. */
 void caml_compute_gc_stats(struct gc_stats* buf)
 {

@@ -178,6 +178,20 @@ where 0 <= R <= 31 is HEADER_RESERVED_BITS, set with the
 #  endif
 #endif
 
+/* Macro used to deactivate ThreadSanitizer on some functions, but only in
+   ThreadSanitizer-enabled installations of OCaml. This has two functions:
+   removing some ThreadSanitizer warnings from the runtime in user programs on
+   a switch configured with --enable-tsan, and manually instrumenting some
+   functions, which requires disabling built-in instrumentation (see
+   [caml_modify]). This macro has no effect when OCaml is configured without
+   --enable-tsan, so that compiler developers can still detect bugs in these
+   functions using ThreadSanitizer. */
+#define CAMLno_user_tsan
+#if defined(WITH_THREAD_SANITIZER)
+#  undef CAMLno_user_tsan
+#  define CAMLno_user_tsan CAMLno_tsan
+#endif
+
 #define Hp_atomic_val(val) ((atomic_uintnat *)(val) - 1)
 CAMLno_tsan Caml_inline header_t Hd_val(value val)
 {
