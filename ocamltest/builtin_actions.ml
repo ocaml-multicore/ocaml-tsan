@@ -212,13 +212,15 @@ let frame_pointers = make
      "frame-pointers not available")
 
 let tsan = make
-  "tsan"
+  ~name:"tsan"
+  ~description:"Pass if thread sanitizer is supported"
   (Actions_helpers.pass_or_skip (Ocamltest_config.tsan)
      "tsan available"
      "tsan not available")
 
 let no_tsan = make
-  "no-tsan"
+  ~name:"no-tsan"
+  ~description:"Pass if thread sanitizer is not supported"
   (Actions_helpers.pass_or_skip (not Ocamltest_config.tsan)
      "tsan not available"
      "tsan available")
