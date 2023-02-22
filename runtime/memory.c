@@ -148,7 +148,8 @@ Caml_inline void write_barrier(
    }
 }
 
-CAMLno_tsan /* We remove the ThreadSanitizer instrumentation of memory accesses
+CAMLno_user_tsan
+            /* We remove the ThreadSanitizer instrumentation of memory accesses
                by the compiler and instrument manually, because we want
                ThreadSanitizer to see a plain store here (this is necessary to
                detect data races). */

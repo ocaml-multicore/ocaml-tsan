@@ -718,10 +718,6 @@ Caml_inline void mark_stack_push_range(struct mark_stack* stk,
   me->end = end;
 }
 
-CAMLno_user_tsan /* FIXME TSan race reports from this function clog user
-                    programs, so we disable instrumentation here. However,
-                    Further investigation would be needed about the cause of
-                    these race reports. */
 /* returns the work done by skipping unmarkable objects */
 static intnat mark_stack_push_block(struct mark_stack* stk, value block)
 {
@@ -840,10 +836,8 @@ static void mark_slice_darken(struct mark_stack* stk, value child,
   }
 }
 
-CAMLno_user_tsan /* FIXME TSan race reports from this function clog user
-                    programs, so we disable instrumentation here. However,
-                    Further investigation would be needed about the cause of
-                    these race reports. */
+CAMLno_user_tsan /* From the point of view of TSan, do_some_marking can race
+                    with caml_modify but this is not actually the case. */
 Caml_noinline static intnat do_some_marking(struct mark_stack* stk,
                                             intnat budget) {
   prefetch_buffer_t pb = { .enqueued = 0, .dequeued = 0,
