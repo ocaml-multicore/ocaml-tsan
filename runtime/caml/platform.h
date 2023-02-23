@@ -61,11 +61,6 @@ Caml_inline uintnat atomic_load_relaxed(atomic_uintnat* p)
   return atomic_load_explicit(p, memory_order_relaxed);
 }
 
-Caml_inline value atomic_load_relaxed_val(value* p)
-{
-  return atomic_load_explicit(Op_atomic_val(p), memory_order_relaxed);
-}
-
 Caml_inline void atomic_store_rel(atomic_uintnat* p, uintnat v)
 {
   atomic_store_explicit(p, v, memory_order_release);

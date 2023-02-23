@@ -724,7 +724,7 @@ static intnat mark_stack_push_block(struct mark_stack* stk, value block)
   int i, block_wsz = Wosize_val(block), end;
   uintnat offset = 0;
 
-  if (Tag_atomic_val(block) == Closure_tag) {
+  if (Tag_val(block) == Closure_tag) {
     /* Skip the code pointers and integers at beginning of closure;
        start scanning at the first word of the environment part. */
     offset = Start_env_closinfo(Closinfo_val(block));
@@ -744,7 +744,7 @@ static intnat mark_stack_push_block(struct mark_stack* stk, value block)
   end = (block_wsz < 8 ? block_wsz : 8);
 
   for (i = offset; i < end; i++) {
-    value v = Field_atomic(block, i);
+    value v = Field(block, i);
 
     if (Is_markable(v))
       break;
@@ -932,7 +932,7 @@ again:
     for (; me.start < scan_end; me.start++) {
       CAMLassert(budget >= 0);
 
-      value child = atomic_load_relaxed_val(me.start);
+      value child = *me.start;
       budget--;
       if (Is_markable(child)) {
         if (pb_full(&pb))
