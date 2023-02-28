@@ -148,11 +148,10 @@ Caml_inline void write_barrier(
    }
 }
 
-CAMLno_user_tsan
-            /* We remove the ThreadSanitizer instrumentation of memory accesses
-               by the compiler and instrument manually, because we want
-               ThreadSanitizer to see a plain store here (this is necessary to
-               detect data races). */
+CAMLno_user_tsan /* We remove the ThreadSanitizer instrumentation of memory
+                    accesses by the compiler and instrument manually, because
+                    we want ThreadSanitizer to see a plain store here (this is
+                    necessary to detect data races). */
 CAMLexport CAMLweakdef void caml_modify (volatile value *fp, value val)
 {
   write_barrier((value)fp, 0, *fp, val);
@@ -160,8 +159,8 @@ CAMLexport CAMLweakdef void caml_modify (volatile value *fp, value val)
   /* See Note [MM] above */
   atomic_thread_fence(memory_order_acquire);
 #if defined(WITH_THREAD_SANITIZER)
-  /* The release store below is not instrumented because of the CAMLno_tsan. We
-   * signal it to ThreadSanitizer as a plain store (see
+  /* The release store below is not instrumented because of the
+   * CAMLno_user_tsan. We signal it to ThreadSanitizer as a plain store (see
    * ocaml-multicore/ocaml-tsan/pull/22#issuecomment-1377439074 on Github).
    */
   __tsan_write8((void *)fp);
