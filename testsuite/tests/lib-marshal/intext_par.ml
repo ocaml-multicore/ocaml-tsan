@@ -1,5 +1,12 @@
 (* TEST
  modules = "intextaux_par.c";
+ no-tsan;
+ {
+   bytecode;
+ }
+ {
+   native;
+ }
 *)
 
 (* Test for output_value / input_value *)
