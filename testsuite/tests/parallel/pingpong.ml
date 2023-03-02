@@ -1,4 +1,5 @@
 (* TEST
+* no-tsan
 *)
 
 let r = ref (Some 0)
