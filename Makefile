@@ -680,7 +680,8 @@ runtime_NATIVE_ONLY_C_SOURCES = \
   fail_nat \
   frame_descriptors \
   startup_nat \
-  signals_nat
+  signals_nat \
+  $(TSAN_NATIVE_RUNTIME_C_SOURCES)
 runtime_NATIVE_C_SOURCES = \
   $(runtime_COMMON_C_SOURCES:%=runtime/%.c) \
   $(runtime_NATIVE_ONLY_C_SOURCES:%=runtime/%.c)
