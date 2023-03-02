@@ -1,4 +1,12 @@
-(* TEST *)
+(* TEST
+ no-tsan;
+ {
+   bytecode;
+ }
+ {
+   native;
+ }
+*)
 
 let r = ref (Some 0)
 

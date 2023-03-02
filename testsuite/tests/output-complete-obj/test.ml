@@ -1,4 +1,5 @@
 (* TEST
+ no-tsan;
  readonly_files = "test.ml_stub.c";
  {
    setup-ocamlc.byte-build-env;
