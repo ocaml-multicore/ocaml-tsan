@@ -1,4 +1,6 @@
-(* TEST *)
+(* TEST
+   * no-tsan
+ *)
 
 (* Testing unsynchronized, parallel Weak usage *)
 

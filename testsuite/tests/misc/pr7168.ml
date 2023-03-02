@@ -1,5 +1,7 @@
 (* TEST
 
+* no-tsan
+
 ocamlrunparam += "l=100000"
 *)
 
