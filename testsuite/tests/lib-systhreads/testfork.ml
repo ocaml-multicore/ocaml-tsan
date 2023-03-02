@@ -3,6 +3,7 @@
  hassysthreads;
  not-bsd;
  libunix;
+ no-tsan;
  {
    bytecode;
  }{

@@ -1,6 +1,7 @@
 (* TEST
  include unix;
  modules = "test3_.c";
+ no-tsan;
  libunix;
  {
    bytecode;
