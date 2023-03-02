@@ -55,8 +55,12 @@ oc_dll_ldflags=""
 oc_exe_ldflags=""
 
 tsan=false
+oc_tsan_c_flags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+
 # Passed to the linker by ocamlopt when tsan is enabled
 oc_tsan_ldflags="-fsanitize=thread"
+
+oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
 
 # The C# compiler and its flags
 CSC=""
@@ -139,6 +143,8 @@ AC_SUBST([ccomptype])
 AC_SUBST([toolchain])
 AC_SUBST([oc_cflags])
 AC_SUBST([tsan])
+AC_SUBST([oc_tsan_ldflags])
+AC_SUBST([tsan_native_runtime_c_sources])
 AC_SUBST([oc_cppflags])
 AC_SUBST([oc_ldflags])
 AC_SUBST([oc_dll_ldflags])
@@ -343,10 +349,10 @@ AC_ARG_ENABLE([tsan],
 # enabled)
 
 AC_ARG_VAR([LIBUNWIND_CPPFLAGS],
-  [cc flags for libunwind (e.g. -I<location of header files>)])
+  [cc flags for libunwind (e.g. -I<location of libunwind>)])
 
 AC_ARG_VAR([LIBUNWIND_LDFLAGS],
-  [linker flags for libunwind (e.g. -L<location of static object files>])
+  [linker flags for libunwind (e.g. -L<location of libunwind>])
 
 AC_ARG_ENABLE([graph-lib], [],
   [AS_IF([test "x$enableval" != 'xno'],
@@ -1588,35 +1594,38 @@ AS_IF([test "x$enable_tsan" = "xyes" ],
   [AS_CASE(["$arch"],
     [amd64],
       [AS_CASE(["$system"],
-        [linux],
+        [linux|macosx],
         [AS_CASE(["$cc_basename"],
           [gcc*|clang*],
           [tsan=true],
           [AC_MSG_ERROR([thread sanitizer not supported with compiler \
 $cc_basename"])]
          )],
-        [macosx],
-        [AS_CASE(["$cc_basename"],
-          [gcc*|clang*],
-          [tsan=true],
-          [AC_MSG_ERROR([thread sanitizer not supported with compiler \
-$cc_basename on system $system"])]
-         )],
-        [AC_MSG_ERROR([thread sanitizer not supported on system $system])]
        )],
       [AC_MSG_ERROR([thread sanitizer not supported on arch $arch])]
   )],
   [tsan=false])
 
+AS_IF([$tsan],
+  [AC_MSG_NOTICE([using thread sanitizer with vendor=$ocaml_cv_cc_vendor])
+  AS_CASE([$ocaml_cv_cc_vendor],
+    [gcc-[[0123456789]]-*|gcc-10-*|clang-*],
+    [],
+    [oc_tsan_c_flags="$oc_tsan_c_flags -Wno-tsan"])
+  common_cppflags="$common_cppflags $oc_tsan_cppflags"
+  native_cflags="$native_cflags $oc_tsan_c_flags"
+  ocamlc_cflags="$ocamlc_cflags $oc_tsan_c_flags"
+  tsan_native_runtime_c_sources="tsan"],
+  [AC_MSG_NOTICE([not using thread sanitizer])
+  tsan_native_runtime_c_sources=""]
+)
+
 # libunwind detection when TSan is enabled
-AC_MSG_CHECKING([whether libunwind is required])
 AS_IF([! $tsan],
   [libunwind_available=false
   libunwind_cppflags=
-  libunwind_ldflags=
-  AC_MSG_RESULT([no])],
-  [AC_MSG_RESULT([yes])
-  AS_IF([test "$system" = "macosx"],
+  libunwind_ldflags=],
+  [AS_IF([test "$system" = "macosx"],
     [AS_IF([test x"$LIBUNWIND_CPPFLAGS" != x -o \
                  x"$LIBUNWIND_LDFLAGS" != x],
       [AC_MSG_WARN(m4_normalize([
@@ -2296,7 +2305,7 @@ AS_IF([test "$ccomptype" != "msvc"],
 
 oc_cflags="$common_cflags $internal_cflags"
 oc_cppflags="$common_cppflags $internal_cppflags"
-ocamlc_cflags="$common_cflags $sharedlib_cflags $CFLAGS"
+ocamlc_cflags="$ocamlc_cflags $common_cflags $sharedlib_cflags $CFLAGS"
 ocamlc_cppflags="$common_cppflags $CPPFLAGS"
 cclibs="$cclibs $mathlib"
 
@@ -2311,6 +2320,9 @@ AS_CASE([$host],
     nativecclibs="advapi32.lib ws2_32.lib version.lib"],
   [bytecclibs="$cclibs $DLLIBS $PTHREAD_LIBS"
   nativecclibs="$cclibs $DLLIBS $PTHREAD_LIBS"])
+
+AS_IF([$tsan],
+  [bytecclibs="$bytecclibs -fsanitize=thread"])
 
 AS_IF([test x"$libdir" = x'${exec_prefix}/lib'],
   [libdir="$libdir"/ocaml])
