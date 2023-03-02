@@ -176,6 +176,10 @@ UNIX_OR_WIN32=@unix_or_win32@
 INSTALL_SOURCE_ARTIFACTS=@install_source_artifacts@
 
 OC_CFLAGS=@oc_cflags@
+OC_TSAN_CFLAGS=@oc_tsan_cflags@
+OC_TSAN_LDFLAGS=@oc_tsan_ldflags@
+OC_TSAN_ASPPFLAGS=@oc_tsan_asppflags@
+OC_TSAN_CPPFLAGS=@oc_tsan_cppflags@
 CFLAGS=@CFLAGS@
 OC_CPPFLAGS=-I$(ROOTDIR)/runtime @oc_cppflags@
 CPPFLAGS=@CPPFLAGS@
@@ -220,6 +224,10 @@ MKEXE_VIA_CC=\
 RUNTIMED=@debug_runtime@
 INSTRUMENTED_RUNTIME=@instrumented_runtime@
 INSTRUMENTED_RUNTIME_LIBS=@instrumented_runtime_libs@
+WITH_TSAN=@tsan@
+ifeq "$(WITH_TSAN)" "true"
+TSAN_RUNTIME_LIBS=@tsan_runtime_libs@
+endif
 WITH_DEBUGGER=@with_debugger@
 WITH_OCAMLDOC=@ocamldoc@
 WITH_OCAMLTEST=@ocamltest@

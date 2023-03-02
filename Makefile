@@ -64,6 +64,13 @@ else
   COLDSTART_DEPS = boot/ocamlruns$(EXE)
 endif
 
+OC_NATIVE_TSAN_C_FLAGS =
+ifeq "$(WITH_TSAN)" "true"
+OC_NATIVE_CPPFLAGS += $(OC_TSAN_CPPFLAGS)
+OC_NATIVE_TSAN_C_FLAGS += $(OC_TSAN_CFLAGS)
+OC_ASPPFLAGS += $(OC_TSAN_ASPPFLAGS)
+endif
+
 expunge := expunge$(EXE)
 
 # targets for the compilerlibs/*.{cma,cmxa} archives
@@ -673,6 +680,7 @@ runtime_NATIVE_ONLY_C_SOURCES = \
   fail_nat \
   frame_descriptors \
   startup_nat \
+  tsan \
   signals_nat
 runtime_NATIVE_C_SOURCES = \
   $(runtime_COMMON_C_SOURCES:%=runtime/%.c) \
@@ -908,17 +916,21 @@ runtime/%.bpic.$(O): OC_CFLAGS += $(SHAREDLIB_CFLAGS)
 $(DEPDIR)/runtime/%.bpic.$(D): OC_CFLAGS += $(SHAREDLIB_CFLAGS)
 
 runtime/%.n.$(O): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS)
+runtime/%.n.$(O): OC_CFLAGS += $(OC_NATIVE_TSAN_C_FLAGS)
 $(DEPDIR)/runtime/%.n.$(D): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS)
 
 runtime/%.nd.$(O): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlrund_CPPFLAGS)
+runtime/%.nd.$(O): OC_CFLAGS += $(OC_NATIVE_TSAN_C_FLAGS)
 $(DEPDIR)/runtime/%.nd.$(D): \
   OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlrund_CPPFLAGS)
 
 runtime/%.ni.$(O): OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlruni_CPPFLAGS)
+runtime/%.ni.$(O): OC_CFLAGS += $(OC_NATIVE_TSAN_C_FLAGS)
 $(DEPDIR)/runtime/%.ni.$(D): \
   OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(ocamlruni_CPPFLAGS)
 
 runtime/%.npic.$(O): OC_CFLAGS += $(OC_NATIVE_CPPFLAGS) $(SHAREDLIB_CFLAGS)
+runtime/%.npic.$(O): OC_CFLAGS += $(OC_NATIVE_TSAN_C_FLAGS)
 $(DEPDIR)/runtime/%.npic.$(D): \
   OC_CPPFLAGS += $(OC_NATIVE_CPPFLAGS) $(SHAREDLIB_CFLAGS)
 

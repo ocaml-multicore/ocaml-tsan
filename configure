@@ -834,6 +834,8 @@ lib_runtime_events
 lib_dynlink
 otherlibraries
 has_monotonic_clock
+tsan_runtime_libs
+tsan
 instrumented_runtime_libs
 instrumented_runtime
 debug_runtime
@@ -858,6 +860,10 @@ oc_exe_ldflags
 oc_dll_ldflags
 oc_ldflags
 oc_cppflags
+oc_tsan_cppflags
+oc_tsan_asppflags
+oc_tsan_ldflags
+oc_tsan_cflags
 oc_cflags
 toolchain
 ccomptype
@@ -947,6 +953,7 @@ enable_debug_runtime
 enable_debugger
 enable_dependency_generation
 enable_instrumented_runtime
+enable_tsan
 enable_vmthreads
 enable_systhreads
 enable_graph_lib
@@ -1633,6 +1640,7 @@ Optional Features:
                           do not compute dependency information for C sources
   --enable-instrumented-runtime
                           build the instrumented runtime [default=auto]
+  --enable-tsan           enable ThreadSanitizer support [default=no]
 
   --disable-systhreads    disable the Win32/POSIX threads library
   --disable-str-lib       do not build the str library
@@ -3223,6 +3231,10 @@ ocamlc_cflags=""
 ocamlc_cppflags=""
 oc_ldflags=""
 oc_dll_ldflags=""
+oc_tsan_cflags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+oc_tsan_ldflags=""
+oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
+oc_tsan_asppflags="-DWITH_THREAD_SANITIZER"
 oc_exe_ldflags=""
 
 # The C# compiler and its flags
@@ -3235,6 +3247,8 @@ toolchain="cc"
 reserved_header_bits=0
 instrumented_runtime=false
 instrumented_runtime_libs=""
+tsan=false
+tsan_runtime_libs="-fsanitize=thread"
 bootstrapping_flexdll=false
 flexdll_dir=
 lib_dynlink=false
@@ -3283,6 +3297,12 @@ OCAML_VERSION_SHORT=5.1
 # Note: This is present for the flexdll bootstrap where it exposed as the old
 # TOOLPREF variable. It would be better if flexdll where updated to require
 # WINDRES instead.
+
+
+
+
+
+
 
 
 
@@ -3648,6 +3668,15 @@ then :
   enableval=$enable_instrumented_runtime;
 else $as_nop
   enable_instrumented_runtime=auto
+fi
+
+
+# Check whether --enable-tsan was given.
+if test ${enable_tsan+y}
+then :
+  enableval=$enable_tsan;
+else $as_nop
+  enable_tsan=no
 fi
 
 
@@ -16349,6 +16378,70 @@ esac
      ;;
 esac
 
+fi
+
+# ThreadSanitizer support is only for Linux/FreeBSD/macOS on amd64.
+# ThreadSanitizer supports more architectures but the OCaml client side is not
+# implemented (yet).
+if test "x$enable_tsan" = "xyes"
+then :
+  case "$arch" in #(
+  amd64) :
+    case "$system" in #(
+  linux) :
+    case "$cc_basename" in #(
+  gcc*|clang*) :
+    tsan=true ;; #(
+  *) :
+    as_fn_error $? "thread sanitizer not supported with compiler \
+$cc_basename\"" "$LINENO" 5
+          ;;
+esac ;; #(
+  macosx) :
+    case "$cc_basename" in #(
+  clang*) :
+    tsan=true ;; #(
+  *) :
+    as_fn_error $? "thread sanitizer not supported with compiler \
+$cc_basename on system $system\"" "$LINENO" 5
+          ;;
+esac ;; #(
+  *) :
+    as_fn_error $? "thread sanitizer not supported on system $system" "$LINENO" 5
+        ;;
+esac ;; #(
+  *) :
+    as_fn_error $? "thread sanitizer not supported on arch $arch" "$LINENO" 5
+   ;;
+esac
+else $as_nop
+  tsan=false
+fi
+
+if $tsan
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&5
+printf "%s\n" "$as_me: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&6;}
+  case $ocaml_cv_cc_vendor in #(
+  gcc-[0123456789]-*|gcc-10-*|clang-*) :
+     ;; #(
+  *) :
+    oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan" ;;
+esac
+else $as_nop
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: not using thread sanitizer" >&5
+printf "%s\n" "$as_me: not using thread sanitizer" >&6;}
+
+fi
+
+if $tsan
+then :
+  case $target in #(
+  *-apple-darwin*) :
+     ;; #(
+  *) :
+    oc_tsan_ldflags="-lunwind" ;;
+esac
 fi
 
 ## Sockets
