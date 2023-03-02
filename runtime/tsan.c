@@ -36,6 +36,18 @@ extern void __tsan_func_exit(void*);
 extern void __tsan_func_entry(void*);
 #endif
 
+/* This hardcodes a number of suppressions of TSan reports about runtime
+   functions (see #11040). Unlike the CAMLno_user_tsan qualifier which
+   un-instruments function, this simply silences reports when the call stack
+   contains a frame matching one of the lines starting with "race:". */
+const char * __tsan_default_suppressions(void) {
+  return "deadlock:caml_plat_lock\n" /* Avoids deadlock inversion messages */
+         "race:create_domain\n"
+         "race:mark_slice_darken\n"
+         "race:caml_darken_cont\n"
+         "race:caml_shared_try_alloc\n";
+}
+
 Caml_inline void caml_tsan_debug_log_pc(const char* msg, uintnat pc)
 {
 #ifdef TSAN_DEBUG
