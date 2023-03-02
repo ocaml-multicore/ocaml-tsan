@@ -513,6 +513,10 @@ module BR = Branch_relaxation.Make (struct
     | Lop (Idls_get) ->
         (* Here to maintain build *)
         assert false
+    | Lop (Ireturn_addr) ->
+        invalid_arg (
+          "Support for Ireturn_addr is not implemented on architecture "
+          ^ Config.architecture)
     | Lreloadretaddr -> 2
     | Lreturn -> 2
     | Llabel _ -> 0
@@ -930,6 +934,10 @@ let emit_instr env i =
     | Lop (Idls_get) ->
         (* Here to maintain build *)
         assert false
+    | Lop (Ireturn_addr) ->
+        invalid_arg (
+          "Support for Ireturn_addr is not implemented on architecture "
+          ^ Config.architecture)
     | Lreloadretaddr ->
         `	{emit_string lg}	11, {emit_int(retaddr_offset env)}(1)\n`;
         `	mtlr	11\n`
