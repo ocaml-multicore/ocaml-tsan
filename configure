@@ -861,6 +861,8 @@ oc_exe_ldflags
 oc_dll_ldflags
 oc_ldflags
 oc_cppflags
+tsan_native_runtime_c_sources
+oc_tsan_ldflags
 tsan
 oc_cflags
 toolchain
@@ -3243,8 +3245,12 @@ oc_dll_ldflags=""
 oc_exe_ldflags=""
 
 tsan=false
+oc_tsan_c_flags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+
 # Passed to the linker by ocamlopt when tsan is enabled
 oc_tsan_ldflags="-fsanitize=thread"
+
+oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
 
 # The C# compiler and its flags
 CSC=""
@@ -3304,6 +3310,8 @@ OCAML_VERSION_SHORT=5.1
 # Note: This is present for the flexdll bootstrap where it exposed as the old
 # TOOLPREF variable. It would be better if flexdll where updated to require
 # WINDRES instead.
+
+
 
 
 
@@ -16451,6 +16459,27 @@ else $as_nop
   tsan=false
 fi
 
+if $tsan
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&5
+printf "%s\n" "$as_me: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&6;}
+  case $ocaml_cv_cc_vendor in #(
+  gcc-[0123456789]-*|gcc-10-*|clang-*) :
+     ;; #(
+  *) :
+    oc_tsan_c_flags="$oc_tsan_c_flags -Wno-tsan" ;;
+esac
+  common_cppflags="$common_cppflags $oc_tsan_cppflags"
+  native_cflags="$native_cflags $oc_tsan_c_flags"
+  ocamlc_cflags="$ocamlc_cflags $oc_tsan_c_flags"
+  tsan_native_runtime_c_sources="tsan"
+else $as_nop
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: not using thread sanitizer" >&5
+printf "%s\n" "$as_me: not using thread sanitizer" >&6;}
+  tsan_native_runtime_c_sources=""
+
+fi
+
 # libunwind detection when TSan is enabled
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether libunwind is required" >&5
 printf %s "checking whether libunwind is required... " >&6; }
@@ -19668,7 +19697,7 @@ fi
 
 oc_cflags="$common_cflags $internal_cflags"
 oc_cppflags="$common_cppflags $internal_cppflags"
-ocamlc_cflags="$common_cflags $sharedlib_cflags $CFLAGS"
+ocamlc_cflags="$ocamlc_cflags $common_cflags $sharedlib_cflags $CFLAGS"
 ocamlc_cppflags="$common_cppflags $CPPFLAGS"
 cclibs="$cclibs $mathlib"
 
@@ -19724,6 +19753,11 @@ case $host in #(
     bytecclibs="$cclibs $DLLIBS $PTHREAD_LIBS"
   nativecclibs="$cclibs $DLLIBS $PTHREAD_LIBS" ;;
 esac
+
+if $tsan
+then :
+  bytecclibs="$bytecclibs -fsanitize=thread"
+fi
 
 if test x"$libdir" = x'${exec_prefix}/lib'
 then :

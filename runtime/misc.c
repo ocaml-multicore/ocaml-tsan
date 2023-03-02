@@ -250,3 +250,17 @@ void caml_bad_caml_state(void)
 {
   caml_fatal_error("no domain lock held");
 }
+
+#ifdef WITH_THREAD_SANITIZER
+/* This hardcodes a number of suppressions of TSan reports about runtime
+   functions (see #11040). Unlike the CAMLno_user_tsan qualifier which
+   un-instruments function, this simply silences reports when the call stack
+   contains a frame matching one of the lines starting with "race:". */
+const char * __tsan_default_suppressions(void) {
+  return "deadlock:caml_plat_lock\n" /* Avoids deadlock inversion messages */
+         "race:create_domain\n"
+         "race:mark_slice_darken\n"
+         "race:caml_darken_cont\n"
+         "race:caml_shared_try_alloc\n";
+}
+#endif /* WITH_THREAD_SANITIZER */
