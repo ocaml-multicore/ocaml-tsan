@@ -1,5 +1,7 @@
 (* TEST
+   * no-tsan
    modules = "intextaux_par.c"
+   ocamlopt_flags = "-g"
 *)
 
 (* Test for output_value / input_value *)
