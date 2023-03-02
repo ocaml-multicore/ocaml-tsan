@@ -1,6 +1,7 @@
 (* TEST
  include systhreads;
  hassysthreads;
+ no-tsan;
  {
    bytecode;
  }{
