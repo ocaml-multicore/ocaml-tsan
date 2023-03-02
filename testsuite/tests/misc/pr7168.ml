@@ -1,5 +1,12 @@
 (* TEST
  ocamlrunparam += "l=100000";
+ no-tsan;
+ {
+   bytecode;
+ }
+ {
+   native;
+ }
 *)
 
 let rec f x =

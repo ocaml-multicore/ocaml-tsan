@@ -31,6 +31,7 @@ let () =
 (* TEST
  flags += "-g";
  exit_status = "2";
+ no-tsan;
  {
    ocamlrunparam += ",b=0";
    reference = "${test_source_directory}/pr2195-nolocs.byte.reference";
