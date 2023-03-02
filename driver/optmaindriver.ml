@@ -49,6 +49,10 @@ let main argv ppf =
     Compmisc.read_clflags_from_env ();
     if !Clflags.plugin then
       Compenv.fatal "-plugin is only supported up to OCaml 4.08.0";
+    if Config.tsan then begin
+      if String.length Config.tsan_ld_flags <> 0 then
+        Compenv.(defer (ProcessObjects (String.split_on_char ' ' Config.tsan_ld_flags)))
+    end;
     begin try
       Compenv.process_deferred_actions
         (ppf,
