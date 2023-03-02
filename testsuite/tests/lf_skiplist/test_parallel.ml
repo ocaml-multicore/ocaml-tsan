@@ -1,4 +1,5 @@
 (* TEST
+   * no-tsan
    modules = "stubs.c"
 *)
 
