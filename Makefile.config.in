@@ -220,6 +220,7 @@ MKEXE_VIA_CC=\
 RUNTIMED=@debug_runtime@
 INSTRUMENTED_RUNTIME=@instrumented_runtime@
 INSTRUMENTED_RUNTIME_LIBS=@instrumented_runtime_libs@
+WITH_TSAN=@tsan@
 WITH_DEBUGGER=@with_debugger@
 WITH_OCAMLDOC=@ocamldoc@
 WITH_OCAMLTEST=@ocamltest@
