@@ -193,8 +193,11 @@ where 0 <= R <= 31 is HEADER_RESERVED_BITS, set with the
 #endif
 
 #define Hp_atomic_val(val) ((atomic_uintnat *)(val) - 1)
-#define Hd_val(val) ((header_t) \
-  (atomic_load_explicit(Hp_atomic_val(val), memory_order_relaxed)))
+CAMLno_user_tsan /* Disable TSan instrumentation for performance. */
+Caml_inline header_t Hd_val(value val)
+{
+  return atomic_load_explicit(Hp_atomic_val(val), memory_order_relaxed);
+}
 
 #define Color_val(val) (Color_hd (Hd_val (val)))
 
