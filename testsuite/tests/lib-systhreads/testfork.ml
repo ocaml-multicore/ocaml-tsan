@@ -1,10 +1,11 @@
 (* TEST
-   * hassysthreads
+   * no-tsan
+   ** hassysthreads
    include systhreads
-   ** not-bsd
-   *** libunix
-   **** bytecode
-   **** native
+   *** not-bsd
+   **** libunix
+   ***** bytecode
+   ***** native
 *)
 
 (* POSIX threads and fork() *)
