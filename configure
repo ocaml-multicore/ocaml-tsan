@@ -16459,6 +16459,7 @@ esac
   oc_asppflags="$oc_tsan_asppflags"
   oc_native_cppflags="$oc_tsan_cppflags"
   oc_native_c_flags="$oc_tsan_c_flags"
+  ocamlc_cflags="$ocamlc_cflags $oc_tsan_c_flags"
 else $as_nop
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: not using thread sanitizer" >&5
 printf "%s\n" "$as_me: not using thread sanitizer" >&6;}
@@ -19586,7 +19587,7 @@ fi
 
 oc_cflags="$common_cflags $internal_cflags"
 oc_cppflags="$common_cppflags $internal_cppflags"
-ocamlc_cflags="$common_cflags $sharedlib_cflags $CFLAGS"
+ocamlc_cflags="$ocamlc_cflags $common_cflags $sharedlib_cflags $CFLAGS"
 ocamlc_cppflags="$common_cppflags $CPPFLAGS"
 cclibs="$cclibs $mathlib"
 
