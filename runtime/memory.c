@@ -158,7 +158,7 @@ CAMLexport CAMLweakdef void caml_modify (volatile value *fp, value val)
 
   /* See Note [MM] above */
   atomic_thread_fence(memory_order_acquire);
-#if defined(WITH_THREAD_SANITIZER)
+#if defined(WITH_THREAD_SANITIZER) && defined(NATIVE_CODE)
   /* The release store below is not instrumented because of the
    * CAMLno_user_tsan. We signal it to ThreadSanitizer as a plain store (see
    * ocaml-multicore/ocaml-tsan/pull/22#issuecomment-1377439074 on Github).

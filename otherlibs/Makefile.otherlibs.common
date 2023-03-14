@@ -168,7 +168,7 @@ distclean:: clean
 	$(V_CC)$(CC) -c $(OC_CFLAGS) $(OC_NATIVE_C_FLAGS) $(CFLAGS) \
 	  $(OC_CPPFLAGS) $(CPPFLAGS) $(OUTPUTOBJ)$@ $<
 
-%.n.$(O): OC_CFLAGS += $(NATIVE_CFLAGS)
+%.n.$(O): OC_CFLAGS += $(OC_NATIVE_CFLAGS)
 
 ifeq "$(COMPUTE_DEPS)" "true"
 ifneq "$(COBJS_BYTECODE)" ""

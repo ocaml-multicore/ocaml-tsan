@@ -144,6 +144,7 @@ AC_SUBST([toolchain])
 AC_SUBST([oc_cflags])
 AC_SUBST([tsan])
 AC_SUBST([oc_tsan_ldflags])
+AC_SUBST([tsan_native_runtime_c_sources])
 AC_SUBST([oc_cppflags])
 AC_SUBST([oc_ldflags])
 AC_SUBST([oc_dll_ldflags])
@@ -1619,10 +1620,12 @@ AS_IF([$tsan],
     [gcc-[[0123456789]]-*|gcc-10-*|clang-*],
     [],
     [oc_tsan_c_flags="$oc_tsan_c_flags -Wno-tsan"])
-  native_cppflags="$native_cppflags $oc_tsan_cppflags"
+  common_cppflags="$common_cppflags $oc_tsan_cppflags"
   native_cflags="$native_cflags $oc_tsan_c_flags"
-  ocamlc_cflags="$ocamlc_cflags $oc_tsan_c_flags"],
-  [AC_MSG_NOTICE([not using thread sanitizer])]
+  ocamlc_cflags="$ocamlc_cflags $oc_tsan_c_flags"
+  tsan_native_runtime_c_sources="tsan"],
+  [AC_MSG_NOTICE([not using thread sanitizer])
+  tsan_native_runtime_c_sources=""]
 )
 
 # libunwind detection when TSan is enabled
@@ -2322,6 +2325,9 @@ AS_CASE([$host],
     nativecclibs="advapi32.lib ws2_32.lib version.lib"],
   [bytecclibs="$cclibs $DLLIBS $PTHREAD_LIBS"
   nativecclibs="$cclibs $DLLIBS $PTHREAD_LIBS"])
+
+AS_IF([$tsan],
+  [bytecclibs="$bytecclibs -fsanitize=thread"])
 
 AS_IF([test x"$libdir" = x'${exec_prefix}/lib'],
   [libdir="$libdir"/ocaml])
