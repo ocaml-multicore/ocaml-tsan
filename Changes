@@ -27,6 +27,10 @@ Working version
   functor leads to new warning 73.
   (Frederic Bour and Richard Eisenberg, review by Florian Angeletti)
 
+- #12114: Add ThreadSanitizer support
+  (Fabrice Buoro and Olivier Nicole, based on an initial work by Anmol Sahoo,
+  review by ???)
+
 ### Runtime system:
 
 - #12001: Fix book keeping for last finalisers during the minor cycle
