@@ -14,6 +14,10 @@
 
 #define CAML_INTERNALS
 
+#ifndef DEBUG
+#undef TSAN_DEBUG
+#endif
+
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
