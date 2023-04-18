@@ -1161,7 +1161,7 @@ LBL(frame_runstack):
         movq    %r13, %rsp
         CFI_RESTORE_STATE
         movq    %r12, %rax
-    TSAN_EXIT_FUNCTION
+        TSAN_EXIT_FUNCTION
     /* Invoke handle_value (or handle_exn) */
         LEAVE_FUNCTION
         jmp     *(%rbx)
