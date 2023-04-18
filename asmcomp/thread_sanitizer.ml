@@ -70,31 +70,6 @@ let machtype_of_memory_chunk = function
 
 let dbg_none = Debuginfo.none
 
-(* Decides whether an expression {i probably} evaluates to a value of type
-   [Addr]. This is not intended to be foolproof, but only aims to catch the
-   cases that should happen in practice. *)
-let rec has_type_addr = function
-  | Cconst_int (_, _) | Cconst_natint (_, _) | Cconst_float (_, _)
-  | Cconst_symbol (_, _) | Cassign (_, _) | Ctuple _ | Cswitch (_, _, _, _)
-  | Ccatch (_, _, _) | Cexit (_, _) | Ctrywith (_, _, _, _) | Creturn_addr
-  | Cvar _ -> false
-  | Clet (_, _, body)
-  | Clet_mut (_, _, _, body)
-  | Cphantom_let (_, _, body) -> has_type_addr body
-  | Csequence (_, e) -> has_type_addr e
-  | Cifthenelse (_, _, e1, _, e2, _) -> has_type_addr e1 || has_type_addr e2
-  | Cop (op, _, _) ->
-      begin match op with
-      | Capply [|Addr|] | Cextcall (_, [|Addr|], _, _) | Cadda -> true
-      | Capply _ | Cextcall _ | Cload _ | Calloc | Cstore (_, _) | Caddi | Csubi
-      | Cmuli | Cmulhi | Cdivi | Cmodi | Cand | Cor | Cxor | Clsl | Clsr | Casr
-      | Ccmpi _ | Caddv | Ccmpa _ | Cnegf | Cabsf | Caddf | Csubf | Cmulf
-      | Cdivf | Cfloatofint | Cintoffloat | Ccmpf _ | Craise _ | Ccheckbound
-      | Copaque | Cdls_get -> false
-      end
-
-type replace_or_not = Keep of Cmm.expression | Replace of VP.t * Cmm.expression
-
 let wrap_entry_exit expr =
   let call_entry =
     Cmm_helpers.return_unit dbg_none @@
@@ -155,12 +130,9 @@ let wrap_entry_exit expr =
            such values should never be live across a function call or
            allocation point. *)
         let fun_ = List.hd args in
-        let replace_args =
+        let args =
           List.map
-            (fun e ->
-              if has_type_addr e
-              then Keep e
-              else Replace (VP.create (V.create_local "arg"), e))
+            (fun e -> VP.create (V.create_local "arg"), e)
             (List.tl args)
         in
         let tail =
@@ -168,21 +140,10 @@ let wrap_entry_exit expr =
             (call_exit,
              (Cop
               (Capply fn,
-               fun_
-               :: List.map
-                    (function
-                      | Replace (id,_) -> Cvar (VP.var id)
-                      | Keep e -> e)
-                    replace_args,
-                dbg_none)))
+               fun_ :: List.map (fun (id, _) -> Cvar (VP.var id)) args,
+               dbg_none)))
         in
-        List.fold_right
-          (fun keep_or_replace acc ->
-            match keep_or_replace with
-            | Keep _ -> acc
-            | Replace (id,arg) -> Clet (id, arg, acc))
-          replace_args
-          tail
+        List.fold_right (fun (id, arg) acc -> Clet (id, arg, acc)) args tail
     | Cconst_int (_, _) | Cconst_natint (_, _) | Cconst_float (_, _)
     | Cconst_symbol (_, _) | Cvar _ | Ctuple _ | Cop (_, _, _)
     | Creturn_addr as expr ->
