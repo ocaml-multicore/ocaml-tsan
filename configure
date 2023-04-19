@@ -3246,7 +3246,7 @@ oc_dll_ldflags=""
 oc_exe_ldflags=""
 
 tsan=false
-oc_tsan_c_flags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+oc_tsan_c_flags="-fsanitize=thread"
 
 # Passed to the linker by ocamlopt when tsan is enabled
 oc_tsan_ldflags="-fsanitize=thread"
@@ -16488,7 +16488,7 @@ if ! $tsan
 then :
   libunwind_available=false
   libunwind_cppflags=
-  libunwind_link_flags=
+  libunwind_ldflags=
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
 else $as_nop
