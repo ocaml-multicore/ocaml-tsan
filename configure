@@ -3246,7 +3246,7 @@ oc_dll_ldflags=""
 oc_exe_ldflags=""
 
 tsan=false
-oc_tsan_c_flags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+oc_tsan_c_flags="-fsanitize=thread"
 
 # Passed to the linker by ocamlopt when tsan is enabled
 oc_tsan_ldflags="-fsanitize=thread"
