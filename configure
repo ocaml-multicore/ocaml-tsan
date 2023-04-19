@@ -1713,10 +1713,9 @@ Some influential environment variables:
   DLLIBS      which libraries to use (in addition to -ldl) to load dynamic
               libs
   LIBUNWIND_CPPFLAGS
-              cc flags for libunwind (e.g. -I<location of header files>)
+              cc flags for libunwind (e.g. -I<location of libunwind>)
   LIBUNWIND_LDFLAGS
-              linker flags for libunwind (e.g. -L<location of static object
-              files>
+              linker flags for libunwind (e.g. -L<location of libunwind>
   WINDOWS_UNICODE_MODE
               how to handle Unicode under Windows: ansi, compatible
   DEFAULT_STRING
@@ -3246,7 +3245,7 @@ oc_dll_ldflags=""
 oc_exe_ldflags=""
 
 tsan=false
-oc_tsan_c_flags="-O1 -fno-omit-frame-pointer -fsanitize=thread"
+oc_tsan_c_flags="-fsanitize=thread"
 
 # Passed to the linker by ocamlopt when tsan is enabled
 oc_tsan_ldflags="-fsanitize=thread"
