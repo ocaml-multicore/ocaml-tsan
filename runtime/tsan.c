@@ -84,7 +84,7 @@ void caml_tsan_exn_func_exit_c(char* limit)
 
   ret = unw_getcontext(&uc);
   if (ret != 0)
-    caml_fatal_error("unw_getcontextfailed failed with code %d", ret);
+    caml_fatal_error("unw_getcontext failed with code %d", ret);
   ret = unw_init_local(&cursor, &uc);
   if (ret != 0)
     caml_fatal_error("unw_init_local failed with code %d", ret);
