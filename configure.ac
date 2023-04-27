@@ -349,10 +349,10 @@ AC_ARG_ENABLE([tsan],
 # enabled)
 
 AC_ARG_VAR([LIBUNWIND_CPPFLAGS],
-  [cc flags for libunwind (e.g. -I<location of header files>)])
+  [cc flags for libunwind (e.g. -I<location of libunwind>)])
 
 AC_ARG_VAR([LIBUNWIND_LDFLAGS],
-  [linker flags for libunwind (e.g. -L<location of static object files>])
+  [linker flags for libunwind (e.g. -L<location of libunwind>])
 
 AC_ARG_ENABLE([graph-lib], [],
   [AS_IF([test "x$enableval" != 'xno'],
