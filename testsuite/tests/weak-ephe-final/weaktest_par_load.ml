@@ -1,6 +1,11 @@
 (* TEST
-   * no-tsan
- *)
+ no-tsan;
+ {
+   bytecode;
+ }{
+   native;
+ }
+*)
 
 (* Testing unsynchronized, parallel Weak usage *)
 
