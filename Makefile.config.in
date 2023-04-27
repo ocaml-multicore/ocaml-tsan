@@ -214,7 +214,6 @@ WITH_OCAMLDOC=@ocamldoc@
 WITH_OCAMLTEST=@ocamltest@
 ASM_CFI_SUPPORTED=@asm_cfi_supported@
 WITH_FRAME_POINTERS=@frame_pointers@
-WITH_TSAN=@tsan@
 HEADER_RESERVED_BITS=@reserved_header_bits@
 WITH_FPIC=@fpic@
 TARGET=@target@
