@@ -1621,14 +1621,11 @@ AS_IF([$tsan],
 )
 
 # libunwind detection when TSan is enabled
-AC_MSG_CHECKING([whether libunwind is required])
 AS_IF([! $tsan],
   [libunwind_available=false
   libunwind_cppflags=
-  libunwind_ldflags=
-  AC_MSG_RESULT([no])],
-  [AC_MSG_RESULT([yes])
-  AS_IF([test "$system" = "macosx"],
+  libunwind_ldflags=],
+  [AS_IF([test "$system" = "macosx"],
     [AS_IF([test x"$LIBUNWIND_CPPFLAGS" != x -o \
                  x"$LIBUNWIND_LDFLAGS" != x],
       [AC_MSG_WARN(m4_normalize([
