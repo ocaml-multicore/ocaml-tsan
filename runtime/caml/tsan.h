@@ -4,7 +4,7 @@
 /*                                                                        */
 /*               Fabrice Buoro and Olivier Nicole, Tarides                */
 /*                                                                        */
-/*   Copyright 2022 Tarides                                               */
+/*   Copyright 2023 Tarides                                               */
 /*                                                                        */
 /*   All rights reserved.  This file is distributed under the terms of    */
 /*   the GNU Lesser General Public License version 2.1, with the          */
