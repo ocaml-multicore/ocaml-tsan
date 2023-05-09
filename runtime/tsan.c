@@ -21,6 +21,7 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
+#include "caml/tsan.h"
 #include "caml/mlvalues.h"
 #include "caml/misc.h"
 #include "caml/frame_descriptors.h"
