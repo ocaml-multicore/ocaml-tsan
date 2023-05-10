@@ -16459,6 +16459,14 @@ printf "%s\n" "$as_me: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >
   *) :
     oc_tsan_c_flags="$oc_tsan_c_flags -Wno-tsan" ;;
 esac
+  case $cc_basename in #(
+  gcc*) :
+    oc_tsan_c_flags="$oc_tsan_c_flags --param=tsan-distinguish-volatile=1" ;; #(
+  clang*) :
+    oc_tsan_c_flags="$oc_tsan_c_flags -mllvm -tsan-distinguish-volatile" ;; #(
+  *) :
+     ;;
+esac
   common_cppflags="$common_cppflags $oc_tsan_cppflags"
   native_cflags="$native_cflags $oc_tsan_c_flags"
   ocamlc_cflags="$ocamlc_cflags $oc_tsan_c_flags"
