@@ -1631,6 +1631,11 @@ AS_IF([$tsan],
     [gcc-[[0123456789]]-*|gcc-10-*|clang-*],
     [],
     [oc_tsan_c_flags="$oc_tsan_c_flags -Wno-tsan"])
+  AS_CASE([$cc_basename],
+    [gcc*],
+    [oc_tsan_c_flags="$oc_tsan_c_flags --param=tsan-distinguish-volatile=1"],
+    [clang*],
+    [oc_tsan_c_flags="$oc_tsan_c_flags -mllvm -tsan-distinguish-volatile"])
   common_cppflags="$common_cppflags $oc_tsan_cppflags"
   native_cflags="$native_cflags $oc_tsan_c_flags"
   ocamlc_cflags="$ocamlc_cflags $oc_tsan_c_flags"
