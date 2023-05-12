@@ -23,6 +23,7 @@ s/tid=[[:digit:]]+/tid=<implemspecific>/
   s/(#[0-9]+) ([^ ]*) [^ ]*(\(discriminator [0-9]+\))? \(([^ ]*)\)/\1 \2 <implemspecific> (\4)/
   s/(caml[a-zA-Z_0-9]+\.[a-zA-Z_0-9]+)_[[:digit:]]+/\1_<implemspecific>/
   s/\((.+)+0x[[:xdigit:]]+\)/(<implemspecific>)/
+  s/ \(BuildId: [[:xdigit:]]+\)//
 }
 
 s/ M[0-9]+/ M<implemspecific>/
