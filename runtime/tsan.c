@@ -184,6 +184,7 @@ CAMLno_tsan void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
 
 #endif // NATIVE_CODE
 
+
 #include "caml/mlvalues.h"
 #include <stdbool.h>
 
@@ -200,31 +201,36 @@ extern uint32_t __tsan_atomic32_load(void*, int);
 extern uint64_t __tsan_atomic64_load(void*, int);
 extern unsigned __int128 __tsan_atomic128_load(void*, int);
 
-#define DEFINE_TSAN_VOLATILE_READ_WRITE(size, bitsize)                                  \
-   \
-extern void __tsan_read##size(void*);       \
-extern void __tsan_write##size(void*);     \
-     \
-  void __tsan_volatile_read##size(void *ptr)                             \
-  {                                                                      \
-    const bool is_atomic = size <= sizeof(long long) &&            \
-               is_aligned(ptr, 8);   \
-    if (is_atomic)                                                 \
-      __tsan_atomic##bitsize##_load(ptr, memory_order_relaxed);                                                \
-    else       \
-      __tsan_read##size(ptr);            \
-  }                                                                      \
-  void __tsan_unaligned_volatile_read##size(void *ptr)                   \
-  {    \
-    __tsan_volatile_read##size(ptr);                           \
-  }     \
-  void __tsan_volatile_write##size(void *ptr)                            \
-  {                                                                      \
-    __tsan_write##size(ptr);     \
-  }                                                                      \
-  void __tsan_unaligned_volatile_write##size(void *ptr)                  \
-  {    \
-    __tsan_volatile_write##size(ptr);                          \
+/* In the OCaml runtime, volatile reads are used instead of relaxed atomic
+   loads on values that are shared with OCaml code, for backward compatibility
+   and performance reasons (see #10992). To avoid this practice causing false
+   positives with TSan, we make it so that TSan consider these reads as relaxed
+   atomic loads. Volatile stores are still seen as plain stores. */
+#define DEFINE_TSAN_VOLATILE_READ_WRITE(size, bitsize)                         \
+                                                                               \
+extern void __tsan_read##size(void*);                                          \
+extern void __tsan_write##size(void*);                                         \
+                                                                               \
+  void __tsan_volatile_read##size(void *ptr)                                   \
+  {                                                                            \
+    const bool is_atomic = size <= sizeof(long long) &&                        \
+               is_aligned(ptr, 8);                                             \
+    if (is_atomic)                                                             \
+      __tsan_atomic##bitsize##_load(ptr, memory_order_relaxed);                \
+    else                                                                       \
+      __tsan_read##size(ptr);                                                  \
+  }                                                                            \
+  void __tsan_unaligned_volatile_read##size(void *ptr)                         \
+  {                                                                            \
+    __tsan_volatile_read##size(ptr);                                           \
+  }                                                                            \
+  void __tsan_volatile_write##size(void *ptr)                                  \
+  {                                                                            \
+    __tsan_write##size(ptr);                                                   \
+  }                                                                            \
+  void __tsan_unaligned_volatile_write##size(void *ptr)                        \
+  {                                                                            \
+    __tsan_volatile_write##size(ptr);                                          \
   }
 
 DEFINE_TSAN_VOLATILE_READ_WRITE(1, 8);
