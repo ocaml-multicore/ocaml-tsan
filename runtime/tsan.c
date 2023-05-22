@@ -99,7 +99,7 @@ void caml_tsan_exn_func_exit_c(char* limit)
   while (1) {
 #ifdef TSAN_DEBUG
     if (unw_get_reg(&cursor, UNW_REG_IP, &prev_pc) < 0) {
-      caml_fatal_error("unw_get_reg failed with code %d", ret);
+      caml_fatal_error("unw_get_reg IP failed with code %d", ret);
     }
 #endif
 
@@ -113,7 +113,7 @@ void caml_tsan_exn_func_exit_c(char* limit)
 
     ret = unw_get_reg(&cursor, UNW_REG_SP, &sp);
     if (ret != 0)
-      caml_fatal_error("unw_get_reg failed with code %d", ret);
+      caml_fatal_error("unw_get_reg SP failed with code %d", ret);
 #ifdef TSAN_DEBUG
     caml_tsan_debug_log_pc("forced__tsan_func_exit for", prev_pc);
 #endif
