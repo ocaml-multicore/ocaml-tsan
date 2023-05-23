@@ -275,7 +275,7 @@ Some of those changes will benefit all OCaml packages.
 
 - #12114: Add ThreadSanitizer support
   (Fabrice Buoro and Olivier Nicole, based on an initial work by Anmol Sahoo,
-  review by ???)
+  review by Damien Doligez, Sebastien Hinderer, Guillaume Munch-Maccagnoni)
 
 ### Runtime system:
 
