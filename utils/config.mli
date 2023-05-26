@@ -69,6 +69,9 @@ val bytecomp_c_libraries: string
 val native_c_libraries: string
 (** The C libraries to link with native-code programs *)
 
+val native_ldflags : string
+(* Flags to pass to the system linker *)
+
 val native_pack_linker: string
 (** The linker to use for packaging (ocamlopt -pack) and for partial
     links (ocamlopt -output-obj). *)
@@ -253,10 +256,6 @@ val ar_supports_response_files: bool
 
 val tsan : bool
 (** Whether ThreadSanitizer instrumentation is enabled *)
-
-val tsan_ld_flags : string
-(* Flags to pass to the system linker when build ThreadSanitizer-instrumented
-   programs *)
 
 (** Access to configuration values *)
 val print_config : out_channel -> unit
