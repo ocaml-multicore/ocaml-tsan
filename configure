@@ -856,13 +856,13 @@ bootstrapping_flexdll
 flexdir
 ocamlc_cppflags
 ocamlc_cflags
+native_ldflags
 cclibs
 oc_exe_ldflags
 oc_dll_ldflags
 oc_ldflags
 oc_cppflags
 tsan_native_runtime_c_sources
-oc_tsan_ldflags
 tsan
 oc_cflags
 toolchain
@@ -3250,7 +3250,6 @@ tsan=false
 oc_tsan_cflags="-fsanitize=thread"
 
 # Passed to the linker by ocamlopt when tsan is enabled
-oc_tsan_ldflags="-fsanitize=thread"
 
 oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
 
@@ -15426,6 +15425,7 @@ model=default
 system=unknown
 
 has_native_backend=no
+native_ldflags=""
 case $host in #(
   i[3456]86-*-linux*) :
     arch=i386; system=linux_elf ;; #(
@@ -16545,7 +16545,7 @@ then :
 fi
 
   native_cppflags="$native_cppflags $libunwind_cppflags"
-  oc_tsan_ldflags="$oc_tsan_ldflags $libunwind_ldflags"
+  native_ldflags="$native_ldflags -fsanitize=thread $libunwind_ldflags"
 
 
   SAVED_CPPFLAGS="$CPPFLAGS"
