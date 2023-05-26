@@ -324,15 +324,10 @@ let call_linker file_list startup_file output_name =
   and main_obj_runtime = !Clflags.output_complete_object
   in
   let files = startup_file :: (List.rev file_list) in
-  let tsan_ld_flags =
-    if Config.tsan && String.length Config.tsan_ld_flags <> 0 then
-      String.split_on_char ' ' Config.tsan_ld_flags
-    else
-      []
-  in
-  let files, c_lib =
+  let files, ldflags =
     if (not !Clflags.output_c_object) || main_dll || main_obj_runtime then
-      files @ (List.rev !Clflags.ccobjs) @ runtime_lib () @ tsan_ld_flags,
+      files @ (List.rev !Clflags.ccobjs) @ runtime_lib (),
+      native_ldflags ^ " " ^
       (if !Clflags.nopervasives || (main_obj_runtime && not main_dll)
        then "" else Config.native_c_libraries)
     else
@@ -343,7 +338,7 @@ let call_linker file_list startup_file output_name =
     else if !Clflags.output_c_object then Ccomp.Partial
     else Ccomp.Exe
   in
-  let exitcode = Ccomp.call_linker mode output_name files c_lib in
+  let exitcode = Ccomp.call_linker mode output_name files ldflags in
   if not (exitcode = 0)
   then raise(Error(Linking_error exitcode))
 
