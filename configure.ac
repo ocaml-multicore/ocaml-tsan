@@ -58,7 +58,6 @@ tsan=false
 oc_tsan_cflags="-fsanitize=thread"
 
 # Passed to the linker by ocamlopt when tsan is enabled
-oc_tsan_ldflags="-fsanitize=thread"
 
 oc_tsan_cppflags="-DWITH_THREAD_SANITIZER"
 
@@ -143,13 +142,13 @@ AC_SUBST([ccomptype])
 AC_SUBST([toolchain])
 AC_SUBST([oc_cflags])
 AC_SUBST([tsan])
-AC_SUBST([oc_tsan_ldflags])
 AC_SUBST([tsan_native_runtime_c_sources])
 AC_SUBST([oc_cppflags])
 AC_SUBST([oc_ldflags])
 AC_SUBST([oc_dll_ldflags])
 AC_SUBST([oc_exe_ldflags])
 AC_SUBST([cclibs])
+AC_SUBST([native_ldflags])
 AC_SUBST([ocamlc_cflags])
 AC_SUBST([ocamlc_cppflags])
 AC_SUBST([flexdir])
@@ -1226,6 +1225,7 @@ model=default
 system=unknown
 
 has_native_backend=no
+native_ldflags=""
 AS_CASE([$host],
   [[i[3456]86-*-linux*]],
     [arch=i386; system=linux_elf],
@@ -1670,7 +1670,7 @@ AS_IF([$tsan],
     [libunwind_ldflags="$LIBUNWIND_LDFLAGS $libunwind_ldflags"])
 
   native_cppflags="$native_cppflags $libunwind_cppflags"
-  oc_tsan_ldflags="$oc_tsan_ldflags $libunwind_ldflags"
+  native_ldflags="$native_ldflags -fsanitize=thread $libunwind_ldflags"
 
   OCAML_CHECK_LIBUNWIND
 
