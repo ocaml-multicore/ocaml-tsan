@@ -1713,7 +1713,8 @@ Some influential environment variables:
   DLLIBS      which libraries to use (in addition to -ldl) to load dynamic
               libs
   LIBUNWIND_CPPFLAGS
-              cc flags for libunwind (e.g. -I<location of libunwind>)
+              C preprocessor flags for libunwind (e.g. -I<location of
+              libunwind headers>)
   LIBUNWIND_LDFLAGS
               linker flags for libunwind (e.g. -L<location of libunwind>
   WINDOWS_UNICODE_MODE
@@ -3245,7 +3246,7 @@ oc_dll_ldflags=""
 oc_exe_ldflags=""
 
 tsan=false
-oc_tsan_c_flags="-fsanitize=thread"
+oc_tsan_cflags="-fsanitize=thread"
 
 # Passed to the linker by ocamlopt when tsan is enabled
 oc_tsan_ldflags="-fsanitize=thread"
@@ -16457,19 +16458,19 @@ printf "%s\n" "$as_me: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >
   gcc-[0123456789]-*|gcc-10-*|clang-*) :
      ;; #(
   *) :
-    oc_tsan_c_flags="$oc_tsan_c_flags -Wno-tsan" ;;
+    oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan" ;;
 esac
   case $cc_basename in #(
   gcc*) :
-    oc_tsan_c_flags="$oc_tsan_c_flags --param=tsan-distinguish-volatile=1" ;; #(
+    oc_tsan_cflags="$oc_tsan_cflags --param=tsan-distinguish-volatile=1" ;; #(
   clang*) :
-    oc_tsan_c_flags="$oc_tsan_c_flags -mllvm -tsan-distinguish-volatile" ;; #(
+    oc_tsan_cflags="$oc_tsan_cflags -mllvm -tsan-distinguish-volatile" ;; #(
   *) :
      ;;
 esac
   common_cppflags="$common_cppflags $oc_tsan_cppflags"
-  native_cflags="$native_cflags $oc_tsan_c_flags"
-  ocamlc_cflags="$ocamlc_cflags $oc_tsan_c_flags"
+  native_cflags="$native_cflags $oc_tsan_cflags"
+  common_cflags="$common_cflags $oc_tsan_cflags"
   tsan_native_runtime_c_sources="tsan"
 else $as_nop
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: not using thread sanitizer" >&5
@@ -16479,12 +16480,11 @@ printf "%s\n" "$as_me: not using thread sanitizer" >&6;}
 fi
 
 # libunwind detection when TSan is enabled
-if ! $tsan
+libunwind_cppflags=""
+libunwind_ldflags=""
+
+if $tsan
 then :
-  libunwind_available=false
-  libunwind_cppflags=
-  libunwind_ldflags=
-else $as_nop
   if test "$system" = "macosx"
 then :
   if test x"$LIBUNWIND_CPPFLAGS" != x -o \
@@ -16538,7 +16538,7 @@ fi
 
   if ! $libunwind_available
 then :
-  as_fn_error $? "libunwind was requested by tsan but can not be found" "$LINENO" 5
+  as_fn_error $? "libunwind is necessary for TSan but cannot be found" "$LINENO" 5
 fi
 
     # We need unwinding information at runtime, but since we use
@@ -19809,7 +19809,7 @@ fi
 
 oc_cflags="$common_cflags $internal_cflags"
 oc_cppflags="$common_cppflags $internal_cppflags"
-ocamlc_cflags="$ocamlc_cflags $common_cflags $sharedlib_cflags $CFLAGS"
+ocamlc_cflags="$common_cflags $sharedlib_cflags $CFLAGS"
 ocamlc_cppflags="$common_cppflags $CPPFLAGS"
 cclibs="$cclibs $mathlib"
 
