@@ -55,7 +55,7 @@ oc_dll_ldflags=""
 oc_exe_ldflags=""
 
 tsan=false
-oc_tsan_c_flags="-fsanitize=thread"
+oc_tsan_cflags="-fsanitize=thread"
 
 # Passed to the linker by ocamlopt when tsan is enabled
 oc_tsan_ldflags="-fsanitize=thread"
@@ -1630,15 +1630,15 @@ AS_IF([$tsan],
   AS_CASE([$ocaml_cv_cc_vendor],
     [gcc-[[0123456789]]-*|gcc-10-*|clang-*],
     [],
-    [oc_tsan_c_flags="$oc_tsan_c_flags -Wno-tsan"])
+    [oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan"])
   AS_CASE([$cc_basename],
     [gcc*],
-    [oc_tsan_c_flags="$oc_tsan_c_flags --param=tsan-distinguish-volatile=1"],
+    [oc_tsan_cflags="$oc_tsan_cflags --param=tsan-distinguish-volatile=1"],
     [clang*],
-    [oc_tsan_c_flags="$oc_tsan_c_flags -mllvm -tsan-distinguish-volatile"])
+    [oc_tsan_cflags="$oc_tsan_cflags -mllvm -tsan-distinguish-volatile"])
   common_cppflags="$common_cppflags $oc_tsan_cppflags"
-  native_cflags="$native_cflags $oc_tsan_c_flags"
-  common_cflags="$common_cflags $oc_tsan_c_flags"
+  native_cflags="$native_cflags $oc_tsan_cflags"
+  common_cflags="$common_cflags $oc_tsan_cflags"
   tsan_native_runtime_c_sources="tsan"],
   [AC_MSG_NOTICE([not using thread sanitizer])
   tsan_native_runtime_c_sources=""]
