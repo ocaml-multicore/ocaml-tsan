@@ -58,6 +58,11 @@ CAMLextern void caml_tsan_func_exit_on_perform(uintnat pc, char* sp);
 CAMLextern void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
     struct stack_info const* stack);
 
+extern void __tsan_func_exit(void*);
+extern void __tsan_func_entry(void*);
+void __tsan_write8(void *location);
+
+
 #endif /* CAML_INTERNALS */
 
 #endif /* CAML_TSAN_H */

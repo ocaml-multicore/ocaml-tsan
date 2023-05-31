@@ -35,13 +35,6 @@
 #include <execinfo.h> /* For backtrace_symbols */
 #endif
 
-extern void __tsan_func_exit(void*);
-#if defined(__GNUC__) && !defined(__clang__)
-/* GCC already has __tsan_func_entry declared for some reason */
-#else
-extern void __tsan_func_entry(void*);
-#endif
-
 Caml_inline void caml_tsan_debug_log_pc(const char* msg, uintnat pc)
 {
 #ifdef TSAN_DEBUG
