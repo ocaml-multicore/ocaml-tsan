@@ -69,7 +69,6 @@ OC_NATIVE_CPPFLAGS=-DNATIVE_CODE @native_cppflags@
 OC_NATIVE_CFLAGS=@native_cflags@
 
 # Additional link-time options
-WITH_TSAN=@tsan@
 # To support dynamic loading of shared libraries (they need to look at
 # our own symbols):
 OC_LDFLAGS=@oc_ldflags@
