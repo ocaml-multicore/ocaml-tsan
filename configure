@@ -16490,7 +16490,7 @@ printf "%s\n" "$as_me: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >
   *) :
     oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan" ;;
 esac
-  case $cc_basename in #(
+  case $ocaml_cv_cc_vendor in #(
   gcc*) :
     oc_tsan_cflags="$oc_tsan_cflags --param=tsan-distinguish-volatile=1" ;; #(
   clang*) :
