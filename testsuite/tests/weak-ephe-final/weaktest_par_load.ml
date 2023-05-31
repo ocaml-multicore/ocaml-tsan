@@ -1,5 +1,6 @@
 (* TEST
- no-tsan;
+ no-tsan; (* Unsynchronized Weak.set and Weak.get is a data race (TODO #XXXX) *)
+ flags = "-g";
  {
    bytecode;
  }{

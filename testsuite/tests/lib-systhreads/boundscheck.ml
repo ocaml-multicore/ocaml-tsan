@@ -1,7 +1,7 @@
 (* TEST
  include systhreads;
  hassysthreads;
- no-tsan;
+ no-tsan; (* See https://github.com/ocaml-multicore/ocaml-tsan/issues/31 *)
  {
    bytecode;
  }{
@@ -31,6 +31,7 @@ let () =
       while Atomic.get go do Thread.yield (); Gc.minor (); done) ()
   in
   while (Gc.quick_stat ()).minor_collections < 1000 do
+    Printf.printf "%d\n%!" (Gc.quick_stat ()).minor_collections;
     let r = ref 42 in
     glob := r; (* force promotion *)
     let n = bounds r in
