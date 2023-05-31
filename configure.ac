@@ -1612,7 +1612,7 @@ AS_IF([$tsan],
     [gcc-[[0123456789]]-*|gcc-10-*|clang-*],
     [],
     [oc_tsan_cflags="$oc_tsan_cflags -Wno-tsan"])
-  AS_CASE([$cc_basename],
+  AS_CASE([$ocaml_cv_cc_vendor],
     [gcc*],
     [oc_tsan_cflags="$oc_tsan_cflags --param=tsan-distinguish-volatile=1"],
     [clang*],
