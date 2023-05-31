@@ -1619,7 +1619,7 @@ AS_IF([$tsan],
     [oc_tsan_c_flags="$oc_tsan_c_flags -mllvm -tsan-distinguish-volatile"])
   common_cppflags="$common_cppflags $oc_tsan_cppflags"
   native_cflags="$native_cflags $oc_tsan_c_flags"
-  ocamlc_cflags="$ocamlc_cflags $oc_tsan_c_flags"
+  common_cflags="$common_cflags $oc_tsan_c_flags"
   tsan_native_runtime_c_sources="tsan"],
   [AC_MSG_NOTICE([not using thread sanitizer])
   tsan_native_runtime_c_sources=""]
@@ -2310,7 +2310,7 @@ AS_IF([test "$ccomptype" != "msvc"],
 
 oc_cflags="$common_cflags $internal_cflags"
 oc_cppflags="$common_cppflags $internal_cppflags"
-ocamlc_cflags="$ocamlc_cflags $common_cflags $sharedlib_cflags $CFLAGS"
+ocamlc_cflags="$common_cflags $sharedlib_cflags $CFLAGS"
 ocamlc_cppflags="$common_cppflags $CPPFLAGS"
 cclibs="$cclibs $mathlib"
 
