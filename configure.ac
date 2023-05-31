@@ -364,7 +364,7 @@ AC_ARG_ENABLE([tsan],
 # enabled)
 
 AC_ARG_VAR([LIBUNWIND_CPPFLAGS],
-  [cc flags for libunwind (e.g. -I<location of libunwind>)])
+  [C preprocessor flags for libunwind (e.g. -I<location of libunwind headers>)])
 
 AC_ARG_VAR([LIBUNWIND_LDFLAGS],
   [linker flags for libunwind (e.g. -L<location of libunwind>])
@@ -1675,7 +1675,7 @@ AS_IF([! $tsan],
   OCAML_CHECK_LIBUNWIND
 
   AS_IF([! $libunwind_available],
-    [AC_MSG_ERROR([libunwind was requested by tsan but can not be found])])
+    [AC_MSG_ERROR([libunwind is necessary for TSan but cannot be found])])
 
     # We need unwinding information at runtime, but since we use
     # -no_compact_unwind, we also need -keep_dwarf_unwind otherwise
