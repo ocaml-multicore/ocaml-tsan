@@ -8,7 +8,7 @@ set -eu
 # - Replace mutex IDs like 'M87' with 'M<implemspecific>'
 # - Replace the complete path of the program by '<systemspecific>/' followed by
 #   the program filename.
-script='s/pid=[[:digit:]]+/pid=<implemspecific>/
+script1='s/pid=[[:digit:]]+/pid=<implemspecific>/
 s/tid=[[:digit:]]+/tid=<implemspecific>/
 
 /([Rr]ead|[Ww]rite) of size/ {
@@ -34,4 +34,10 @@ s/ M[0-9]+/ M<implemspecific>/
   s/(caml[a-zA-Z_0-9]+\.[a-zA-Z_0-9]+)_[[:digit:]]+(\+0x[[:xdigit:]]+)?/\1_<implemspecific>/
 }'
 
-sed -E -e "${script}"
+# To ignore differences in compiler function inlining, kill backtrace after
+# caml_start_program or caml_startup*.
+script2='/^[[:space:]]+#[[:digit:]]+ (caml_start_program|caml_startup)/, /^$/ {
+  /^$/ !d
+}'
+
+sed -E -e "${script1}" -e "${script2}"

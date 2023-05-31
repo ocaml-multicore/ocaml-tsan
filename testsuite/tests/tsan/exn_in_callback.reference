@@ -14,23 +14,12 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
   Write of size 8 at <implemspecific> by thread T1 (mutexes: write M<implemspecific>):
     #0 camlExn_in_callback.fun_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlStdlib__Domain.body_<implemspecific> <implemspecific> (<implemspecific>)
-    #2 caml_start_program <implemspecific> (<implemspecific>)
-    #3 caml_callback_exn <implemspecific> (<implemspecific>)
-    #4 caml_callback <implemspecific> (<implemspecific>)
-    #5 domain_thread_func <implemspecific> (<implemspecific>)
 
   Previous read of size 8 at <implemspecific> by main thread (mutexes: write M<implemspecific>):
     #0 camlExn_in_callback.race_<implemspecific> <implemspecific> (<implemspecific>)
     #1 camlExn_in_callback.f_<implemspecific> <implemspecific> (<implemspecific>)
     #2 camlExn_in_callback.entry <implemspecific> (<implemspecific>)
     #3 caml_program <implemspecific> (<implemspecific>)
-    #4 caml_start_program <implemspecific> (<implemspecific>)
-    #5 caml_startup_common <implemspecific> (<implemspecific>)
-    #6 caml_startup_common <implemspecific> (<implemspecific>)
-    #7 caml_startup_exn <implemspecific> (<implemspecific>)
-    #8 caml_startup <implemspecific> (<implemspecific>)
-    #9 caml_main <implemspecific> (<implemspecific>)
-    #10 main <implemspecific> (<implemspecific>)
 
   As if synchronized via sleep:
     #0 nanosleep <implemspecific> (<implemspecific>)
@@ -39,34 +28,18 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #3 camlUnix.sleep_<implemspecific> <implemspecific> (<implemspecific>)
     #4 camlExn_in_callback.fun_<implemspecific> <implemspecific> (<implemspecific>)
     #5 camlStdlib__Domain.body_<implemspecific> <implemspecific> (<implemspecific>)
-    #6 caml_start_program <implemspecific> (<implemspecific>)
-    #7 caml_callback_exn <implemspecific> (<implemspecific>)
-    #8 caml_callback <implemspecific> (<implemspecific>)
-    #9 domain_thread_func <implemspecific> (<implemspecific>)
 
   Mutex M<implemspecific> (<implemspecific>) created at:
     #0 pthread_mutex_init <implemspecific> (<implemspecific>)
     #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
     #3 caml_init_gc <implemspecific> (<implemspecific>)
-    #4 caml_startup_common <implemspecific> (<implemspecific>)
-    #5 caml_startup_common <implemspecific> (<implemspecific>)
-    #6 caml_startup_exn <implemspecific> (<implemspecific>)
-    #7 caml_startup <implemspecific> (<implemspecific>)
-    #8 caml_main <implemspecific> (<implemspecific>)
-    #9 main <implemspecific> (<implemspecific>)
 
   Mutex M<implemspecific> (<implemspecific>) created at:
     #0 pthread_mutex_init <implemspecific> (<implemspecific>)
     #1 caml_plat_mutex_init <implemspecific> (<implemspecific>)
     #2 caml_init_domains <implemspecific> (<implemspecific>)
     #3 caml_init_gc <implemspecific> (<implemspecific>)
-    #4 caml_startup_common <implemspecific> (<implemspecific>)
-    #5 caml_startup_common <implemspecific> (<implemspecific>)
-    #6 caml_startup_exn <implemspecific> (<implemspecific>)
-    #7 caml_startup <implemspecific> (<implemspecific>)
-    #8 caml_main <implemspecific> (<implemspecific>)
-    #9 main <implemspecific> (<implemspecific>)
 
   Thread T1 (tid=<implemspecific>, running) created by main thread at:
     #0 pthread_create <implemspecific> (<implemspecific>)
@@ -75,13 +48,6 @@ WARNING: ThreadSanitizer: data race (pid=<implemspecific>)
     #3 camlStdlib__Domain.spawn_<implemspecific> <implemspecific> (<implemspecific>)
     #4 camlExn_in_callback.entry <implemspecific> (<implemspecific>)
     #5 caml_program <implemspecific> (<implemspecific>)
-    #6 caml_start_program <implemspecific> (<implemspecific>)
-    #7 caml_startup_common <implemspecific> (<implemspecific>)
-    #8 caml_startup_common <implemspecific> (<implemspecific>)
-    #9 caml_startup_exn <implemspecific> (<implemspecific>)
-    #10 caml_startup <implemspecific> (<implemspecific>)
-    #11 caml_main <implemspecific> (<implemspecific>)
-    #12 main <implemspecific> (<implemspecific>)
 
 SUMMARY: ThreadSanitizer: data race (<systemspecific>:<implemspecific>) in camlExn_in_callback.fun_<implemspecific>
 ==================
