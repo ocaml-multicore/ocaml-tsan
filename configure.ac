@@ -2349,7 +2349,7 @@ AS_CASE([$host],
 AC_CONFIG_COMMANDS_PRE([cclibs="$cclibs $mathlib $DLLIBS $PTHREAD_LIBS"])
 
 AS_IF([$tsan],
-  [bytecclibs="$bytecclibs -fsanitize=thread"])
+  [cclibs="$cclibs -fsanitize=thread"])
 
 AS_IF([test x"$libdir" = x'${exec_prefix}/lib'],
   [libdir="$libdir"/ocaml])

@@ -19929,7 +19929,7 @@ esac
 
 if $tsan
 then :
-  bytecclibs="$bytecclibs -fsanitize=thread"
+  cclibs="$cclibs -fsanitize=thread"
 fi
 
 if test x"$libdir" = x'${exec_prefix}/lib'
