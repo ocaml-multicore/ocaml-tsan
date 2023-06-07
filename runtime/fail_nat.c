@@ -222,6 +222,11 @@ void caml_array_bound_error(void)
 
 void caml_array_bound_error_asm(void)
 {
+#if defined(WITH_THREAD_SANITIZER)
+  char* exception_pointer = (char*)Caml_state->c_stack;
+  caml_tsan_exn_func_exit_c(exception_pointer);
+#endif
+
   /* This exception is raised directly from ocamlopt-compiled OCaml,
      not C, so we jump directly to the OCaml handler (and avoid GC) */
   caml_raise_exception(Caml_state, array_bound_exn());
