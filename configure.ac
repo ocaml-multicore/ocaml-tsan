@@ -1686,6 +1686,14 @@ AS_IF([$tsan],
       [extra_flags="-Wl,-keep_dwarf_unwind"
       mkexe="$mkexe $extra_flags"
       mksharedlib="$mksharedlib $extra_flags"])
+
+    # Check for libtsan library files (necessary on some Linux distributions)
+    AC_SEARCH_LIBS([__tsan_func_entry], [tsan],
+      [],
+      [AC_MSG_ERROR([libtsan is necessary for TSan but cannot be found.
+                     Try installing it on your system.])],
+      [-fsanitize=thread]
+    )
   ])
 
 ## Sockets

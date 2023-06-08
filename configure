@@ -16585,6 +16585,71 @@ then :
       mksharedlib="$mksharedlib $extra_flags"
 fi
 
+    # Check for libtsan library files (necessary on some Linux distributions)
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing __tsan_func_entry" >&5
+printf %s "checking for library containing __tsan_func_entry... " >&6; }
+if test ${ac_cv_search___tsan_func_entry+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char __tsan_func_entry ();
+int
+main (void)
+{
+return __tsan_func_entry ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' tsan
+do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib -fsanitize=thread
+     $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_search___tsan_func_entry=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext
+  if test ${ac_cv_search___tsan_func_entry+y}
+then :
+  break
+fi
+done
+if test ${ac_cv_search___tsan_func_entry+y}
+then :
+
+else $as_nop
+  ac_cv_search___tsan_func_entry=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search___tsan_func_entry" >&5
+printf "%s\n" "$ac_cv_search___tsan_func_entry" >&6; }
+ac_res=$ac_cv_search___tsan_func_entry
+if test "$ac_res" != no
+then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+else $as_nop
+  as_fn_error $? "libtsan is necessary for TSan but cannot be found.
+                     Try installing it on your system." "$LINENO" 5
+fi
+
+
 fi
 
 ## Sockets
