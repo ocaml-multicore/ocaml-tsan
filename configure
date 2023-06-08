@@ -16486,6 +16486,32 @@ if $tsan
 then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&5
 printf "%s\n" "$as_me: using thread sanitizer with vendor=$ocaml_cv_cc_vendor" >&6;}
+
+  # Check for libtsan library files (necessary on some Linux distributions)
+  SAVED_LDFLAGS="$LDFLAGS"
+  LDFLAGS="$LDFLAGS -fsanitize=thread"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+void __tsan_func_entry(void *retaddr);
+int
+main (void)
+{
+__tsan_func_entry((void *)0);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+
+else $as_nop
+  as_fn_error $? "libtsan is necessary for TSan but cannot be found.
+                   Try installing it on your system." "$LINENO" 5
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+  LDFLAGS="$SAVED_LDFLAGS"
+
   case $ocaml_cv_cc_vendor in #(
   gcc-[0123456789]-*|gcc-10-*|clang-*) :
      ;; #(
