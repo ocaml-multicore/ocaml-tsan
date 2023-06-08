@@ -1627,6 +1627,17 @@ $cc_basename"])]
 
 AS_IF([$tsan],
   [AC_MSG_NOTICE([using thread sanitizer with vendor=$ocaml_cv_cc_vendor])
+
+  # Check for libtsan library files (necessary on some Linux distributions)
+  SAVED_LDFLAGS="$LDFLAGS"
+  LDFLAGS="$LDFLAGS -fsanitize=thread"
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([void __tsan_func_entry(void *retaddr);],
+      [__tsan_func_entry((void *)0);])],
+    [],
+    [AC_MSG_ERROR([libtsan is necessary for TSan but cannot be found.
+                   Try installing it on your system.])])
+  LDFLAGS="$SAVED_LDFLAGS"
+
   AS_CASE([$ocaml_cv_cc_vendor],
     [gcc-[[0123456789]]-*|gcc-10-*|clang-*],
     [],
