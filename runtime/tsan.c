@@ -204,27 +204,27 @@ extern unsigned __int128 __tsan_atomic128_load(void*, int);
 extern void __tsan_read##size(void*);                                          \
 extern void __tsan_write##size(void*);                                         \
                                                                                \
-  void __tsan_volatile_read##size(void *ptr)                                   \
-  {                                                                            \
-    const bool is_atomic = size <= sizeof(long long) &&                        \
-               is_aligned(ptr, 8);                                             \
-    if (is_atomic)                                                             \
-      __tsan_atomic##bitsize##_load(ptr, memory_order_relaxed);                \
-    else                                                                       \
-      __tsan_read##size(ptr);                                                  \
-  }                                                                            \
-  void __tsan_unaligned_volatile_read##size(void *ptr)                         \
-  {                                                                            \
-    __tsan_volatile_read##size(ptr);                                           \
-  }                                                                            \
-  void __tsan_volatile_write##size(void *ptr)                                  \
-  {                                                                            \
-    __tsan_write##size(ptr);                                                   \
-  }                                                                            \
-  void __tsan_unaligned_volatile_write##size(void *ptr)                        \
-  {                                                                            \
-    __tsan_volatile_write##size(ptr);                                          \
-  }
+CAMLno_tsan void __tsan_volatile_read##size(void *ptr)                         \
+{                                                                              \
+  const bool is_atomic = size <= sizeof(long long) &&                          \
+             is_aligned(ptr, 8);                                               \
+  if (is_atomic)                                                               \
+    __tsan_atomic##bitsize##_load(ptr, memory_order_relaxed);                  \
+  else                                                                         \
+    __tsan_read##size(ptr);                                                    \
+}                                                                              \
+CAMLno_tsan void __tsan_unaligned_volatile_read##size(void *ptr)               \
+{                                                                              \
+  __tsan_volatile_read##size(ptr);                                             \
+}                                                                              \
+CAMLno_tsan void __tsan_volatile_write##size(void *ptr)                        \
+{                                                                              \
+  __tsan_write##size(ptr);                                                     \
+}                                                                              \
+CAMLno_tsan void __tsan_unaligned_volatile_write##size(void *ptr)              \
+{                                                                              \
+  __tsan_volatile_write##size(ptr);                                            \
+}
 
 DEFINE_TSAN_VOLATILE_READ_WRITE(1, 8);
 DEFINE_TSAN_VOLATILE_READ_WRITE(2, 16);
