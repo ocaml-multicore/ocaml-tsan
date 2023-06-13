@@ -35,6 +35,66 @@
 #include <execinfo.h> /* For backtrace_symbols */
 #endif
 
+
+/* Thread Sanitizer (TSan) provides backtraces for both events that cause a
+   data race (i.e. read/write or write/write). One backtrace corresponds to the
+   code position at the current memory event that caused the race, while the
+   other backtrace corresponds to the other event that happened in the past.
+
+   In order for TSan to provide this past event backtrace, each function entry
+   must call `__tsan_func_entry` and each function exit must call
+   `__tsan_func_exit`.
+   The CMM instrumentation pass is responsible for adding these entry/exit
+   calls to TSan, so that TSan is able to re-create the backtrace on every
+   memory access it's notified of.
+
+   But exceptions and effects make the execution flow no longer linear: the
+   code jumps from an exception raising point to the matching exception
+   handler, or from a computation to the matching effect handler when
+   performing an effect, and the other way around when resuming it. This
+   prevents the `__tsan_func_exit` calls, inserted at the end of functions by
+   the CMM instrumentation pass, from being executed.
+
+   It is important to keep TSan entries and exits balanced to avoid
+   underflow/overflow on the TSan internal buffer used for reconstructing
+   events backtrace.
+   The runtime is responsible for emiting `__tsan_func_exit` call for each
+   function "left" while raising an exception or peforming an effect. They map
+   to the corresponding `__tsan_func_entry` call inserted by the CMM
+   instrumentation pass.
+   Similarly, when a continuation is resumed, the execution flow jumps back
+   into the computation, and the runtime must call `__tsan_func_entry` for each
+   function that is re-entered.
+
+   Functions that don't create a stack frame (i.e. function entered into using
+   the `jmp` instruction in `amd64.S') don't need to call `__tsan_func_entry`
+   and `__tsan_func_exit`.
+
+   1. Exceptions
+
+     1.1 From OCaml
+
+     Both `caml_raise_exn` and `caml_tsan_raise_notrace_exn` need to call
+     `caml_tsan_exn_func_exit` to issue calls to `__tsan_func_exit` for each
+     OCaml function exited by the exception. The process can be repeated
+     several times until the appropriate exception handler is found.
+
+     1.2 From C
+
+     Similarly, raising an exception from C using `caml_raise_exception` must
+     be preceded by a call to `caml_tsan_exn_func_exit_c` to issue calls to
+     `__tsan_func_exit` for each C function left in the current stack chunk.
+
+   2. Effects
+
+   Similary to exception, when `perform` is called `__tsan_func_exit` must be
+   called for every function on the currrent fiber. The process can be repeated
+   for every fiber's parents, because of `caml_repeform` until reaching the
+   effect handler.
+   When `resume` is called, the runtime must call `__tsan_func_entry` for every
+   function in every fiber between the effect handler and the actual
+   computation. */
+
 Caml_inline void caml_tsan_debug_log_pc(const char* msg, uintnat pc)
 {
 #ifdef TSAN_DEBUG
@@ -46,6 +106,17 @@ Caml_inline void caml_tsan_debug_log_pc(const char* msg, uintnat pc)
 #endif
 }
 
+/* This function is called by `caml_raise_exn` or `caml_tsan_raise_notrace_exn`
+ from an OCaml stack.
+ - [pc] is the program counter where `caml_raise_exn` would return, i.e. the
+ next instruction after `caml_raise_exn` in the function that raised the
+ exception.
+ - [sp] is the stack pointer at the raising point, i.e. pointing just before
+  [pc].
+ - [trapsp] is the address of the next exception handler.
+
+ This function iterates over every function stack frame between [sp] and
+ [trapsp], calling `__tsan_func_exit` for each function. */
 void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
 {
   caml_domain_state* domain_state = Caml_state;
@@ -72,6 +143,12 @@ void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
   }
 }
 
+/* This function must be called before `caml_raise_exception` on a C stack.
+ - [limit] is the end of the current stack chunk.
+
+ This function iterates over every function stack frame between the current
+ stack pointer and [limit] using libunwind and call `__tsan_func_exit` for each
+ function. */
 void caml_tsan_exn_func_exit_c(char* limit)
 {
   unw_context_t uc;
@@ -121,7 +198,9 @@ void caml_tsan_exn_func_exit_c(char* limit)
 /* This function iterates on each stack frame of the current fiber. This is
    sufficient, since when the top of the stack is reached, the runtime switches
    to the parent fiber, and re-performs; as a consequence, this function will
-   be called again. */
+   be called again.
+   - [pc] is the program counter where `caml_(re)perform` will return.
+   - [sp] is the stack pointer at the perform point. */
 void caml_tsan_func_exit_on_perform(uintnat pc, char* sp)
 {
   struct stack_info* stack = Caml_state->current_stack;
@@ -147,10 +226,12 @@ void caml_tsan_func_exit_on_perform(uintnat pc, char* sp)
    restored by restoring the parent link to the handler's stack. As a
    consequence, this function simply iterates on each stack frame, following
    links to parent fibers, until that link is NULL. This way, it performs a
-   [__tsan_func_entry] for each stack frame between the current and the
+   `__tsan_func_entry` for each stack frame between the current and the
    handler's stack.
-   We use non-tail recursion to call [__tsan_func_entry] in the reverse order
-   of iteration. */
+   We use non-tail recursion to call `__tsan_func_entry` in the reverse order
+   of iteration.
+   - [pc] is the program counter where `caml_perform` was called.
+   - [sp] is the stack pointer at the perform point. */
 CAMLno_tsan void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
     struct stack_info const* stack)
 {
