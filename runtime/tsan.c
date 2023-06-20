@@ -66,7 +66,7 @@
    into the computation, and the runtime must call `__tsan_func_entry` for each
    function that is re-entered.
 
-   Functions that don't create a stack frame (i.e. function entered into using
+   Functions that don't create a stack frame (i.e. functions entered into using
    the `jmp` instruction in `amd64.S') don't need to call `__tsan_func_entry`
    and `__tsan_func_exit`.
 
@@ -76,18 +76,23 @@
 
      Both `caml_raise_exn` and `caml_tsan_raise_notrace_exn` need to call
      `caml_tsan_exn_func_exit` to issue calls to `__tsan_func_exit` for each
-     OCaml function exited by the exception. The process can be repeated
-     several times until the appropriate exception handler is found.
+     OCaml function exited by the exception. The process should be repeated
+     when re-raising until the appropriate exception handler is found.
 
      1.2 From C
 
      Similarly, raising an exception from C using `caml_raise_exception` must
      be preceded by a call to `caml_tsan_exn_func_exit_c` to issue calls to
      `__tsan_func_exit` for each C function left in the current stack chunk.
+     A distinct function needs to be used for C because, although both
+     functions work by unwinding the stack, they use different mechanisms.
+     OCaml stack chunks are traversed using the information from frame
+     descriptors, while C stack frames (for which there are no frame
+     descriptors) are traversed using the libunwind library.
 
    2. Effects
 
-   Similary to exception, when `perform` is called `__tsan_func_exit` must be
+   Similary to exceptions, when `perform` is called `__tsan_func_exit` must be
    called for every function on the currrent fiber. The process can be repeated
    for every fiber's parents, because of `caml_repeform` until reaching the
    effect handler.
