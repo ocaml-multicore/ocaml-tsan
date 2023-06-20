@@ -269,6 +269,16 @@
         CFI_DEF_CFA_OFFSET(16);                \
         POP_EXN_HANDLER
 
+/* When ThreadSanitizer instrumentation is enabled, the code must call
+   the C functions __tsan_func_entry and __tsan_func_exit to signal
+   function entries and exits. They follow the x86_64 calling
+   convention of the platform. For efficiency reasons, we don't always
+   save all caller-saved registers before calling them, but only the
+   registers in use. */
+
+/* Calls __tsan_func_entry on the current return address. [offset] is the
+   distance to the saved return address and the current stack pointer, in
+   bytes. May clobber all caller-saved registers. */
 #if defined(WITH_THREAD_SANITIZER)
 #define TSAN_ENTER_FUNCTION(offset)                             \
         /* arg 1: pc of raise */                                \
@@ -276,6 +286,8 @@
         SWITCH_OCAML_TO_C;                                      \
         C_call  (GCALL(__tsan_func_entry));                     \
         SWITCH_C_TO_OCAML;
+
+/* Calls __tsan_func_exit. May clobber all caller-saved registers. */
 #define TSAN_EXIT_FUNCTION                                      \
         SWITCH_OCAML_TO_C;                                      \
         movq    $0, C_ARG_1;                                    \
@@ -525,9 +537,9 @@ G(caml_system__code_begin):
         movsd   (15+13)*8(%r15),%xmm15;                \
         movq    Caml_state(young_ptr), %r15
 
-/* Save non-callee saved registers that may be in use to a free gc_regs bucket.
-   Do not save %xmm8 to %xmm15 as they are not used to pass values to and from
-   functions.
+/* Save non-callee saved registers that may be in use to a free gc_regs
+   bucket, except for %xmm8 to %xmm15 as they are not used to pass
+   arguments and return values in the System V amd64 ABI.
    Returns: bucket in %r15. Clobbers %r11 (after saving it) */
 #ifdef WITH_THREAD_SANITIZER
 #define TSAN_SAVE_CALLER_REGS                               \
@@ -919,6 +931,9 @@ LBL(118):
 CFI_ENDPROC
 ENDFUNCTION(G(caml_raise_exn))
 
+/* Exception raising routine called in case of Raise_notrace when TSan
+   is enabled. Does not store a backtrace but still signals function
+   exits to TSan. */
 #if defined(WITH_THREAD_SANITIZER)
 FUNCTION(G(caml_tsan_raise_notrace_exn))
 CFI_STARTPROC
@@ -935,6 +950,8 @@ FUNCTION(G(caml_reraise_exn))
 CFI_STARTPROC
         ENTER_FUNCTION
 #if defined(WITH_THREAD_SANITIZER)
+        /* Signals function exits to TSan (implemented in caml_raise_exn) even
+           if backtraces are not enabled */
         jmp   LBL(117)
 #else
         testq   $1, Caml_state(backtrace_active)
@@ -1090,7 +1107,7 @@ LBL(112):
     /* No parent stack. Raise Effect.Unhandled. */
         SWITCH_OCAML_STACKS
 #if defined(WITH_THREAD_SANITIZER)
-        /* We must let the TSan runtime know that switched back to the
+        /* We must let the TSan runtime know that we switched back to the
            original performer stack. For that, we perform the necessary calls
            to __tsan_func_entry via caml_tsan_func_entry_on_resume. */
         TSAN_SAVE_CALLER_REGS

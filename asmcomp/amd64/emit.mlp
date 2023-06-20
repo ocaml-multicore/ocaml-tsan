@@ -868,6 +868,8 @@ let emit_instr env fallthrough i =
           record_frame env Reg.Set.empty (Dbg_raise i.dbg)
       | Lambda.Raise_notrace ->
           if Config.tsan then begin
+            (* TSan requires to signal function exits upon exceptions,
+               even with [Raise_notrace] *)
             emit_call "caml_tsan_raise_notrace_exn";
             record_frame env Reg.Set.empty (Dbg_raise i.dbg)
           end else begin
