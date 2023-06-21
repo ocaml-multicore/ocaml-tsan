@@ -276,7 +276,7 @@ void caml_bad_caml_state(void)
 
 #ifdef WITH_THREAD_SANITIZER
 /* This hardcodes a number of suppressions of TSan reports about runtime
-   functions (see #11040). Unlike the CAMLno_user_tsan qualifier which
+   functions (see #11040). Unlike the CAMLno_tsan qualifier which
    un-instruments function, this simply silences reports when the call stack
    contains a frame matching one of the lines starting with "race:". */
 const char * __tsan_default_suppressions(void) {

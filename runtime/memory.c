@@ -147,10 +147,10 @@ Caml_inline void write_barrier(
    }
 }
 
-CAMLno_user_tsan /* We remove the ThreadSanitizer instrumentation of memory
-                    accesses by the compiler and instrument manually, because
-                    we want ThreadSanitizer to see a plain store here (this is
-                    necessary to detect data races). */
+CAMLno_tsan /* We remove the ThreadSanitizer instrumentation of memory accesses
+               by the compiler and instrument manually, because we want
+               ThreadSanitizer to see a plain store here (this is necessary to
+               detect data races). */
 CAMLexport CAMLweakdef void caml_modify (volatile value *fp, value val)
 {
 #if defined(WITH_THREAD_SANITIZER) && defined(NATIVE_CODE)
@@ -164,7 +164,7 @@ CAMLexport CAMLweakdef void caml_modify (volatile value *fp, value val)
 
 #if defined(WITH_THREAD_SANITIZER) && defined(NATIVE_CODE)
   /* The release store below is not instrumented because of the
-   * CAMLno_user_tsan. We signal it to ThreadSanitizer as a plain store (see
+   * CAMLno_tsan. We signal it to ThreadSanitizer as a plain store (see
    * ocaml-multicore/ocaml-tsan/pull/22#issuecomment-1377439074 on Github).
    */
   __tsan_write8((void *)fp);
@@ -223,9 +223,9 @@ CAMLexport void caml_adjust_gc_speed (mlsize_t res, mlsize_t max)
 
    [caml_initialize] never calls the GC, so you may call it while a block is
    unfinished (i.e. just after a call to [caml_alloc_shr].) */
-CAMLno_user_tsan /* Avoid instrumenting initializing writes with TSan: they
-                    should never cause data races (albeit for reasons outside
-                    of the C11 memory model). */
+CAMLreally_no_tsan /* Avoid instrumenting initializing writes with TSan: they
+                      should never cause data races (albeit for reasons outside
+                      of the C11 memory model). */
 CAMLexport CAMLweakdef void caml_initialize (volatile value *fp, value val)
 {
 #ifdef DEBUG

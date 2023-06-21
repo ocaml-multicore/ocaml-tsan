@@ -16,18 +16,18 @@
 #define CAML_TSAN_H
 
 /* Macro used to deactivate thread sanitizer on some functions. */
-#define CAMLno_tsan
+#define CAMLreally_no_tsan
 /* __has_feature is Clang-specific, but GCC defines __SANITIZE_ADDRESS__ and
  * __SANITIZE_THREAD__. */
 #if defined(__has_feature)
 #  if __has_feature(thread_sanitizer)
-#    undef CAMLno_tsan
-#    define CAMLno_tsan __attribute__((disable_sanitizer_instrumentation))
+#    undef CAMLreally_no_tsan
+#    define CAMLreally_no_tsan __attribute__((disable_sanitizer_instrumentation))
 #  endif
 #else
 #  if __SANITIZE_THREAD__
-#    undef CAMLno_tsan
-#    define CAMLno_tsan __attribute__((no_sanitize_thread))
+#    undef CAMLreally_no_tsan
+#    define CAMLreally_no_tsan __attribute__((no_sanitize_thread))
 #  endif
 #endif
 
@@ -39,10 +39,10 @@
    [caml_modify]). This macro has no effect when OCaml is configured without
    --enable-tsan, so that compiler developers can still detect bugs in these
    functions using ThreadSanitizer. */
-#define CAMLno_user_tsan
+#define CAMLno_tsan
 #if defined(WITH_THREAD_SANITIZER)
-#  undef CAMLno_user_tsan
-#  define CAMLno_user_tsan CAMLno_tsan
+#  undef CAMLno_tsan
+#  define CAMLno_tsan CAMLreally_no_tsan
 #endif
 
 
