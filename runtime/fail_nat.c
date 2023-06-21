@@ -84,7 +84,7 @@ void caml_raise(value v)
   }
 
 #if defined(WITH_THREAD_SANITIZER)
-  caml_tsan_exn_func_exit_c(exception_pointer);
+  caml_tsan_exit_on_raise_c(exception_pointer);
 #endif
 
   caml_raise_exception(Caml_state, v);
@@ -224,7 +224,7 @@ void caml_array_bound_error_asm(void)
 {
 #if defined(WITH_THREAD_SANITIZER)
   char* exception_pointer = (char*)Caml_state->c_stack;
-  caml_tsan_exn_func_exit_c(exception_pointer);
+  caml_tsan_exit_on_raise_c(exception_pointer);
 #endif
 
   /* This exception is raised directly from ocamlopt-compiled OCaml,

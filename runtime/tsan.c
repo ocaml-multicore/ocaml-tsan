@@ -75,14 +75,14 @@
      1.1 From OCaml
 
      Both `caml_raise_exn` and `caml_tsan_raise_notrace_exn` need to call
-     `caml_tsan_exn_func_exit` to issue calls to `__tsan_func_exit` for each
+     `caml_tsan_exit_on_raise` to issue calls to `__tsan_func_exit` for each
      OCaml function exited by the exception. The process should be repeated
      when re-raising until the appropriate exception handler is found.
 
      1.2 From C
 
      Similarly, raising an exception from C using `caml_raise_exception` must
-     be preceded by a call to `caml_tsan_exn_func_exit_c` to issue calls to
+     be preceded by a call to `caml_tsan_exit_on_raise_c` to issue calls to
      `__tsan_func_exit` for each C function left in the current stack chunk.
      A distinct function needs to be used for C because, although both
      functions work by unwinding the stack, they use different mechanisms.
@@ -122,7 +122,7 @@ Caml_inline void caml_tsan_debug_log_pc(const char* msg, uintnat pc)
 
  This function iterates over every function stack frame between [sp] and
  [trapsp], calling `__tsan_func_exit` for each function. */
-void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
+void caml_tsan_exit_on_raise(uintnat pc, char* sp, char* trapsp)
 {
   caml_domain_state* domain_state = Caml_state;
   caml_frame_descrs fds = caml_get_frame_descrs();
@@ -154,7 +154,7 @@ void caml_tsan_exn_func_exit(uintnat pc, char* sp, char* trapsp)
  This function iterates over every function stack frame between the current
  stack pointer and [limit] using libunwind and call `__tsan_func_exit` for each
  function. */
-void caml_tsan_exn_func_exit_c(char* limit)
+void caml_tsan_exit_on_raise_c(char* limit)
 {
   unw_context_t uc;
   unw_cursor_t cursor;
@@ -206,7 +206,7 @@ void caml_tsan_exn_func_exit_c(char* limit)
    be called again.
    - [pc] is the program counter where `caml_(re)perform` will return.
    - [sp] is the stack pointer at the perform point. */
-void caml_tsan_func_exit_on_perform(uintnat pc, char* sp)
+void caml_tsan_exit_on_perform(uintnat pc, char* sp)
 {
   struct stack_info* stack = Caml_state->current_stack;
   caml_frame_descrs fds = caml_get_frame_descrs();
@@ -237,7 +237,7 @@ void caml_tsan_func_exit_on_perform(uintnat pc, char* sp)
    of iteration.
    - [pc] is the program counter where `caml_perform` was called.
    - [sp] is the stack pointer at the perform point. */
-CAMLreally_no_tsan void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
+CAMLreally_no_tsan void caml_tsan_entry_on_resume(uintnat pc, char* sp,
     struct stack_info const* stack)
 {
   caml_frame_descrs fds = caml_get_frame_descrs();
@@ -259,7 +259,7 @@ CAMLreally_no_tsan void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
     sp = p + sizeof(value);
   }
 
-  caml_tsan_func_entry_on_resume(next_pc, sp, stack);
+  caml_tsan_entry_on_resume(next_pc, sp, stack);
   caml_tsan_debug_log_pc("forced__tsan_func_entry for", pc);
   __tsan_func_entry((void*)next_pc);
 }

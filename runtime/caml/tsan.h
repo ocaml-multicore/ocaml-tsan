@@ -52,10 +52,10 @@
 
 struct stack_info;
 
-CAMLextern void caml_tsan_exn_func_exit_c(char* limit);
+CAMLextern void caml_tsan_exit_on_raise_c(char* limit);
 
-CAMLextern void caml_tsan_func_exit_on_perform(uintnat pc, char* sp);
-CAMLextern void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
+CAMLextern void caml_tsan_exit_on_perform(uintnat pc, char* sp);
+CAMLextern void caml_tsan_entry_on_resume(uintnat pc, char* sp,
     struct stack_info const* stack);
 
 extern void __tsan_func_exit(void*);

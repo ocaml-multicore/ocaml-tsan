@@ -923,7 +923,7 @@ LBL(118):
         movq    STACK_RETADDR(%r13), C_ARG_1   /* arg 1: pc of raise */
         leaq    STACK_ARG_1(%r13), C_ARG_2  /* arg 2: sp at raise */
         movq    Caml_state(exn_handler), C_ARG_3 /* arg 3: sp of handler */
-        C_call  (GCALL(caml_tsan_exn_func_exit))
+        C_call  (GCALL(caml_tsan_exit_on_raise))
 #endif
         movq    %r12, %rax        /* Recover exception bucket */
         RESTORE_EXN_HANDLER_OCAML
@@ -1088,7 +1088,7 @@ LBL(do_perform):
         movq    (%rsp), C_ARG_1   /* arg 1: pc of perform */
         leaq    8(%rsp), C_ARG_2  /* arg 2: sp at perform */
         SWITCH_OCAML_TO_C
-        C_call  (GCALL(caml_tsan_func_exit_on_perform))
+        C_call  (GCALL(caml_tsan_exit_on_perform))
         SWITCH_C_TO_OCAML
         TSAN_RESTORE_CALLER_REGS
 #endif
@@ -1109,14 +1109,14 @@ LBL(112):
 #if defined(WITH_THREAD_SANITIZER)
         /* We must let the TSan runtime know that we switched back to the
            original performer stack. For that, we perform the necessary calls
-           to __tsan_func_entry via caml_tsan_func_entry_on_resume. */
+           to __tsan_func_entry via caml_tsan_entry_on_resume. */
         TSAN_SAVE_CALLER_REGS
         movq    Stack_sp(%r10), %r11
         movq    (%r11), C_ARG_1   /* arg 1: pc of perform */
         leaq    8(%r11), C_ARG_2  /* arg 2: sp at perform */
         movq    %r10, C_ARG_3     /* arg 3: fiber */
         SWITCH_OCAML_TO_C
-        C_call  (GCALL(caml_tsan_func_entry_on_resume))
+        C_call  (GCALL(caml_tsan_entry_on_resume))
         SWITCH_C_TO_OCAML
         TSAN_ENTER_FUNCTION(0)
         TSAN_RESTORE_CALLER_REGS
@@ -1163,7 +1163,7 @@ CFI_STARTPROC
         leaq    8(%r11), C_ARG_2  /* arg 2: sp at perform */
         movq    %r10, C_ARG_3     /* arg 3: fiber */
         SWITCH_OCAML_TO_C
-        C_call  (GCALL(caml_tsan_func_entry_on_resume))
+        C_call  (GCALL(caml_tsan_entry_on_resume))
         SWITCH_C_TO_OCAML
         TSAN_RESTORE_CALLER_REGS
 #endif
