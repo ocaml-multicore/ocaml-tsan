@@ -251,7 +251,10 @@ CAMLno_tsan void caml_tsan_func_entry_on_resume(uintnat pc, char* sp,
     }
 
     char* p = (char*)stack->sp;
-    Pop_frame_pointer(p);
+#ifdef WITH_FRAME_POINTERS
+    p += sizeof(value); /* Would not work on POWER (but POWER is not supported
+                           by TSan anyway) */
+#endif
     next_pc = *(uintnat*)p;
     sp = p + sizeof(value);
   }
