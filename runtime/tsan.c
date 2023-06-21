@@ -44,7 +44,7 @@
    In order for TSan to provide this past event backtrace, each function entry
    must call `__tsan_func_entry` and each function exit must call
    `__tsan_func_exit`.
-   The CMM instrumentation pass is responsible for adding these entry/exit
+   The Cmm instrumentation pass is responsible for adding these entry/exit
    calls to TSan, so that TSan is able to re-create the backtrace on every
    memory access it's notified of.
 
@@ -53,14 +53,14 @@
    handler, or from a computation to the matching effect handler when
    performing an effect, and the other way around when resuming it. This
    prevents the `__tsan_func_exit` calls, inserted at the end of functions by
-   the CMM instrumentation pass, from being executed.
+   the Cmm instrumentation pass, from being executed.
 
    It is important to keep TSan entries and exits balanced to avoid
    underflow/overflow on the TSan internal buffer used for reconstructing
    events backtrace.
    The runtime is responsible for emiting `__tsan_func_exit` call for each
-   function "left" while raising an exception or peforming an effect. They map
-   to the corresponding `__tsan_func_entry` call inserted by the CMM
+   function "aborted" while raising an exception or performing an effect. They
+   match the corresponding `__tsan_func_entry` call inserted by the Cmm
    instrumentation pass.
    Similarly, when a continuation is resumed, the execution flow jumps back
    into the computation, and the runtime must call `__tsan_func_entry` for each
