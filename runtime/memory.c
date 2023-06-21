@@ -147,34 +147,31 @@ Caml_inline void write_barrier(
    }
 }
 
-#if defined(WITH_THREAD_SANITIZER) && defined(NATIVE_CODE)
-#define TSAN_FUNC_ENTRY __tsan_func_entry(__builtin_return_address(0))
-#define TSAN_FUNC_EXIT __tsan_func_exit(NULL)
-#define TSAN_SIGNAL_PLAIN_WRITE(loc) __tsan_write8((void *)loc)
-#else
-#define TSAN_FUNC_ENTRY
-#define TSAN_FUNC_EXIT
-#define TSAN_SIGNAL_PLAIN_WRITE(loc)
-#endif
-
 CAMLno_user_tsan /* We remove the ThreadSanitizer instrumentation of memory
                     accesses by the compiler and instrument manually, because
                     we want ThreadSanitizer to see a plain store here (this is
                     necessary to detect data races). */
 CAMLexport CAMLweakdef void caml_modify (volatile value *fp, value val)
 {
-  TSAN_FUNC_ENTRY;
+#if defined(WITH_THREAD_SANITIZER) && defined(NATIVE_CODE)
+  __tsan_func_entry(__builtin_return_address(0));
+#endif
+
   write_barrier((value)fp, 0, *fp, val);
 
   /* See Note [MM] above */
   atomic_thread_fence(memory_order_acquire);
+
+#if defined(WITH_THREAD_SANITIZER) && defined(NATIVE_CODE)
   /* The release store below is not instrumented because of the
    * CAMLno_user_tsan. We signal it to ThreadSanitizer as a plain store (see
    * ocaml-multicore/ocaml-tsan/pull/22#issuecomment-1377439074 on Github).
    */
-  TSAN_SIGNAL_PLAIN_WRITE(fp);
+  __tsan_write8((void *)fp);
+  __tsan_func_exit(NULL);
+#endif
+
   atomic_store_release(&Op_atomic_val((value)fp)[0], val);
-  TSAN_FUNC_EXIT;
 }
 
 /* Dependent memory is all memory blocks allocated out of the heap
