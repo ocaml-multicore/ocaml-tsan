@@ -22,7 +22,8 @@
 #if defined(__has_feature)
 #  if __has_feature(thread_sanitizer)
 #    undef CAMLreally_no_tsan
-#    define CAMLreally_no_tsan __attribute__((disable_sanitizer_instrumentation))
+#    define CAMLreally_no_tsan \
+       __attribute__((disable_sanitizer_instrumentation))
 #  endif
 #else
 #  if __SANITIZE_THREAD__
