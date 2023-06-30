@@ -14,6 +14,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+[@@@warning "@4"]
+
 open Asttypes
 open Cmm
 module V = Backend_var
@@ -124,10 +126,10 @@ let wrap_entry_exit expr =
            dbg_none)
     | Cop (Capply fn, args, dbg_none) when is_tail ->
         (* This is a tail call. We insert the call to [__tsan_func_exit] right
-           before the call, but after evaluating the arguments. We make an
-           exception for arguments which evaluate to a value of type [Addr], as
-           such values should never be live across a function call or
-           allocation point. *)
+           before the call, but after evaluating the arguments (from right to
+           left). We make an exception for arguments which evaluate to a value
+           of type [Addr], as such values should never be live across a
+           function call or allocation point. *)
         let fun_ = List.hd args in
         let args =
           List.map
@@ -142,9 +144,10 @@ let wrap_entry_exit expr =
                fun_ :: List.map (fun (id, _) -> Cvar (VP.var id)) args,
                dbg_none)))
         in
-        List.fold_right (fun (id, arg) acc -> Clet (id, arg, acc)) args tail
+        List.fold_left (fun acc (id, arg) -> Clet (id, arg, acc)) tail args
+    | Cop ((Calloc | Caddi | Csubi | Cmuli | Cdivi | Cmodi | Cand | Cmulhi | Cor | Cxor | Clsl | Clsr | Casr | Caddv | Cadda | Cnegf | Cabsf | Caddf | Csubf | Cmulf | Cdivf | Cfloatofint | Cintoffloat | Ccheckbound | Copaque | Cdls_get | Capply _ | Cextcall _ | Cload _ | Cstore _ | Ccmpi _ | Ccmpa _ | Ccmpf _ | Craise _), _, _)
     | Cconst_int (_, _) | Cconst_natint (_, _) | Cconst_float (_, _)
-    | Cconst_symbol (_, _) | Cvar _ | Ctuple _ | Cop (_, _, _)
+    | Cconst_symbol (_, _) | Cvar _ | Ctuple _
     | Creturn_addr as expr ->
         let id = VP.create (V.create_local "res") in
         Clet (id, expr, Csequence (call_exit, Cvar (VP.var id)))
@@ -205,7 +208,11 @@ let instrument body =
         end
     | Cop (Cstore _, _, _) ->
         invalid_arg "instrument: wrong number of arguments for operation Cstore"
-    | Cop (op, es, dbg_none) -> Cop (op, List.map aux es, dbg_none)
+    | Cop (Cload {mutability = Immutable; _ } as op, es, dbg_none) ->
+        (* Loads of immutable location require no instrumentation *)
+        Cop (op, List.map aux es, dbg_none)
+    | Cop ((Capply _ | Caddi | Calloc | Csubi | Cmuli | Cmulhi | Cdivi | Cmodi | Cand | Cor | Cxor | Clsl | Clsr | Casr | Caddv | Cadda | Cnegf | Cabsf | Caddf | Csubf | Cmulf | Cdivf | Cfloatofint | Cintoffloat | Ccheckbound | Copaque | Cdls_get | Cextcall _ | Ccmpi _ | Ccmpa _ | Ccmpf _ | Craise _) as op, es, dbg_none) ->
+        Cop (op, List.map aux es, dbg_none)
     | Clet (v, e, body) -> Clet (v, aux e, aux body)
     | Clet_mut (v, k, e, body) -> Clet_mut (v, k, aux e, aux body)
     | Cphantom_let (v, e, body) -> Cphantom_let (v, e, aux body)
