@@ -128,9 +128,7 @@ let wrap_entry_exit expr =
     | Cop (Capply fn, args, dbg_none) when is_tail ->
       (* This is a tail call. We insert the call to [__tsan_func_exit] right
          before the call, but after evaluating the arguments (from right to
-         left). We make an exception for arguments which evaluate to a value of
-         type [Addr], as such values should never be live across a function
-         call or allocation point. *)
+         left). *)
       let fun_ = List.hd args in
       let args =
         List.map (fun e -> VP.create (V.create_local "arg"), e) (List.tl args)
