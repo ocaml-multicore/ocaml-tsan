@@ -2260,6 +2260,7 @@ asmcomp/arch.cmi : \
     asmcomp/x86_ast.cmi \
     lambda/lambda.cmi
 asmcomp/asmgen.cmo : \
+    asmcomp/tsan2.cmi \
     lambda/translmod.cmi \
     asmcomp/split.cmi \
     asmcomp/spill.cmi \
@@ -2303,6 +2304,7 @@ asmcomp/asmgen.cmo : \
     middle_end/backend_intf.cmi \
     asmcomp/asmgen.cmi
 asmcomp/asmgen.cmx : \
+    asmcomp/tsan2.cmx \
     lambda/translmod.cmx \
     asmcomp/split.cmx \
     asmcomp/spill.cmx \
@@ -2379,7 +2381,6 @@ asmcomp/asmlibrarian.cmx : \
     asmcomp/asmlibrarian.cmi
 asmcomp/asmlibrarian.cmi :
 asmcomp/asmlink.cmo : \
-    asmcomp/thread_sanitizer.cmi \
     lambda/runtimedef.cmi \
     utils/profile.cmi \
     utils/misc.cmi \
@@ -2398,7 +2399,6 @@ asmcomp/asmlink.cmo : \
     asmcomp/asmgen.cmi \
     asmcomp/asmlink.cmi
 asmcomp/asmlink.cmx : \
-    asmcomp/thread_sanitizer.cmx \
     lambda/runtimedef.cmx \
     utils/profile.cmx \
     utils/misc.cmx \
@@ -3190,6 +3190,16 @@ asmcomp/thread_sanitizer.cmx : \
     asmcomp/thread_sanitizer.cmi
 asmcomp/thread_sanitizer.cmi : \
     asmcomp/cmm.cmi
+asmcomp/tsan2.cmo : \
+    asmcomp/reg.cmi \
+    asmcomp/cmm.cmi \
+    asmcomp/tsan2.cmi
+asmcomp/tsan2.cmx : \
+    asmcomp/reg.cmx \
+    asmcomp/cmm.cmx \
+    asmcomp/tsan2.cmi
+asmcomp/tsan2.cmi : \
+    asmcomp/mach.cmi
 asmcomp/x86_ast.cmi :
 asmcomp/x86_dsl.cmo : \
     asmcomp/x86_proc.cmi \

@@ -131,6 +131,9 @@ let rec regalloc ~ppf_dump round fd =
     Reg.reinit(); Liveness.fundecl newfd; regalloc ~ppf_dump (round + 1) newfd
   end else newfd
 
+let tsan fun_ =
+  if Config.tsan then Tsan2.fundecl fun_ else fun_
+
 let (++) x f = f x
 
 let compile_fundecl ~ppf_dump ~funcnames fd_cmm =
@@ -147,6 +150,7 @@ let compile_fundecl ~ppf_dump ~funcnames fd_cmm =
   ++ pass_dump_if ppf_dump dump_combine "After allocation combining"
   ++ Profile.record ~accumulate:true "cse" CSE.fundecl
   ++ pass_dump_if ppf_dump dump_cse "After CSE"
+  ++ Profile.record ~accumulate:true "TSan instrumentation" tsan
   ++ Profile.record ~accumulate:true "liveness" liveness
   ++ Profile.record ~accumulate:true "deadcode" Deadcode.fundecl
   ++ pass_dump_if ppf_dump dump_live "Liveness analysis"

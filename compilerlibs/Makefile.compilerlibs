@@ -207,7 +207,6 @@ ASMCOMP = \
   asmcomp/cmmgen_state.cmo \
   asmcomp/cmm_helpers.cmo \
   asmcomp/afl_instrument.cmo \
-  asmcomp/thread_sanitizer.cmo \
   asmcomp/cmmgen.cmo \
   asmcomp/cmm_invariants.cmo \
   asmcomp/interval.cmo \
@@ -219,6 +218,7 @@ ASMCOMP = \
   asmcomp/comballoc.cmo \
   asmcomp/CSEgen.cmo \
   asmcomp/CSE.cmo \
+  asmcomp/tsan2.cmo \
   asmcomp/liveness.cmo \
   asmcomp/spill.cmo \
   asmcomp/split.cmo \
