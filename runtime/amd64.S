@@ -898,17 +898,12 @@ LBL(caml_raise_exn):
 LBL(116):
         movq    $0, Caml_state(backtrace_pos)
 LBL(117):
-        movq    %rsp, %r13        /* Save OCaml stack pointer */
+        movq    %rsp, %r10        /* Save OCaml stack pointer */
         movq    %rax, %r12        /* Save exception bucket */
         movq    Caml_state(c_stack), %rsp
         movq    %rax, C_ARG_1     /* arg 1: exception bucket */
-#ifdef WITH_FRAME_POINTERS
-        movq    8(%r13), C_ARG_2   /* arg 2: pc of raise */
-        leaq    16(%r13), C_ARG_3  /* arg 3: sp at raise */
-#else
-        movq    (%r13), C_ARG_2   /* arg 2: pc of raise */
-        leaq    8(%r13), C_ARG_3  /* arg 3: sp at raise */
-#endif
+        movq    STACK_RETADDR(%r10), C_ARG_2   /* arg 2: pc of raise */
+        leaq    STACK_ARG_1(%r10), C_ARG_3  /* arg 3: sp at raise */
         movq    Caml_state(exn_handler), C_ARG_4
                                   /* arg 4: sp of handler */
         C_call  (GCALL(caml_stash_backtrace))
