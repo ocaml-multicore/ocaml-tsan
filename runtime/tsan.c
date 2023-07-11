@@ -93,7 +93,7 @@
    2. Effects
 
    Similary to exceptions, when `perform` is called `__tsan_func_exit` must be
-   called for every function on the currrent fiber. The process can be repeated
+   called for every function on the current fiber. The process can be repeated
    for every fiber's parents, because of `caml_repeform` until reaching the
    effect handler.
    When `resume` is called, the runtime must call `__tsan_func_entry` for every
@@ -152,8 +152,8 @@ void caml_tsan_exit_on_raise(uintnat pc, char* sp, char* trapsp)
  - [limit] is the end of the current stack chunk.
 
  This function iterates over every function stack frame between the current
- stack pointer and [limit] using libunwind and call `__tsan_func_exit` for each
- function. */
+ stack pointer and [limit] using libunwind and calls `__tsan_func_exit` for
+ each function. */
 void caml_tsan_exit_on_raise_c(char* limit)
 {
   unw_context_t uc;

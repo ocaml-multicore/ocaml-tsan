@@ -277,7 +277,7 @@
    registers in use. */
 
 /* Calls __tsan_func_entry on the current return address. [offset] is the
-   distance to the saved return address and the current stack pointer, in
+   distance from the current stack pointer to the saved return address, in
    bytes. May clobber all caller-saved registers. */
 #if defined(WITH_THREAD_SANITIZER)
 #define TSAN_ENTER_FUNCTION(offset)                             \
@@ -1104,8 +1104,8 @@ LBL(112):
         movq    0(%rbx), %r10  /* load performer stack from continuation */
         subq    $1, %r10       /* r10 := Ptr_val(r10) */
         movq    Caml_state(current_stack), %rsi
-    /* No parent stack. Raise Effect.Unhandled. */
         SWITCH_OCAML_STACKS
+    /* No parent stack. Raise Effect.Unhandled. */
 #if defined(WITH_THREAD_SANITIZER)
         /* We must let the TSan runtime know that we switched back to the
            original performer stack. For that, we perform the necessary calls
