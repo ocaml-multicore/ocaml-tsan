@@ -1,9 +1,10 @@
 (* TEST
 
 include systhreads
-* hassysthreads
-** bytecode
-** native
+* no-tsan
+** hassysthreads
+*** bytecode
+*** native
 
 *)
 

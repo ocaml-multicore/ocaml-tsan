@@ -660,6 +660,7 @@ runtime_COMMON_C_SOURCES = \
   str \
   sync \
   sys \
+  $(TSAN_NATIVE_RUNTIME_C_SOURCES) \
   $(UNIX_OR_WIN32) \
   weak
 

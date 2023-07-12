@@ -1,9 +1,10 @@
 (* TEST
   modules="opt.ml barrier.ml hist.ml shared.ml run.ml outcome.ml"
-  * not-bsd
-  ** not-windows
-  *** bytecode
-  ** native
+  * no-tsan (* tsan detects data races and fails *)
+  ** not-bsd
+  *** not-windows
+  **** bytecode
+  *** native
 *)
 
 (* Memory model: test the _publish idiom *)
