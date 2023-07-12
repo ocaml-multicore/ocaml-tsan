@@ -2,8 +2,9 @@
 
 * hassysthreads
 include systhreads
-** bytecode
-** native
+** no-tsan (* tsan detects the mutex errors and fails *)
+*** bytecode
+*** native
 
 *)
 
