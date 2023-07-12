@@ -1,8 +1,9 @@
 (* TEST
   modules="opt.ml barrier.ml hist.ml shared.ml run.ml outcome.ml"
   * not-bsd
-  ** bytecode
-  ** native
+  ** no-tsan (* tsan detects the intentional data races and fails *)
+  *** bytecode
+  *** native
 *)
 
 (* Memory model test:
