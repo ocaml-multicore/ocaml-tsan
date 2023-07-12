@@ -3,8 +3,10 @@
    include systhreads
    ** not-bsd
    *** libunix
-   **** bytecode
-   **** native
+   **** no-tsan
+     (* tsan limitation: starting new threads after fork is not supported *)
+   ***** bytecode
+   ***** native
 *)
 
 (* POSIX threads and fork() *)
