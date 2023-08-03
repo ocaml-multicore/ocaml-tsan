@@ -774,7 +774,6 @@ Caml_inline void mark_stack_push_range(struct mark_stack* stk,
   me->end = end;
 }
 
-CAMLno_tsan /* Disable TSan reports from this function (see #11040) */
 /* returns the work done by skipping unmarkable objects */
 static intnat mark_stack_push_block(struct mark_stack* stk, value block)
 {
@@ -890,7 +889,11 @@ static void mark_slice_darken(struct mark_stack* stk, value child,
   }
 }
 
-CAMLno_tsan /* Disable TSan reports from this function (see #11040) */
+CAMLno_tsan /* Disable TSan reports from this function. It can read fields
+               concurrently as caml_modify writes to them. We don't consider it
+               a race because the read is volatile. However with --enable-tsan,
+               the caml_modify write is seen by TSan as a plain write, so we
+               need to silence this. */
 Caml_noinline static intnat do_some_marking(struct mark_stack* stk,
                                             intnat budget) {
   prefetch_buffer_t pb = { .enqueued = 0, .dequeued = 0,
