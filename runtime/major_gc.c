@@ -494,6 +494,7 @@ static inline intnat diffmod (uintnat x1, uintnat x2)
   return (intnat) (x1 - x2);
 }
 
+CAMLno_tsan /* Silence false alarm on caml_gc_phase. */
 static void update_major_slice_work(intnat howmuch) {
   double heap_words;
   intnat alloc_work, dependent_work, extra_work, new_work;
