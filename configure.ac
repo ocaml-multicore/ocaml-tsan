@@ -1697,6 +1697,13 @@ AS_IF([$tsan],
       [extra_flags="-Wl,-keep_dwarf_unwind"
       mkexe="$mkexe $extra_flags"
       mksharedlib="$mksharedlib $extra_flags"])
+
+    AX_CHECK_COMPILE_FLAG([$oc_tsan_cflags],
+      [],
+      [AC_MSG_ERROR(m4_normalize([The C compiler does not support the
+        tsan-distinguish-volatile option. Try upgrading to GCC 11 or later, or
+        Clang 11 or later.]))],
+      [-Werror])
   ])
 
 ## Sockets
