@@ -61,6 +61,9 @@ OCaml 5.1.1 (8 December 2023)
   executables with a C++ linker.
   (Shayne Fletcher, review by Antonin Décimo and Xavier Leroy)
 
+- #12561: Fix crash when combining TSan and frame-pointers
+  (Fabrice Buoro and Olivier Nicole, report by Jan Midtgaard, review by Miod
+  Vallat and Gabriel Scherer)
 
 OCaml 5.1.0 (14 September 2023)
 -------------------------------
