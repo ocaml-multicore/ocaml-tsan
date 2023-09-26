@@ -65,6 +65,14 @@ OCaml 5.1.1 (8 December 2023)
   (Fabrice Buoro and Olivier Nicole, report by Jan Midtgaard, review by Miod
   Vallat and Gabriel Scherer)
 
+- #12482: Rework bounds checking code in the POWER backend
+  (Miod Vallat and Xavier Leroy, report by Jan Midtgaard, review by
+   KC Sivaramakrishnan)
+
+- #12593: TSan should handle Effect.Unhandled correctly
+  (Fabrice Buoro and Olivier Nicole, report by Jan Midtgaard and Miod Vallat,
+  review by ...)
+
 OCaml 5.1.0 (14 September 2023)
 -------------------------------
 
