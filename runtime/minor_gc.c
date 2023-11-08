@@ -225,9 +225,9 @@ static int try_update_object_header(value v, volatile value *p, value result,
     }
   }
 
-  // TODO Temporary, to silence the race between two threads both on this line
+  // TODO Temporary, to silence the false positives on this volatile write
   //*p = result + infix_offset;
-  atomic_store_relaxed(p, result + infix_offset);
+  atomic_store_relaxed((_Atomic value *)p, result + infix_offset);
   return success;
 }
 
@@ -249,9 +249,9 @@ static void oldify_one (void* st_v, value v, volatile value *p)
   tail_call:
   if (!(Is_block(v) && Is_young(v))) {
     /* not a minor block */
-    // TODO Temporary, to silence the race between two threads both on this line
+    // TODO Temporary, to silence the false positives on this volatile write
     //*p = v;
-    atomic_store_relaxed(p, v);
+    atomic_store_relaxed((_Atomic value *)p, v);
     return;
   }
 
@@ -262,7 +262,7 @@ static void oldify_one (void* st_v, value v, volatile value *p)
       /* already forwarded, another domain is likely working on this. */
       // TODO Temporary, to silence false positives on this volatile write
       //*p = Field(v, 0) + infix_offset;
-      atomic_store_relaxed(p, Field(v, 0) + infix_offset);
+      atomic_store_relaxed((_Atomic value *)p, Field(v, 0) + infix_offset);
       return;
     }
     tag = Tag_hd (hd);
