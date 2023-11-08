@@ -893,6 +893,10 @@ static void mark_slice_darken(struct mark_stack* stk, value child,
   }
 }
 
+Caml_noinline CAMLno_tsan value volatile_load_uninstrumented(volatile value* p) {
+  return *p;
+}
+
 /* TODO see below CAMLno_tsan */ /* Loading from a location in the OCaml heap can cause false alarms
                in TSan when this location is concurrently written to by
                caml_modify. This false positive is due to the way we map OCaml
@@ -993,7 +997,7 @@ again:
 
       // TODO Integrate this finer-grain fix, rather than de-instrument the whole function?
       //value child = *me.start;
-      value child = atomic_load_relaxed(me.start);
+      value child = volatile_load_uninstrumented(me.start);
 
       budget--;
       if (Is_markable(child)) {
