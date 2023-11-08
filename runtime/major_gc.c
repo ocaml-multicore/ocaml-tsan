@@ -893,7 +893,7 @@ static void mark_slice_darken(struct mark_stack* stk, value child,
   }
 }
 
-CAMLno_tsan /* Loading from a location in the OCaml heap can cause false alarms
+/* TODO see below CAMLno_tsan */ /* Loading from a location in the OCaml heap can cause false alarms
                in TSan when this location is concurrently written to by
                caml_modify. This false positive is due to the way we map OCaml
                accesses to C11 accesses for TSan and is unlikely to go away. */
@@ -991,7 +991,10 @@ again:
     for (; me.start < scan_end; me.start++) {
       CAMLassert(budget >= 0);
 
-      value child = *me.start;
+      // TODO Integrate this finer-grain fix, rather than de-instrument the whole function?
+      //value child = *me.start;
+      value child = atomic_load_relaxed(me.start);
+
       budget--;
       if (Is_markable(child)) {
         if (pb_full(&pb))
