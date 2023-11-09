@@ -106,7 +106,7 @@ jobs:
       - name: Run the testsuite
         if: matrix.id == 'normal'
         run: |
-          MAKE_ARG=-j OCAMLRUNPARAM=b,v=0 bash -xe tools/ci/actions/runner.sh test
+          TSAN_OPTIONS=history_size=6 MAKE_ARG=-j OCAMLRUNPARAM=b,v=0 bash -xe tools/ci/actions/runner.sh test
       - name: Run the testsuite (debug runtime)
         if: matrix.id == 'debug'
         env:
@@ -172,7 +172,7 @@ jobs:
       - name: Run the testsuite
         if: ${{ matrix.name != 'linux-O0' }}
         run: |
-          bash -c 'SHOW_TIMINGS=1 tools/ci/actions/runner.sh test'
+          bash -c 'TSAN_OPTIONS=history_size=6 SHOW_TIMINGS=1 tools/ci/actions/runner.sh test'
         env:
           MallocNanoZone: 0
       - name: Run the testsuite (linux-O0)
