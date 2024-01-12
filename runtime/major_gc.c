@@ -1007,6 +1007,7 @@ Caml_noinline static intnat do_some_marking(struct mark_stack* stk,
       /* This part of the code is a duplicate of mark_slice_darken for
        * performance reasons.
        * Changes here should probably be reflected here in mark_slice_darken. */
+      CAML_TSAN_ANNOTATE_HAPPENS_AFTER(Hp_atomic_val(block));
       header_t hd = Hd_val(block);
 
       if (Tag_hd(hd) == Infix_tag) {

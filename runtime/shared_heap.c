@@ -454,6 +454,7 @@ value* caml_shared_try_alloc(struct caml_heap_state* local, mlsize_t wosize,
     if (!p) return 0;
   }
   colour = caml_global_heap_state.MARKED;
+  CAML_TSAN_ANNOTATE_HAPPENS_BEFORE(p);
   Hd_hp (p) = Make_header_with_reserved(wosize, tag, colour, reserved);
 #ifdef DEBUG
   {
