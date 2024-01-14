@@ -40,6 +40,8 @@
 #  endif
 #endif
 
+/* TSAN annotates a release operation on encountering ANNOTATE_HAPPENS_BEFORE
+ * and similarly an acquire operation on encountering ANNOTATE_HAPPENS_AFTER */
 #define CAML_TSAN_ANNOTATE_HAPPENS_BEFORE(addr)
 #define CAML_TSAN_ANNOTATE_HAPPENS_AFTER(addr)
 
