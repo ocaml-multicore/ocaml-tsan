@@ -1,3 +1,7 @@
+= THIS REPOSITORY IS OUT-OF-DATE
+
+ThreadSanitizer support has been integrated into OCaml and this repository is kept only for archiving purposes. For up-to-date information about using OCaml with ThreadSanitizer, you should read https://ocaml.org/manual/latest/tsan.html[the dedicated OCaml manual page].
+
 == ThreadSanitizer support for OCaml 5
 
 ThreadSanitizer is an effective approach to locate data races in
